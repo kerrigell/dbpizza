@@ -9,6 +9,7 @@ import sqlobject
 from sqlobject.mysql import builder
 
 conn=builder()(user='root', password='',host='127.0.0.1',db='dbpizza')
+
 class t_server(sqlobject.SQLObject):
     class sqlmeta:
         table='t_server'
