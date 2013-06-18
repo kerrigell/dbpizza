@@ -11,46 +11,31 @@ import traceback
 import cmd
 import subprocess
 
-from server import Server,servers
-import sqlobject
-class Logger(object):
-    def __init__(self, filename="Default.log"):
-        self.terminal = sys.stdout
-        self.log = open(filename, "a")
-        self.mode='ip or product'
-        self.current='target'
-        
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-    def flush(self):
-        self.terminal.flush()
-        self.log.flush()
-    def close(self):
-        self.terminal.close()
-        self.log.close()
-    def isatty(self):
-        return False
+from node import Server
+
 
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.prompt="Pizza>"
-        self.root=None
-        self._init_servers(0,self.root)
-        self.current=self.root
-    def _kdf(self):
-        welcome='''DB Pizza '''
-    def _init_servers(self,pid,parent):
-        result=list(servers.select(servers.q.pid==pid))
-        if len(result) != 1 and pid ==0:
-            return
-        for i in result:
-            tsrv=Server(i,parent)
-            if pid==0:
-                self.root=tsrv
-            self._init_servers(i.id,tsrv)
-
+        
+        self.rootNode=Server(0)
+        self.currentNode=self.rootNode
+        self.rootNode.breed()
+        self.prompt="Pizza [%s]>" % self.currentNode
+    def do_pwd(self,line):
+        print self.currentNode
+    def do_cd(self,line):
+        line=string.strip(line)
+        if line == '..':
+            self.currentNode=self.currentNode.parent
+            self.prompt="Pizza [%s]>" % self.currentNode
+        (dbid,info)=string.split(line)
+        if self.currentNode.childs.has_key(dbid):
+            self.currentNode=self.currentNode.childs[dbid]
+            self.prompt="Pizza [%s]>" % self.currentNode
+    def complete_cd(self,text,line,begidx,endidx):
+        tlist=[i for i in self.current.childs.values()]
+        return tlist
     def do_put(self,line):
         '''put a file to target server from ccs'''
         (lfile, taddr, rpath)=string.split(line)
@@ -93,12 +78,19 @@ class PizzaShell(cmd.Cmd):
         exit()
     def do_EOF(self,line):
         return True
-    def do_cd(self,line):
-        print 'aa'
-    def complete_cd(self,text,line,begidx,endidx):
-        
-        tlist=[i.s.ip_oper for i in self.current.childs.values()]
-        return tlist
+
+    def do_ls(self,line):
+        pass
+    def do_put(self,line):
+        pass
+    def do_get(self,line):
+        pass
+    def do_set(self,line):
+        pass
+    def do_instance(self,line):
+        pass
+    def do_use(self,line):
+        pass
     def do_shell(self,line):
         sub_cmd=subprocess.Popen(line,
                                  shell=True,
@@ -109,17 +101,53 @@ class PizzaShell(cmd.Cmd):
         import dbapi
         tt=dbapi.servers()
         print 'skdf'
+    def do_piece(self,line):
+        pass
+    def do_pwd(self,line):
+        pass
+
+class Logger(object):
+    def __init__(self, filename="Default.log"):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+        self.mode='ip or product'
+        self.current='target'
         
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+    def close(self):
+        self.terminal.close()
+        self.log.close()
+    def isatty(self):
+        return False    
+    
+def import_file(modulename):
+    dirname = os.path.dirname(os.path.abspath(modulename))
+    filename, ext = os.path.splitext(os.path.basename(modulename))
+    if ext.lower() != '.py':
+        return {}, {}
+    if sys.modules.has_key(filename):
+        del sys.modules[filename]
+    if dirname:
+        sys.path.insert(0, dirname)
+    mod = __import__(filename)
+    if dirname:
+        del sys.path[0]
+    return mod    
+
 def main():
     #log_file=r"dbpizza.log"
     #sys.stdout = Logger(log_file)
-    #sys.stderr = sys.stdout    
+    #sys.stderr = sys.stdout  
+    aa=import_file(r'Y:\git\dbpizza\branches\crude_code\db\test.py')
     if len(sys.argv)>1:
         PizzaShell().onecmd(' '.join(sys.argv[1:]))
     else:
         PizzaShell().cmdloop() 
 
-      
-    
 if __name__=='__main__':   
     main()
