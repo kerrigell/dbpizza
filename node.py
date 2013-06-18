@@ -11,6 +11,7 @@ from fabric.utils import puts
 from fabric.colors import *
 from fabric.tasks import execute
 from fabric.exceptions import NetworkError       
+import traceback
 
 from dbi import t_server
 class Server(object):
