@@ -28,9 +28,9 @@ class Server(object):
         else:
             result=list(t_server.select(t_server.q.id==dbid))
         return None if result is None or len(result) <> 1 else result[0]
-    @classmethod
+
     def add_child(self,child):
-        if not ( child and isinstance(child,Server)):
+        if child is None or  not isinstance(child,Server):
             return False
         if self.childs is None:
             self.childs={}
@@ -46,8 +46,6 @@ class Server(object):
         result=list(t_server.select(t_server.q.pid==self.dbid))
         if result is None or len(result)==0:
             return 0
-        if self.childs is None:
-            self.childs={}
         for i in result:
             self.add_child(Server(i.id))
         return len(self.childs)
