@@ -35,10 +35,8 @@ class PizzaShell(cmd.Cmd):
                 return
         elif line == '':
             return
-        
         (dbid,info)=string.split(line,'[')
         (dbid,info)=string.split(info,':')
-        
         if self.currentNode.childs.has_key(int(dbid)):
             self.currentNode=self.currentNode.childs[int(dbid)]
             self.prompt="Pizza [%s]>" % self.currentNode
@@ -48,8 +46,9 @@ class PizzaShell(cmd.Cmd):
     def complete_cd(self,text,line,begidx,endidx):
         print "text:%s" % text
         print "line:%s" % line
+        import readline
+        readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
         tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),text) ==0]
-        print tlist
         return tlist
     def do_put(self,line):
         '''put a file to target server from ccs'''
