@@ -40,8 +40,10 @@ class PizzaShell(cmd.Cmd):
         if self.currentNode.childs.has_key(int(dbid)):
             self.currentNode=self.currentNode.childs[int(dbid)]
             self.prompt="Pizza [%s]>" % self.currentNode
+            if self.currentNode.childs is None:
+                self.currentNode.breed()
     def complete_cd(self,text,line,begidx,endidx):
-        tlist=[str(i) for i in self.currentNode.childs.values()]
+        tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line) <> -1]
         return tlist
     def do_put(self,line):
         '''put a file to target server from ccs'''
@@ -104,7 +106,7 @@ class PizzaShell(cmd.Cmd):
                                  stdout=subprocess.PIPE)
         output=sub_cmd.communicate()[0]
         print output
-    def do_addserver(self,line):
+    def do_node(self,line):
         import dbapi
         tt=dbapi.servers()
         print 'skdf'

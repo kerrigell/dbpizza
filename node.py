@@ -61,7 +61,7 @@ class Server(object):
         except Exception,e:
             self._print_error(e)        
     def __str__(self):
-        return "%s:%s[%s]%s" % (self.dbid,self.s.ip_oper,self.s.description, '' if self.parent == None else "<%s" % self.parent.s.ip_oper)
+        return "%s:%s[%s]" % (self.dbid,self.s.ip_oper,self.s.description,)
     def __len__(self):
         return self.level
     def __iter__(self):
