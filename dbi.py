@@ -8,8 +8,7 @@ import sys
 import sqlobject
 from sqlobject.mysql import builder
 
-conn=builder()(user='majianpo', password='JIAN*@jian82',host='10.127.64.248',db='dbpizza')
-#conn=builder()(user='root', password='',host='127.0.0.1',db='dbpizza')
+conn=builder()(user='root', password='',host='127.0.0.1',db='dbpizza')
 class t_server(sqlobject.SQLObject):
     class sqlmeta:
         table='t_server'
