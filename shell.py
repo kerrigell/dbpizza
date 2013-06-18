@@ -42,7 +42,6 @@ class PizzaShell(cmd.Cmd):
             self.prompt="Pizza [%s]>" % self.currentNode
     def complete_cd(self,text,line,begidx,endidx):
         tlist=[str(i) for i in self.currentNode.childs.values()]
-        print tlist
         return tlist
     def do_put(self,line):
         '''put a file to target server from ccs'''
