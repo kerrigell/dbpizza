@@ -76,14 +76,9 @@ class PizzaShell(cmd.Cmd):
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
     def do_cmd(self,line):
-        li =string.split(line,'"')
-        taddr=string.strip(li[0])
-        tcmd=''.join(li[1:])
-        tsrv=self.root.search(taddr)
-        if tsrv == None:
-            print 'Error: not find %s' % taddr
-            return
-        print tsrv.run(tcmd)
+        print line
+        self.currentNode.run(line)
+
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
         exit()
