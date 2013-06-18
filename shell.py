@@ -143,7 +143,6 @@ def main():
     #log_file=r"dbpizza.log"
     #sys.stdout = Logger(log_file)
     #sys.stderr = sys.stdout  
-    aa=import_file(r'Y:\git\dbpizza\branches\crude_code\db\test.py')
     if len(sys.argv)>1:
         PizzaShell().onecmd(' '.join(sys.argv[1:]))
     else:
