@@ -25,18 +25,18 @@ class PizzaShell(cmd.Cmd):
     def do_pwd(self,line):
         print self.currentNode
     def do_cd(self,line):
-        line=string.strip(line)
         if line == '..':
             if self.currentNode <> self.rootNode:
                 self.currentNode=self.currentNode.parent
                 self.prompt="Pizza [%s]>" % self.currentNode
+                return
         (dbid,info)=string.split(line)
         if self.currentNode.childs.has_key(dbid):
             self.currentNode=self.currentNode.childs[dbid]
             self.prompt="Pizza [%s]>" % self.currentNode
     def complete_cd(self,text,line,begidx,endidx):
-        tlist=[i for i in self.current.childs.values()]
-        return tlist
+        tlist=[i for i in self.currentNode.childs.values()]
+        return ['10.sdfk','20.ksdfj']
     def do_put(self,line):
         '''put a file to target server from ccs'''
         (lfile, taddr, rpath)=string.split(line)
