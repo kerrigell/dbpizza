@@ -24,8 +24,7 @@ class PizzaShell(cmd.Cmd):
         self.prompt="Pizza [%s]>" % self.currentNode
     def do_pwd(self,line):
         print self.currentNode
-        for i in self.currentNode.childs.values():
-            print i
+
 
     def do_cd(self,line):
         line=string.strip(line)
@@ -46,7 +45,7 @@ class PizzaShell(cmd.Cmd):
     def complete_cd(self,text,line,begidx,endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
-        tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line) ==0]
+        tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),text) ==0]
         return tlist
     def do_put(self,line):
         '''put a file to target server from ccs'''

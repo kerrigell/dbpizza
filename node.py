@@ -61,7 +61,7 @@ class Server(object):
         except Exception,e:
             self._print_error(e)        
     def __str__(self):
-        return "%s:%s[%s]" % (self.dbid,self.s.ip_oper,self.s.description,)
+        return "%2s:%s:%-15s[%3d:%s]" % (self.s.region,self.s.product,self.s.ip_oper,self.dbid,self.s.description)
     def __len__(self):
         return self.level
     def __iter__(self):
