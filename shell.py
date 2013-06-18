@@ -18,7 +18,7 @@ class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         
-        self.rootNode=Server(0)
+        self.rootNode=Server()
         self.currentNode=self.rootNode
         self.rootNode.breed()
         self.prompt="Pizza [%s]>" % self.currentNode
@@ -27,8 +27,9 @@ class PizzaShell(cmd.Cmd):
     def do_cd(self,line):
         line=string.strip(line)
         if line == '..':
-            self.currentNode=self.currentNode.parent
-            self.prompt="Pizza [%s]>" % self.currentNode
+            if self.currentNode <> self.rootNode:
+                self.currentNode=self.currentNode.parent
+                self.prompt="Pizza [%s]>" % self.currentNode
         (dbid,info)=string.split(line)
         if self.currentNode.childs.has_key(dbid):
             self.currentNode=self.currentNode.childs[dbid]

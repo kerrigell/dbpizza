@@ -9,10 +9,10 @@ import sys
 from dbi import t_server
 class Server(object):
     """Server.s --->  sqlobject ---> TABLE:servers"""
-    def __init__(self,dbid=0):
+    def __init__(self,dbid=None):
         """Constructor"""
-        self.dbid=dbid
-        self.s=self._get_dbinfo(self.dbid)
+        self.s=self._get_dbinfo(dbid)
+        self.dbid=None if self.s is None else self.s.id
         self.parent=None
         self.childs=None
         self.root=self
@@ -22,10 +22,12 @@ class Server(object):
         
     @classmethod
     def _get_dbinfo(self,dbid):
-        result=list(t_server.select(t_server.q.id==dbid))
-        if len(result) <> 1:
-            return None
-        return result[0]
+        result=None
+        if dbid is None:
+            result=list(t_server.select(t_server.q.pid==0))
+        else:
+            result=list(t_server.select(t_server.q.id==dbid))
+        return None if result is None or len(result) <> 1 else result[0]
     @classmethod
     def add_child(self,child):
         if not ( child and isinstance(child,Server)):
@@ -39,12 +41,13 @@ class Server(object):
         
     def breed(self):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
-        if self.childs is not None and len(self.childs)>0:
+        if not (self.childs is  None) and len(self.childs)>0:
             return len(self.childs)
         result=list(t_server.select(t_server.q.pid==self.dbid))
         if result is None or len(result)==0:
-            self.childs={}
             return 0
+        if self.childs is None:
+            self.childs={}
         for i in result:
             self.add_child(Server(i.id))
         return len(self.childs)
