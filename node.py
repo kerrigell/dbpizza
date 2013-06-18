@@ -145,10 +145,17 @@ class Server(object):
             return 0     
     def infect_cmd(self,cmd,extent=False):
         '''infect a file or command to childs or whole'''
+        self.execute(cmd)
         if self.childs is None:
             return
         for i in self.childs.values():
-            i.execute(cmd)
             if extent:
                 i.infect_cmd(cmd,extent)
+    def infect_files(self,local,remote,extent=False):
+        if self.level ==2:
+            pass
+        elif self.level ==1:
+            pass
+        elif self.level==0:
+            pass
 

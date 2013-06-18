@@ -37,13 +37,14 @@ class PizzaShell(cmd.Cmd):
                 return
         elif line == '':
             return
-        (dbid,info)=string.split(line,'[')
-        (dbid,info)=string.split(info,':')
-        if self.currentNode.childs.has_key(int(dbid)):
-            self.currentNode=self.currentNode.childs[int(dbid)]
-            self.prompt="Pizza [%s]>" % self.currentNode
-            if self.currentNode.childs is None:
-                self.currentNode.breed()
+        else:
+            (dbid,info)=string.split(line,'[')
+            (dbid,info)=string.split(info,':')
+            if self.currentNode.childs.has_key(int(dbid)):
+                self.currentNode=self.currentNode.childs[int(dbid)]
+                self.prompt="Pizza [%s]>" % self.currentNode
+                if self.currentNode.childs is None:
+                    self.currentNode.breed()
 
     def complete_cd(self,text,line,begidx,endidx):
         import readline
@@ -83,7 +84,7 @@ class PizzaShell(cmd.Cmd):
         cmd=' '.join(args)
         for opt,arg in opts:
             if opt in ('-r'):
-                self.currentNode.infect_cmd(cmd)
+                self.currentNode.infect_cmd(cmd,True)
                 return
         self.currentNode.execute(cmd)
 
