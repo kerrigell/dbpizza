@@ -109,7 +109,7 @@ class Server(object):
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=True
-                return Server._print_result(run(cmd,shell=False))
+                return Server._print_result(run(cmd,shell=False),)
         except NetworkError,e:
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -130,7 +130,7 @@ class Server(object):
             pass
         if result.succeeded:
             if len(result):
-                puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '') 
+                puts(yellow("%sReturnCode:%s" % result.return_code if code <> -99 else '') 
                             + green('\n' + result)
                             ,show_prefix=prefix)
                 if hopevalue and result != hopevalue:
@@ -147,7 +147,7 @@ class Server(object):
         '''infect a file or command to childs or whole'''
         self.execute(cmd)
         if self.childs is None:
-            return
+            self.breed()
         for i in self.childs.values():
             if extent:
                 i.infect_cmd(cmd,extent)
