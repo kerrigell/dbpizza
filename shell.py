@@ -41,7 +41,7 @@ class PizzaShell(cmd.Cmd):
             self.currentNode=self.currentNode.childs[int(dbid)]
             self.prompt="Pizza [%s]>" % self.currentNode
     def complete_cd(self,text,line,begidx,endidx):
-        tlist=[i for i in self.currentNode.childs.values()]
+        tlist=[str(i) for i in self.currentNode.childs.values()]
         print tlist
         return tlist
     def do_put(self,line):
