@@ -44,8 +44,6 @@ class PizzaShell(cmd.Cmd):
                 self.currentNode.breed()
 
     def complete_cd(self,text,line,begidx,endidx):
-        print "text:%s" % text
-        print "line:%s" % line
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
         tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line[3:]) ==0]
@@ -80,7 +78,7 @@ class PizzaShell(cmd.Cmd):
             return self.root.search_list(text)
     def do_cmd(self,line):
         print line
-        self.currentNode.run(line)
+        self.currentNode.execute(line)
 
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
