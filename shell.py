@@ -11,6 +11,8 @@ import traceback
 import cmd
 import subprocess
 
+import getopt
+
 from node import Server
 
 
@@ -77,8 +79,13 @@ class PizzaShell(cmd.Cmd):
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
     def do_cmd(self,line):
-        print line
-        self.currentNode.execute(line)
+        opts,args = getopt.getopt(string.split(line),'r')
+        cmd=' '.join(args)
+        for opt,arg in opts:
+            if opt in ('-r'):
+                self.currentNode.infect_cmd(cmd)
+                return
+        self.currentNode.execute(cmd)
 
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
