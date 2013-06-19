@@ -132,16 +132,16 @@ class Server(object):
             if len(result):
                 puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else '')) 
                             + green('\n' + result)
-                            ,show_prefix=prefix)
+                            ,show_prefix=showprefix)
                 if hopevalue and result != hopevalue:
-                    puts(red("The Result is not hope"),show_prefix=prefix)
+                    puts(red("The Result is not hope"),show_prefix=showprefix)
                     return 0
                 return 1
         if result.failed:
             #result.return_code == 1
             puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '') 
                     + red('\n' + result)
-                    ,show_prefix=prefix)    
+                    ,show_prefix=showprefix)    
             return 0     
     def infect_execute(self,cmd,extent=False):
         '''infect a file or command to childs or whole'''
