@@ -109,7 +109,7 @@ class Server(object):
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=True
-                return Server._print_result(run(cmd,shell=False),prefix=False)
+                return self._print_result(run(cmd,shell=False),prefix=False)
         except NetworkError,e:
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -121,7 +121,7 @@ class Server(object):
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
             return 0
-    @staticmethod
+
     def _print_result(result,hopevalue=None,prefix=None):
         code=-99
         try:
