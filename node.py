@@ -150,7 +150,7 @@ class Server(object):
         for i in self.childs.values():
             i.execute(cmd)
             if extent:
-                i.infect_cmd(cmd,extent)
+                i.infect_execute(cmd,extent)
     def infect_files(self,local,remote,extent=False):
         if self.level ==2:
             pass

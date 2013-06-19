@@ -80,12 +80,12 @@ class PizzaShell(cmd.Cmd):
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
     def do_cmd(self,line):
-        opts,args = getopt.getopt(string.split(line),'ie:',['infect=','extent='])
+        opts,args = getopt.getopt(string.split(line),'iR',)
         cmd=' '.join(args)
         infect=False
         extent=False
         for opt,arg in opts:
-            if opt in ('-i','--infect'):
+            if opt in ('-i'):
                 infect=True
             elif opt in ('-R'):
                 extent=True
