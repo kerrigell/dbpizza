@@ -98,8 +98,8 @@ class Server(object):
     def execute(self,cmd):
         if self.level >2:
             raise "Don't supply operation on 4 round"
-        root= self if self.root is None else self.root
-        env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root is None else self.s.ip_oper)
+        root= self if self.root == self else self.root
+        env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
         env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         try:
             with settings(hide('running','stdout'),warn_ony=True):
@@ -143,12 +143,12 @@ class Server(object):
                     + red('\n' + result)
                     ,show_prefix=prefix)    
             return 0     
-    def infect_cmd(self,cmd,extent=False):
+    def infect_execute(self,cmd,extent=False):
         '''infect a file or command to childs or whole'''
-        self.execute(cmd)
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
+            i.execute(cmd)
             if extent:
                 i.infect_cmd(cmd,extent)
     def infect_files(self,local,remote,extent=False):
