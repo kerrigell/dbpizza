@@ -109,7 +109,7 @@ class Server(object):
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=True
-                return self._print_result(run(cmd,shell=False),prefix=False)
+                return self._print_result(run(cmd,shell=False),prefix=False,info=str(self))
         except NetworkError,e:
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -121,8 +121,8 @@ class Server(object):
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
             return 0
-
-    def _print_result(result,hopevalue=None,prefix=None):
+    @classmethod
+    def _print_result(result,hopevalue=None,showprefix=None,info=''):
         code=-99
         try:
             code=result.return_code
@@ -130,7 +130,7 @@ class Server(object):
             pass
         if result.succeeded:
             if len(result):
-                puts(yellow("%s ReturnCode:%s" % (str(self),result.return_code if code <> -99 else '')) 
+                puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else '')) 
                             + green('\n' + result)
                             ,show_prefix=prefix)
                 if hopevalue and result != hopevalue:
