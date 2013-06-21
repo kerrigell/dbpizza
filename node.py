@@ -193,6 +193,7 @@ class Server(object):
                     return self.download(path,uuid)
             else:
                 if parent is None or parent.level == 0:
+                    parent=self
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
