@@ -186,10 +186,10 @@ class Server(object):
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
                     if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=True):
-                        puts(yellow("%s+-->%s",(string.ljust(' ',self.level*4,),str(self))))
+                        puts(yellow("%s+-->%s",(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         return uuid
                     else:
-                        print "Transfer Failed!"
+                        puts(red("%s+-->%s:%s",(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                         return None
                 else:
                     return self.download(path,uuid)
@@ -198,10 +198,10 @@ class Server(object):
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=True):
-                            puts(yellow("%s+-->%s",(string.ljust(' ',self.level*4),str(self))))
+                            puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                             return uuid
                         else:
-                            print "Transfer Failed!"
+                            puts(red("%s+-->%s:%s",(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                             return None
                     else:
                         print "%s: %snot exists!" % (str(self),path)
@@ -216,7 +216,8 @@ class Server(object):
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
-            uuid=i.download(path,uuid)
+            if uuid:
+                uuid=i.download(path,uuid)
             if extent and uuid:
                 i.infectdownload(path,uuid)
         
