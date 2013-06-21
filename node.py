@@ -186,10 +186,10 @@ class Server(object):
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
                     if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=True):
-                        puts(yellow("%s+-->%s",(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
+                        puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         return uuid
                     else:
-                        puts(red("%s+-->%s:%s",(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
+                        puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                         return None
                 else:
                     return self.download(path,uuid)
@@ -201,10 +201,10 @@ class Server(object):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                             return uuid
                         else:
-                            puts(red("%s+-->%s:%s",(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
+                            puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                             return None
                     else:
-                        print "%s: %snot exists!" % (str(self),path)
+                        puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"File not  exists")),show_prefix=False) 
                         return None
                 else:
                     return self.download(path,parent.download(path))
