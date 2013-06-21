@@ -181,14 +181,16 @@ class Server(object):
         try:
             parent = self.parent
             local_ip = self.s.ip_oper
-            if uuid:
+            if uuid == -1:
+                return -1
+            elif uuid is not None:
                 if parent.exists("/tmp/%s" % uuid):
                     if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                         puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         return uuid
                     else:
                         puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
-                        return None
+                        return -1
                 else:
                     return self.download(path,uuid)
             else:
@@ -200,10 +202,10 @@ class Server(object):
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
-                            return None
+                            return -1
                     else:
                         puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"File not  exists")),show_prefix=False) 
-                        return None
+                        return -1
                 else:
                     return self.download(path,parent.download(path))
 
