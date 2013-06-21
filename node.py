@@ -216,7 +216,7 @@ class Server(object):
         for i in self.childs.values():
             uuid=i.download(path)
             if extent and uuid:
-                i.infect_execute(path,uuid)
+                i.infect_download(path,uuid)
         
     def upload(self,local_path,uuid=None):
         pass
