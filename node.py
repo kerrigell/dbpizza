@@ -167,13 +167,6 @@ class Server(object):
             if extent:
                 i.infect_execute(cmd,extent)
 
-    def infect_files(self,local,remote,extent=False):
-        if self.level ==2:
-            pass
-        elif self.level ==1:
-            pass
-        elif self.level==0:
-            pass
 
     def exists(self,path):
         env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
@@ -195,7 +188,7 @@ class Server(object):
                 else:
                     return self.download(path,uuid)
             else:
-                if parent.level == 0:
+                if parent is None or parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=True):
