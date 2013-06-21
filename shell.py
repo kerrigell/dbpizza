@@ -111,7 +111,7 @@ class PizzaShell(cmd.Cmd):
         else:
             self.currentNode.download(cmd)
 
-
+            
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
         exit()
