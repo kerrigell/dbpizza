@@ -187,12 +187,8 @@ class Server(object):
             local_ip = self.s.ip_oper
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
-<<<<<<< HEAD
                     if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
-=======
-                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=True):
                         puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
->>>>>>> a5045d6a89fa3606c295b71b687b81bd2cd7abee
                         return uuid
                     else:
                         puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
@@ -203,12 +199,8 @@ class Server(object):
                 if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
-<<<<<<< HEAD
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
-=======
-                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=True):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
->>>>>>> a5045d6a89fa3606c295b71b687b81bd2cd7abee
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
