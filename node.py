@@ -105,7 +105,7 @@ class Server(object):
         root=self if (self.root == None) else self.root
         return _search(addr,root)    
 
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,show_prefix=False,flush=False):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False):
         if self.level >2:
             raise "Don't supply operation on 4 round"
         env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
@@ -121,7 +121,8 @@ class Server(object):
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=True
-                return Server._print_result(run(cmd,shell=False),showprefix=show_prefix,info=str(self))
+                env.output_prefix=False if hide_output_prefix else False
+                return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
         except NetworkError,e:
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -145,7 +146,7 @@ class Server(object):
             if len(result):
                 puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else '')) 
                             + green('\n' + result)
-                            ,show_prefix=showprefix)
+                            ,show_prefix=showprefix,flush=True)
                 if hopevalue and result != hopevalue:
                     puts(red("The Result is not hope"),show_prefix=showprefix)
                     return 0
@@ -154,7 +155,7 @@ class Server(object):
             #result.return_code == 1
             puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '') 
                     + red('\n' + result)
-                    ,show_prefix=showprefix)    
+                    ,show_prefix=showprefix,flush=True)    
             return 0     
 
     def infect_execute(self,cmd,extent=False):
@@ -185,7 +186,7 @@ class Server(object):
             local_ip = self.s.ip_oper
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
-                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=True):
+                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
                         return uuid
                     else:
                         print "Transfer Failed!"
@@ -196,7 +197,7 @@ class Server(object):
                 if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
-                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=True):
+                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
                             return uuid
                         else:
                             print "Transfer Failed!"
