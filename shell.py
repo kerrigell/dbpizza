@@ -126,9 +126,6 @@ class PizzaShell(cmd.Cmd):
     def do_put(self,line):
         pass
 
-    def do_get(self,line):
-        pass
-
     def do_instance(self,line):
         pass
 
