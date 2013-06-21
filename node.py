@@ -11,7 +11,10 @@ from fabric.utils import puts
 from fabric.colors import *
 from fabric.tasks import execute
 from fabric.exceptions import NetworkError      
+from fabric.contrib.files import exists as fexists
 import traceback     
+import uuid as muuid
+import pdb
 
 
 from dbi import t_server
@@ -49,7 +52,7 @@ class Server(object):
         
     def breed(self):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
-        if not (self.childs is  None) and len(self.childs)>0:
+        if not (self.childs is None) and len(self.childs)>0:
             return len(self.childs)
         result=list(t_server.select(t_server.q.pid==self.dbid))
         if result is None or len(result)==0:
@@ -68,14 +71,18 @@ class Server(object):
             return it
         except Exception,e:
             self._print_error(e)        
+
     def __str__(self):
         return "%s:%s:%s[%03d:%s]" % (self.s.region,self.s.product,self.s.ip_oper,self.dbid,self.s.description)
+
     def __len__(self):
         return self.level
+
     def __iter__(self):
         self._iter_step=self.level-1
         self._iter_parent=self
         return self
+
     def next(self):
         if self._iter_step < 0:
             self._iter_step=self.level
@@ -83,8 +90,10 @@ class Server(object):
         self._iter_parent=self._iter_parent.parent
         self._iter_step-=1
         return self._iter_parent
+
     def _print_error(e):
         puts('%s Error: #%d %s' % (self.s.ip_oper, e.args[0], e.args[1]))             
+
     def search(self,addr):
         def _search(addr,start):
             if start.s.ip_oper == addr:
@@ -95,15 +104,15 @@ class Server(object):
                     return result
         root=self if (self.root == None) else self.root
         return _search(addr,root)    
+
     def execute(self,cmd):
         if self.level >2:
             raise "Don't supply operation on 4 round"
-        root= self if self.root == self else self.root
         env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
         env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         try:
-            with settings(hide('running','stdout'),warn_ony=True):
-                env.skip_bad_hosts=True
+            with settings(hide('running'),warn_only=True):
+                #env.skip_bad_hosts=True
                 env.connection_attempts=2
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
@@ -121,6 +130,7 @@ class Server(object):
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
             return 0
+
     @staticmethod
     def _print_result(result,hopevalue=None,showprefix=None,info=''):
         code=-99
@@ -143,6 +153,7 @@ class Server(object):
                     + red('\n' + result)
                     ,show_prefix=showprefix)    
             return 0     
+
     def infect_execute(self,cmd,extent=False):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
@@ -151,6 +162,7 @@ class Server(object):
             i.execute(cmd)
             if extent:
                 i.infect_execute(cmd,extent)
+
     def infect_files(self,local,remote,extent=False):
         if self.level ==2:
             pass
@@ -158,4 +170,37 @@ class Server(object):
             pass
         elif self.level==0:
             pass
+
+    def exists(self,path):
+        env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
+        env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
+        return fexists(path)
+
+    def download(self,path,uuid=None):
+        try:
+            parent = self.parent
+            local_ip = self.s.ip_oper
+            if uuid:
+                if parent.exists("/tmp/%s" % uuid):
+                    parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid))
+                    return uuid
+                else:
+                    return self.download(path,uuid)
+            else:
+                if parent.level == 0:
+                    if parent.exists(path):
+                        uuid = uuid if uuid else muuid.uuid1()
+                        parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid))
+                        return uuid
+                    else:
+                        print "File not exists!"
+                        return False
+                else:
+                    return self.download(path,parent.download(path))
+
+        except Exception, e:
+            print e
+
+    def upload(self,local_path,uuid=None):
+        pass
 

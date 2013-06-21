@@ -19,14 +19,12 @@ from node import Server
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-        
         self.rootNode=Server()
         self.currentNode=self.rootNode
         self.rootNode.breed()
         self.prompt="Pizza [%s]>" % self.currentNode
     def do_pwd(self,line):
         print self.currentNode
-
 
     def do_cd(self,line):
         line=string.strip(line)
@@ -51,6 +49,7 @@ class PizzaShell(cmd.Cmd):
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
         tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line[3:]) ==0]
         return tlist
+
     def do_put(self,line):
         '''put a file to target server from ccs'''
         (lfile, taddr, rpath)=string.split(line)
@@ -64,8 +63,10 @@ class PizzaShell(cmd.Cmd):
         print 'Send a file from %s to %s' % (self.root, tsrv)
         self.root.putfile(lfile,tsrv,rpath)
         print 'Send finished'
+
     def help_put(self):
         print '\n'.join(['put <localfile> <targetserver> <remotepath>','put a file to target server from ccs'])
+
     def complete_put(self,text,line,begidx,endidx):
         import readline
         pos=len(string.split(line))
@@ -79,6 +80,7 @@ class PizzaShell(cmd.Cmd):
             '''search server list like aaa.*'''
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
+
     def do_cmd(self,line):
         opts,args = getopt.getopt(string.split(line),'iR',)
         cmd=' '.join(args)
@@ -94,35 +96,46 @@ class PizzaShell(cmd.Cmd):
         else:
             self.currentNode.execute(cmd)
 
+    def do_download(self,line):
+        self.currentNode.download(line)
 
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
         exit()
+
     def do_EOF(self,line):
         return True
 
     def do_ls(self,line):
         pass
+
     def do_put(self,line):
         pass
+
     def do_get(self,line):
         pass
+
     def do_set(self,line):
         pass
+
     def do_instance(self,line):
         pass
+
     def do_use(self,line):
         pass
+
     def do_shell(self,line):
         sub_cmd=subprocess.Popen(line,
                                  shell=True,
                                  stdout=subprocess.PIPE)
         output=sub_cmd.communicate()[0]
         print output
+
     def do_node(self,line):
         import dbapi
         tt=dbapi.servers()
         print 'skdf'
+
     def do_piece(self,line):
         pass
 
@@ -136,12 +149,15 @@ class Logger(object):
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
+
     def flush(self):
         self.terminal.flush()
         self.log.flush()
+
     def close(self):
         self.terminal.close()
         self.log.close()
+
     def isatty(self):
         return False    
     

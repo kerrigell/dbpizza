@@ -16,7 +16,7 @@ class t_server(sqlobject.SQLObject):
     _connection=conn
     pid=sqlobject.IntCol('pid',length=11,default=None)
     region=sqlobject.EnumCol(enumValues=['hk','vn','id','tw','th','us','my','cn','in',None],default=None)
-    product=sqlobject.EnumCol(enumValues=['tlbb','ldj','taoyuan','guyu','totem','specialforce','gamefuse','oppaplay','gamiction','cuaban','davinci','swordgirls','common'],default=None)
+    product=sqlobject.EnumCol(enumValues=['tlbb','ldj','taoyuan','guyu','totem','specialforce','gamefuse','oppaplay','gamiction','cuaban','davinci','swordgirls','common','zszw'],default=None)
     role=sqlobject.EnumCol(enumValues=['cc','backup','db',None],default=None)
     loginuser=sqlobject.StringCol(length=40,default='root')
     description=sqlobject.StringCol('description',length=250,default=None)
