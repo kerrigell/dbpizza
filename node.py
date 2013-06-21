@@ -202,7 +202,7 @@ class Server(object):
                             print "Transfer Failed!"
                             return None
                     else:
-                        print "File not exists!"
+                        print "%s: %snot exists!" % (str(self),path)
                         return None
                 else:
                     return self.download(path,parent.download(path))

@@ -96,7 +96,7 @@ class PizzaShell(cmd.Cmd):
         else:
             self.currentNode.execute(cmd)
 
-    def do_download(self,line):
+    def do_get(self,line):
         opts,args = getopt.getopt(string.split(line),'iR',)
         path=' '.join(args)
         infect=False
@@ -127,9 +127,6 @@ class PizzaShell(cmd.Cmd):
         pass
 
     def do_get(self,line):
-        pass
-
-    def do_set(self,line):
         pass
 
     def do_instance(self,line):
