@@ -97,8 +97,21 @@ class PizzaShell(cmd.Cmd):
             self.currentNode.execute(cmd)
 
     def do_download(self,line):
-        self.currentNode.download(line)
+        opts,args = getopt.getopt(string.split(line),'iR',)
+        cmd=' '.join(args)
+        infect=False
+        extent=False
+        for opt,arg in opts:
+            if opt in ('-i'):
+                infect=True
+            elif opt in ('-R'):
+                extent=True
+        if infect:
+            self.currentNode.infect_download(cmd,extent)
+        else:
+            self.currentNode.download(cmd)
 
+            
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
         exit()
