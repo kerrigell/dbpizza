@@ -107,10 +107,10 @@ class PizzaShell(cmd.Cmd):
             elif opt in ('-R'):
                 extent=True
         if infect:
-            uuid=self.currentNode.download(cmd)
-            self.currentNode.infect_download(path=cmd,extent=extent,uuid=uuid)
+            uuid=self.currentNode.download(path)
+            self.currentNode.infect_download(path=path,extent=extent,uuid=uuid)
         else:
-            self.currentNode.download(cmd)
+            self.currentNode.download(path)
 
             
     def do_exit(self,line):
