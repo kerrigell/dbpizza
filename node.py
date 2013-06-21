@@ -14,8 +14,8 @@ from fabric.exceptions import NetworkError
 from fabric.contrib.files import exists as fexists
 import traceback     
 import uuid as muuid
-import pdb
-
+import pdb   #pdb.set_trace()
+import string
 
 from dbi import t_server
 class Server(object):
@@ -56,6 +56,7 @@ class Server(object):
             return len(self.childs)
         result=list(t_server.select(t_server.q.pid==self.dbid))
         if result is None or len(result)==0:
+            self.childs={}
             return 0
         for i in result:
             self.add_child(Server(i.id))
@@ -186,10 +187,15 @@ class Server(object):
             local_ip = self.s.ip_oper
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
+<<<<<<< HEAD
                     if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
+=======
+                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=True):
+                        puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
+>>>>>>> a5045d6a89fa3606c295b71b687b81bd2cd7abee
                         return uuid
                     else:
-                        print "Transfer Failed!"
+                        puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                         return None
                 else:
                     return self.download(path,uuid)
@@ -197,27 +203,33 @@ class Server(object):
                 if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
+<<<<<<< HEAD
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
+=======
+                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=True):
+                            puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
+>>>>>>> a5045d6a89fa3606c295b71b687b81bd2cd7abee
                             return uuid
                         else:
-                            print "Transfer Failed!"
+                            puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
                             return None
                     else:
-                        print "File not exists!"
+                        puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"File not  exists")),show_prefix=False) 
                         return None
                 else:
                     return self.download(path,parent.download(path))
 
         except Exception, e:
             print e
-    def infect_download(self,path,extent=False):
+    def infect_download(self,path,extent=False,uuid=None):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
-            uuid=i.download(path)
-            if extent and uuid:
-                i.infect_execute(path,uuid)
+            if uuid:
+                tuuid=i.download(path,uuid)
+                if extent and tuuid:
+                    i.infectdownload(path,tuuid)
         
     def upload(self,local_path,uuid=None):
         pass
