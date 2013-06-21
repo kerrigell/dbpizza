@@ -106,7 +106,7 @@ class Server(object):
         root=self if (self.root == None) else self.root
         return _search(addr,root)    
 
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
         if self.level >2:
             raise "Don't supply operation on 4 round"
         env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
@@ -123,7 +123,10 @@ class Server(object):
                 env.abort_on_prompts=True
                 env.warn_only=True
                 env.output_prefix=False if hide_output_prefix else False
-                return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
+                if hide_puts is True:
+                    return run(cmd,shell=False)
+                else:
+                    return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
         except NetworkError,e:
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -187,7 +190,7 @@ class Server(object):
             local_ip = self.s.ip_oper
             if uuid:
                 if parent.exists("/tmp/%s" % uuid):
-                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
+                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                         puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         return uuid
                     else:
@@ -199,7 +202,7 @@ class Server(object):
                 if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
-                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True):
+                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                             return uuid
                         else:
