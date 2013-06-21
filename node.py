@@ -209,14 +209,14 @@ class Server(object):
 
         except Exception, e:
             print e
-    def infect_download(self,path,extent=False):
+    def infect_download(self,path,extent=False,uuid=None):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
-            uuid=i.download(path)
+            uuid=i.download(path,uuid)
             if extent and uuid:
-                i.infect_download(path,uuid)
+                i.infectdownload(path,uuid)
         
     def upload(self,local_path,uuid=None):
         pass

@@ -98,7 +98,7 @@ class PizzaShell(cmd.Cmd):
 
     def do_download(self,line):
         opts,args = getopt.getopt(string.split(line),'iR',)
-        cmd=' '.join(args)
+        path=' '.join(args)
         infect=False
         extent=False
         for opt,arg in opts:
@@ -107,7 +107,8 @@ class PizzaShell(cmd.Cmd):
             elif opt in ('-R'):
                 extent=True
         if infect:
-            self.currentNode.infect_download(cmd,extent)
+            uuid=self.currentNode.download(cmd)
+            self.currentNode.infect_download(path=cmd,extent=extent,uuid=uuid)
         else:
             self.currentNode.download(cmd)
 
