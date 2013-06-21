@@ -14,7 +14,7 @@ from fabric.exceptions import NetworkError
 from fabric.contrib.files import exists as fexists
 import traceback     
 import uuid as muuid
-import pdb
+import pdb   #pdb.set_trace()
 import string
 
 from dbi import t_server
@@ -56,6 +56,7 @@ class Server(object):
             return len(self.childs)
         result=list(t_server.select(t_server.q.pid==self.dbid))
         if result is None or len(result)==0:
+            self.childs={}
             return 0
         for i in result:
             self.add_child(Server(i.id))
@@ -217,9 +218,9 @@ class Server(object):
             self.breed()
         for i in self.childs.values():
             if uuid:
-                uuid=i.download(path,uuid)
-            if extent and uuid:
-                i.infectdownload(path,uuid)
+                tuuid=i.download(path,uuid)
+                if extent and tuuid:
+                    i.infectdownload(path,tuuid)
         
     def upload(self,local_path,uuid=None):
         pass
