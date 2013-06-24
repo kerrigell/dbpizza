@@ -220,7 +220,7 @@ class Server(object):
         for i in self.childs.values():
             tuuid=i.download(path,uuid)
             if extent and tuuid:
-                i.infectdownload(path,tuuid)
+                i.infect_download(path,tuuid)
         
     def upload(self,local_path,uuid=None):
         pass
