@@ -219,8 +219,10 @@ class Server(object):
             self.breed()
         for i in self.childs.values():
             tuuid=i.download(path,uuid)
-            if extent and tuuid:
-                i.infect_download(path,tuuid)
+            if tuuid is not None and uuid is None and tuuid != -1:
+                uuid=tuuid
+            if extent and uuid and uuid <>-1:
+                i.infect_download(path,uuid)
         
     def upload(self,local_path,uuid=None):
         pass
