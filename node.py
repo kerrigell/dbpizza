@@ -195,7 +195,7 @@ class Server(object):
                     return self.download(path,uuid)
             else:
                 if parent is None:
-                    return -1
+                    return None
                 elif   parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
@@ -218,10 +218,9 @@ class Server(object):
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
-            if uuid:
-                tuuid=i.download(path,uuid)
-                if extent and tuuid:
-                    i.infectdownload(path,tuuid)
+            tuuid=i.download(path,uuid)
+            if extent and tuuid:
+                i.infectdownload(path,tuuid)
         
     def upload(self,local_path,uuid=None):
         pass

@@ -106,7 +106,6 @@ class PizzaShell(cmd.Cmd):
                 infect=True
             elif opt in ('-R'):
                 extent=True
-                
         uuid=self.currentNode.download(path)
         if infect:
             self.currentNode.infect_download(path=path,extent=extent,uuid=uuid)
