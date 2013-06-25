@@ -107,14 +107,13 @@ class Server(object):
         return _search(addr,root)    
 
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
-        if self.level >2:
-            raise "Don't supply operation on 4 round"
-        env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
-        env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
-        hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None) 
-        hiding_clause = [ x for x in hiding_clause if x ] 
-
         try:
+            if self.level >2:
+                raise "Don't supply operation on 4 round"
+            env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
+            env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
+            hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None) 
+            hiding_clause = [ x for x in hiding_clause if x ]             
             with settings(hide(*hiding_clause),warn_only=True):
                 #env.skip_bad_hosts=True
                 env.connection_attempts=2
@@ -128,12 +127,14 @@ class Server(object):
                 else:
                     return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
         except NetworkError,e:
+            pdb.set_trace()
             traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
             return 0
         except Exception,e:
+            pdb.set_trace()
             traceback.print_exc()
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
@@ -210,16 +211,17 @@ class Server(object):
                     return self.download(path,parent.download(path))
 
         except Exception, e:
-            print e
+            traceback.print_exc()
     def infect_download(self,path,extent=False,uuid=None):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
             self.breed()
         for i in self.childs.values():
-            if uuid:
-                tuuid=i.download(path,uuid)
-                if extent and tuuid:
-                    i.infectdownload(path,tuuid)
+            tuuid=i.download(path,uuid)
+            if tuuid is not None and uuid is None and tuuid != -1:
+                uuid=tuuid
+            if extent and uuid and uuid <>-1:
+                i.infect_download(path,uuid)
         
     def upload(self,local_path,uuid=None):
         pass
