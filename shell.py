@@ -145,7 +145,12 @@ class PizzaShell(cmd.Cmd):
 
     def do_piece(self,line):
         pass
-
+    def do_ipsec(self,text,line,begidx,endidx):
+        import shlex
+        tlist=shlex.shlex(line)
+        tlen=len(tlist)
+        print tlist
+    def complete_ipsec(
 class Logger(object):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.stdout

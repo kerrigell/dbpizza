@@ -111,7 +111,7 @@ class Server(object):
             if self.level >2:
                 raise "Don't supply operation on 4 round"
             env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
-            env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
+            env.gateway = "%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None) 
             hiding_clause = [ x for x in hiding_clause if x ]             
             with settings(hide(*hiding_clause),warn_only=True):
