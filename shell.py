@@ -150,7 +150,9 @@ class PizzaShell(cmd.Cmd):
         tlist=shlex.shlex(line)
         tlen=len(tlist)
         print tlist
-    def complete_ipsec(
+    def complete_ipsec():
+        pass
+
 class Logger(object):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.stdout

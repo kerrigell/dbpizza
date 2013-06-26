@@ -212,6 +212,7 @@ class Server(object):
 
         except Exception, e:
             traceback.print_exc()
+
     def infect_download(self,path,extent=False,uuid=None):
         '''infect a file or command to childs or whole'''
         if self.childs is None:
