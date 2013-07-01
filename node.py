@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
 # Author:   Jianpo Ma
-# Purpose: 
+# Purpose:
 # Created: 2013/6/17
 
 import sys
@@ -10,14 +10,21 @@ from fabric.api import run,env,task,parallel,settings,hide
 from fabric.utils import puts
 from fabric.colors import *
 from fabric.tasks import execute
-from fabric.exceptions import NetworkError      
+from fabric.exceptions import NetworkError
 from fabric.contrib.files import exists as fexists
-import traceback     
+import traceback
 import uuid as muuid
-import pdb   #pdb.set_trace()
+import pdb
 import string
 
 from dbi import t_server
+class piece(object,*args):
+    """A piece is a collection of condition to pick Server"""
+    def __init__(self):
+
+    def cut(self):
+
+
 class Server(object):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     def __init__(self,dbid=None):
@@ -26,11 +33,12 @@ class Server(object):
         self.dbid=None if self.s is None else self.s.id
         self.parent=None
         self.childs=None
+        self.pieces={}
         self.root=self
         self.level=0
         self._iter_step=None
         self._iter_parent=None
-        
+
     @classmethod
     def _get_dbinfo(self,dbid):
         result=None
@@ -49,7 +57,7 @@ class Server(object):
         child.level=self.level+1
         child.parent=self
         self.childs[child.dbid]=child
-        
+
     def breed(self):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
         if not (self.childs is None) and len(self.childs)>0:
@@ -61,17 +69,16 @@ class Server(object):
         for i in result:
             self.add_child(Server(i.id))
         return len(self.childs)
-    
+
     def __getitem__(self,index):
         '''Get the item of the access way'''
         #print 'getitem_index: %s' % index
         try:
-            it=self
             for i in range(self.level-index):
                 it=it.parent
             return it
         except Exception,e:
-            self._print_error(e)        
+            self._print_error(e)
 
     def __str__(self):
         return "%s:%s:%s[%03d:%s]" % (self.s.region,self.s.product,self.s.ip_oper,self.dbid,self.s.description)
@@ -93,7 +100,7 @@ class Server(object):
         return self._iter_parent
 
     def _print_error(e):
-        puts('%s Error: #%d %s' % (self.s.ip_oper, e.args[0], e.args[1]))             
+        puts('%s Error: #%d %s' % (self.s.ip_oper, e.args[0], e.args[1]))
 
     def search(self,addr):
         def _search(addr,start):
@@ -104,7 +111,7 @@ class Server(object):
                 if result:
                     return result
         root=self if (self.root == None) else self.root
-        return _search(addr,root)    
+        return _search(addr,root)
 
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
         try:
@@ -112,8 +119,8 @@ class Server(object):
                 raise "Don't supply operation on 4 round"
             env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
             env.gateway = "%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
-            hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None) 
-            hiding_clause = [ x for x in hiding_clause if x ]             
+            hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
+            hiding_clause = [ x for x in hiding_clause if x ]
             with settings(hide(*hiding_clause),warn_only=True):
                 #env.skip_bad_hosts=True
                 env.connection_attempts=2
@@ -149,7 +156,7 @@ class Server(object):
             pass
         if result.succeeded:
             if len(result):
-                puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else '')) 
+                puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else ''))
                             + green('\n' + result)
                             ,show_prefix=showprefix,flush=True)
                 if hopevalue and result != hopevalue:
@@ -158,10 +165,10 @@ class Server(object):
                 return 1
         if result.failed:
             #result.return_code == 1
-            puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '') 
+            puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '')
                     + red('\n' + result)
-                    ,show_prefix=showprefix,flush=True)    
-            return 0     
+                    ,show_prefix=showprefix,flush=True)
+            return 0
 
     def infect_execute(self,cmd,extent=False):
         '''infect a file or command to childs or whole'''
@@ -190,7 +197,7 @@ class Server(object):
                         puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         return uuid
                     else:
-                        puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
+                        puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
                         return -1
                 else:
                     return self.download(path,uuid)
@@ -202,10 +209,10 @@ class Server(object):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                             return uuid
                         else:
-                            puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False) 
+                            puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
                             return -1
                     else:
-                        puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"File not  exists")),show_prefix=False) 
+                        puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"File not  exists")),show_prefix=False)
                         return -1
                 else:
                     return self.download(path,parent.download(path))
@@ -223,7 +230,19 @@ class Server(object):
                 uuid=tuuid
             if extent and uuid and uuid <>-1:
                 i.infect_download(path,uuid)
-        
+
+    def knife(self, *args):
+        "Generate filt condition from keywords using by breed()"
+        if not (self.childs is None) and len(self.childs)>0:
+            return len(self.childs)
+        result=list(t_server.select(t_server.q.pid==self.dbid))
+        if result is None or len(result)==0:
+            self.childs={}
+            return 0
+        for i in result:
+            self.add_child(Server(i.id))
+        return len(self.childs)
+
     def upload(self,local_path,uuid=None):
         pass
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
-# Author:  Jianpo Ma 
-# Purpose: 
+# Author:  Jianpo Ma
+# Purpose:
 # Created: 2013/6/17
 
 import sys

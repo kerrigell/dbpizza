@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
 # Author:  Jianpo Ma
-# Purpose: 
+# Purpose:
 # Created: 2013/3/29
 
 import os,sys
@@ -22,6 +22,7 @@ class PizzaShell(cmd.Cmd):
         self.rootNode=Server()
         self.currentNode=self.rootNode
         self.rootNode.breed()
+        self.piece={}
         self.prompt="Pizza [%s]>" % self.currentNode
     def do_pwd(self,line):
         print self.currentNode
@@ -75,7 +76,7 @@ class PizzaShell(cmd.Cmd):
             # readline.parse_and_bind("tab: complete")
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             import glob
-            return glob.glob('%s*' % text) 
+            return glob.glob('%s*' % text)
         if pos == 3:
             '''search server list like aaa.*'''
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
@@ -111,7 +112,7 @@ class PizzaShell(cmd.Cmd):
             self.currentNode.infect_download(path=path,extent=extent,uuid=uuid)
 
 
-            
+
     def do_exit(self,line):
         print '%s: %s' % ('bye',line)
         exit()
@@ -159,7 +160,7 @@ class Logger(object):
         self.log = open(filename, "a")
         self.mode='ip or product'
         self.current='target'
-        
+
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
@@ -173,8 +174,8 @@ class Logger(object):
         self.log.close()
 
     def isatty(self):
-        return False    
-    
+        return False
+
 def import_file(modulename):
     dirname = os.path.dirname(os.path.abspath(modulename))
     filename, ext = os.path.splitext(os.path.basename(modulename))
@@ -187,16 +188,16 @@ def import_file(modulename):
     mod = __import__(filename)
     if dirname:
         del sys.path[0]
-    return mod    
+    return mod
 
 def main():
     #log_file=r"dbpizza.log"
     #sys.stdout = Logger(log_file)
-    #sys.stderr = sys.stdout  
+    #sys.stderr = sys.stdout
     if len(sys.argv)>1:
         PizzaShell().onecmd(' '.join(sys.argv[1:]))
     else:
-        PizzaShell().cmdloop() 
+        PizzaShell().cmdloop()
 
-if __name__=='__main__':   
+if __name__=='__main__':
     main()
