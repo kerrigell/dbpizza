@@ -12,11 +12,11 @@ class piece(Server):
     pass
 
 class knife(object):
-    self.words = self._all_word()
     def __init__(self,*keywords):
        pass
+       self.words = self._all_words()
 
-    def _all_words(sefl):
+    def _all_words(self):
         words = []
         words += self._get_word(t_server.region)
         words += self._get_word(t_server.product)
@@ -26,17 +26,12 @@ class knife(object):
         words += self._get_word(t_server.os_type)
         words += self._get_word(t_server.os_release)
         words += self._get_word(t_server.os_arch)
-        words += 'reserve'
+        words += ['reserve']
+        return words
 
     def _get_word(self, col):
-        ret = session.query(col).distinct().all()
+        ret = session.query(col).filter(col != None).distinct().all()
         return [ str(x[0]) for x in ret ]
-
-    def __str__(self):
-        print self.words
-
-
-
 
 
 
