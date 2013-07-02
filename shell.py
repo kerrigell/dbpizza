@@ -12,6 +12,7 @@ import cmd
 import subprocess
 
 import getopt
+import pdb
 
 from node import Server
 

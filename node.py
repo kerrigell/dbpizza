@@ -17,12 +17,19 @@ import uuid as muuid
 import pdb
 import string
 
+reload(sys)
+sys.setdefaultencoding('latin1')
+
 from dbi import t_server
-class piece(object,*args):
+from dbi import session
+
+class piece(object):
     """A piece is a collection of condition to pick Server"""
-    def __init__(self):
+    def __init__(self, *keywords):
+        pass
 
     def cut(self):
+        pass
 
 
 class Server(object):
@@ -43,9 +50,9 @@ class Server(object):
     def _get_dbinfo(self,dbid):
         result=None
         if dbid is None:
-            result=list(t_server.select(t_server.q.pid==0))
+            result=session.query(t_server).filter(t_server.pid==0).all()
         else:
-            result=list(t_server.select(t_server.q.id==dbid))
+            result=session.query(t_server).filter(t_server.id==dbid).all()
         return None if result is None or len(result) <> 1 else result[0]
 
     def add_child(self,child):
@@ -62,7 +69,7 @@ class Server(object):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
         if not (self.childs is None) and len(self.childs)>0:
             return len(self.childs)
-        result=list(t_server.select(t_server.q.pid==self.dbid))
+        result=session.query(t_server).filter(t_server.pid==self.dbid).all()
         if result is None or len(result)==0:
             self.childs={}
             return 0
@@ -235,7 +242,8 @@ class Server(object):
         "Generate filt condition from keywords using by breed()"
         if not (self.childs is None) and len(self.childs)>0:
             return len(self.childs)
-        result=list(t_server.select(t_server.q.pid==self.dbid))
+        result=session.query(t_server).filter(t_server.pid==self.dbid).all()
+
         if result is None or len(result)==0:
             self.childs={}
             return 0
