@@ -25,7 +25,7 @@ class NothingFoundException(Exception):
 
 class Piece(Server):
     def __init__(self, name = None, *keywords):
-        super(Server, self).__init__(dbid = None)
+        super(Piece, self).__init__()
         chars = string.ascii_letters + string.digits
         salt = ''.join(random.sample(chars, 8))
         self.knife = Knife(*keywords).knife
