@@ -23,15 +23,6 @@ sys.setdefaultencoding('latin1')
 from dbi import t_server
 from dbi import session
 
-class piece(object):
-    """A piece is a collection of condition to pick Server"""
-    def __init__(self, *keywords):
-        pass
-
-    def cut(self):
-        pass
-
-
 class Server(object):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     def __init__(self,dbid=None):
@@ -40,7 +31,6 @@ class Server(object):
         self.dbid=None if self.s is None else self.s.id
         self.parent=None
         self.childs=None
-        self.pieces={}
         self.root=self
         self.level=0
         self._iter_step=None
@@ -237,19 +227,6 @@ class Server(object):
                 uuid=tuuid
             if extent and uuid and uuid <>-1:
                 i.infect_download(path,uuid)
-
-    def knife(self, *args):
-        "Generate filt condition from keywords using by breed()"
-        if not (self.childs is None) and len(self.childs)>0:
-            return len(self.childs)
-        result=session.query(t_server).filter(t_server.pid==self.dbid).all()
-
-        if result is None or len(result)==0:
-            self.childs={}
-            return 0
-        for i in result:
-            self.add_child(Server(i.id))
-        return len(self.childs)
 
     def upload(self,local_path,uuid=None):
         pass

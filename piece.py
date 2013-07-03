@@ -4,6 +4,8 @@
 # Purpose:
 # Created: 2013/7/02
 
+import random
+import string
 from dbi import t_server
 from dbi import session
 from node import Server
@@ -14,24 +16,36 @@ class KeyWordException(Exception):
     def __str__(self):
         return repr(self.value)
 
+class NothingFoundException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+
 class Piece(Server):
-    def __init__(self):
-        self.knife = Knife()
+    def __init__(self, name = None, *keywords):
+        super(Server, self).__init__(dbid = None)
+        chars = string.ascii_letters + string.digits
+        salt = ''.join(random.sample(chars, 8))
+        self.knife = Knife(*keywords).knife
+        self.name = name if not name else salt
+        self.breed()
+
     def breed(self):
-        '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
+        '''繁殖出整个piece'''
         if not (self.childs is None) and len(self.childs)>0:
             return len(self.childs)
         result=session.query(t_server)
-        for col, value in knife:
-            #result = result.filter(t_server.:col == ":value")
-            pass
+        for value, col in self.knife.iteritems():
+            result = result.filter(col == value)
         result = result.all()
         if result is None or len(result)==0:
-            self.childs={}
-            return 0
+            raise NothingFoundException(self.knife.keys())
         for i in result:
-            self.add_child(Server(i.id))
-        return len(self.childs)
+            print i
+            #self.add_child(Server(i.id))
+        return len(result)
 
 class Knife(object):
     def __init__(self,*keywords):
