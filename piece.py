@@ -8,8 +8,8 @@ from dbi import t_server
 from dbi import session
 from node import Server
 
-class piece(Server):
-
+class Piece(Server):
+    self.knife = Knife()
     def breed(self):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
         if not (self.childs is None) and len(self.childs)>0:
@@ -26,9 +26,15 @@ class piece(Server):
             self.add_child(Server(i.id))
         return len(self.childs)
 
-class knife(object):
+class Knife(object):
     def __init__(self,*keywords):
-       self.words = self._all_words()
+        self.words = self._all_words()
+        self.knife = {}
+        for i in keywords:
+            if i in words.keys():
+                slef.knife[i] = words[i]
+            else:
+                raise Exception("Invalid keywords %s" % i)
 
     def _all_words(self):
         words = []
