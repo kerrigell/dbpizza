@@ -23,10 +23,42 @@ sys.setdefaultencoding('latin1')
 from dbi import t_server
 from dbi import session
 
-class Server(object):
-    """Server.s --->  sqlobject ---> TABLE:servers"""
-    def __init__(self,dbid=None):
+########################################################################
+class NodeNet(object):
+    """"""
+    # the node that watched by someone on this net
+    current_node=None
+    # db table class
+    __dbclass__=None
+    # db session
+    __dbsession__=None
+
+    #----------------------------------------------------------------------
+    def _get_dbclass(self):
+        selfclassname=self.__class__.__name__
+        dbclassname="t_%s" % string.lower(selfclassname)
+        dbclass=None
+        dbsesssion=None        
+        import importlib
+        mo=importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo,dbclassname):
+                dbclass= getattr(mo,dbclassname)
+            if hasattr(mo,'session'):
+                dbsesssion=getattr(mo,'session')
+        return (session,dbclass)
+    def _get_dbinfo(self,dbid):
+        if self.__dbsession__  is None or  self.__dbclass__ is None:
+            return None
+        result=None
+        if dbid is None:
+            result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.pid==0).all()
+        else:
+            result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.id==dbid).all()
+        return None if result is None or len(result) <> 1 else result[0]
+    def __init__(self,dbid):
         """Constructor"""
+        (self.__dbsession__,self.__dbclass__)=self._get_dbclass()
         self.s=self._get_dbinfo(dbid)
         self.dbid=None if self.s is None else self.s.id
         self.parent=None
@@ -35,37 +67,46 @@ class Server(object):
         self.level=0
         self._iter_step=None
         self._iter_parent=None
-
-    @classmethod
-    def _get_dbinfo(self,dbid):
-        result=None
-        if dbid is None:
-            result=session.query(t_server).filter(t_server.pid==0).all()
-        else:
-            result=session.query(t_server).filter(t_server.id==dbid).all()
-        return None if result is None or len(result) <> 1 else result[0]
-
+    def cd(self,dbid):
+        #search node with dbid 
+        resultnode=None
+        #set current node
+        self.__class__.current_node=resultnode
     def add_child(self,child):
-        if child is None or  not isinstance(child,Server):
+        if child is None or  not isinstance(child,self.__class__):
             return False
         if self.childs is None:
             self.childs={}
         child.root=self.root
         child.level=self.level+1
         child.parent=self
-        self.childs[child.dbid]=child
-
+        self.childs[child.dbid]=child        
     def breed(self):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
         if not (self.childs is None) and len(self.childs)>0:
             return len(self.childs)
-        result=session.query(t_server).filter(t_server.pid==self.dbid).all()
+        result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.pid==self.dbid).all()
         if result is None or len(result)==0:
             self.childs={}
             return 0
         for i in result:
-            self.add_child(Server(i.id))
-        return len(self.childs)
+            self.add_child(self.__class__(i.id))
+        return len(self.childs)    
+    
+    
+    
+class Feature(NodeNet):
+    """"""
+    def __init__(self,dbid=None):
+        super(self.__class__,self).__init__(dbid)
+    
+
+class Server(object):
+    """Server.s --->  sqlobject ---> TABLE:servers"""
+    def __init__(self,dbid=None):
+        """Constructor"""
+        super(self.__class__,self).__init__(dbid)
+
 
     def __getitem__(self,index):
         '''Get the item of the access way'''
