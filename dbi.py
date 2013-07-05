@@ -11,7 +11,7 @@ from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.types import SchemaType,TypeDecorator,Enum
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('mysql://root@127.0.0.1/dbpizza?charset=latin1')
+engine = create_engine('mysql://root@dbpizzzahost/dbpizza?charset=latin1')
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()

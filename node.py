@@ -98,14 +98,14 @@ class NodeNet(object):
 class Feature(NodeNet):
     """"""
     def __init__(self,dbid=None):
-        super(self.__class__,self).__init__(dbid)
+        super(Feature,self).__init__(dbid)
     
 
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     def __init__(self,dbid=None):
         """Constructor"""
-        super(self.__class__,self).__init__(dbid)
+        super(Server,self).__init__(dbid)
 
 
     def __getitem__(self,index):
