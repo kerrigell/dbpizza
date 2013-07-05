@@ -101,7 +101,7 @@ class Feature(NodeNet):
         super(self.__class__,self).__init__(dbid)
     
 
-class Server(object):
+class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     def __init__(self,dbid=None):
         """Constructor"""
