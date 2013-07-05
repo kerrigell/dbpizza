@@ -37,6 +37,15 @@ class t_server(Base):
     os_type = Column(Enum('Linux','Windows'))
     os_release = Column(Enum('RHEL_5_3','RHEL_4_8','RHEL_4_6','CENT_6_3','WIN2003','WIN2008'))
     os_arch = Column(Enum('x86_64','i386'))
-
     def __repr__(self):
         return "<Server('%s','%s','%s')>" % (self.region, self.product, self.ip_oper)
+
+class t_feature(Base):
+    __tablename__ = 't_feature'
+    id = Column(Integer, primary_key=True)
+    pid = Column(Integer)
+    feature = Column(VARCHAR(50))
+    detail = Column(VARCHAR(50))
+    server_id = Column(Integer)
+    fabric = Column(VARCHAR(50))
+    exec_info=Column(VARCHAR(200))
