@@ -20,9 +20,6 @@ import string
 reload(sys)
 sys.setdefaultencoding('latin1')
 
-from dbi import t_server
-from dbi import session
-
 ########################################################################
 class NodeNet(object):
     """"""
@@ -32,32 +29,53 @@ class NodeNet(object):
     __dbclass__=None
     # db session
     __dbsession__=None
-
+    # the map of objects
+    __nodemap__={}
+    # foreign class
+    __foreignclass__=None
+    # foreign node
+    foreignnode=None
     #----------------------------------------------------------------------
     def _get_dbclass(self):
         selfclassname=self.__class__.__name__
         dbclassname="t_%s" % string.lower(selfclassname)
         dbclass=None
-        dbsesssion=None        
+        dbsession=None        
         import importlib
         mo=importlib.import_module('dbi')
         if mo:
             if hasattr(mo,dbclassname):
                 dbclass= getattr(mo,dbclassname)
             if hasattr(mo,'session'):
-                dbsesssion=getattr(mo,'session')
-        return (session,dbclass)
+                dbsession=getattr(mo,'session')
+        return (dbsession,dbclass)
     def _get_dbinfo(self,dbid):
         if self.__dbsession__  is None or  self.__dbclass__ is None:
             return None
+        if self.__class__.__nodemap__.has_key(dbid) and self.__class__.__nodemap__[dbid].s is not None:
+            return self.__class__.__nodemap__[dbid].s
         result=None
         if dbid is None:
             result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.pid==0).all()
         else:
             result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.id==dbid).all()
         return None if result is None or len(result) <> 1 else result[0]
-    def __init__(self,dbid):
+    def dockapply(self):
+        result=False
+        if self.s is None or self.__dbclass__ is None or  self.__foreignclass__ is None or self.__dbclass__ is None or not hasattr(self.__dbclass__ , string.lower("%s_id" % self.__foreignclass__.__name__)):
+            return result
+        foreignid=getattr(self.s, string.lower("%s_id" % self.__foreignclass__.__name__))
+        if foreignid:
+            self.__foreignclass__.dockhandle(self,foreignid)
+    @classmethod
+    def dockhandle(cls,applicant,searchid):
+        if cls.__nodemap__.has_key(searchid):
+            cnode=cls.__nodemap__[searchid]
+            cnode.foreignnode=applicant
+            applicant.foreignnode=cnode
+    def __init__(self,dbid,foreignclass=None):
         """Constructor"""
+        self.__foreignclass__=foreignclass
         (self.__dbsession__,self.__dbclass__)=self._get_dbclass()
         self.s=self._get_dbinfo(dbid)
         self.dbid=None if self.s is None else self.s.id
@@ -67,6 +85,10 @@ class NodeNet(object):
         self.level=0
         self._iter_step=None
         self._iter_parent=None
+        if self.dbid is not None and not self.__class__.__nodemap__.has_key(self.dbid):
+            self.__class__.__nodemap__[self.dbid]=self
+        if self.__foreignclass__:
+            self.dockapply()
     def cd(self,dbid):
         #search node with dbid 
         resultnode=None
@@ -90,22 +112,22 @@ class NodeNet(object):
             self.childs={}
             return 0
         for i in result:
-            self.add_child(self.__class__(i.id))
+            self.add_child(self.__class__(i.id,self.__foreignclass__))
         return len(self.childs)    
     
     
     
 class Feature(NodeNet):
     """"""
-    def __init__(self,dbid=None):
-        super(Feature,self).__init__(dbid)
+    def __init__(self,dbid=None,foreignclass=None):
+        super(Feature,self).__init__(dbid,foreignclass)
     
 
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
-    def __init__(self,dbid=None):
+    def __init__(self,dbid=None,foreignclass=None):
         """Constructor"""
-        super(Server,self).__init__(dbid)
+        super(Server,self).__init__(dbid,foreignclass)
 
 
     def __getitem__(self,index):
