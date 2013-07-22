@@ -36,8 +36,11 @@ class NodeNet(object):
     # foreign node
     foreignnode=None
     #----------------------------------------------------------------------
-    def _get_dbclass(self):
-        selfclassname=self.__class__.__name__
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname=cls.__name__
         dbclassname="t_%s" % string.lower(selfclassname)
         dbclass=None
         dbsession=None        
@@ -48,17 +51,23 @@ class NodeNet(object):
                 dbclass= getattr(mo,dbclassname)
             if hasattr(mo,'session'):
                 dbsession=getattr(mo,'session')
-        return (dbsession,dbclass)
-    def _get_dbinfo(self,dbid):
-        if self.__dbsession__  is None or  self.__dbclass__ is None:
+            if dbclass and dbsession:
+                cls.__dbsession__=dbsession
+                cls.__dbclass__=dbclass
+                return True
+            else:
+                return False
+    @classmethod
+    def _get_dbinfo(cls,dbid):
+        if not cls._get_dbclass():
             return None
-        if self.__class__.__nodemap__.has_key(dbid) and self.__class__.__nodemap__[dbid].s is not None:
-            return self.__class__.__nodemap__[dbid].s
+        if cls.__nodemap__.has_key(dbid) and cls.__nodemap__[dbid].s is not None:
+            return cls.__nodemap__[dbid].s
         result=None
         if dbid is None:
-            result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.pid==0).all()
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.pid==0).all()
         else:
-            result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.id==dbid).all()
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.id==dbid).all()
         return None if result is None or len(result) <> 1 else result[0]
     def dockapply(self):
         result=False
@@ -69,14 +78,21 @@ class NodeNet(object):
             self.__foreignclass__.dockhandle(self,foreignid)
     @classmethod
     def dockhandle(cls,applicant,searchid):
-        if cls.__nodemap__.has_key(searchid):
-            cnode=cls.__nodemap__[searchid]
-            cnode.foreignnode=applicant
-            applicant.foreignnode=cnode
+        the_node=cls.get_node(searchid)
+        if the_node is None:
+            return False
+        else:
+            the_node.foreignnode=applicant
+            applicant.foreignnode=the_node
     def __init__(self,dbid,foreignclass=None):
         """Constructor"""
         self.__foreignclass__=foreignclass
-        (self.__dbsession__,self.__dbclass__)=self._get_dbclass()
+        if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
+            self._get_dbclass()
+        # 需要重载赋值，实现从已有map中恢复实例
+        #if self.__class__.__nodemap__.has_key(dbid) and isinstance(self.__class__.__nodemap__[dbid],self.__class__):
+            #self=self.__class__.__nodemap__[dbid]
+            #return
         self.s=self._get_dbinfo(dbid)
         self.dbid=None if self.s is None else self.s.id
         self.parent=None
@@ -103,28 +119,57 @@ class NodeNet(object):
         child.level=self.level+1
         child.parent=self
         self.childs[child.dbid]=child        
-    def breed(self):
+    def breed(self,recursion=False):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
+        child_count=0
         if not (self.childs is None) and len(self.childs)>0:
-            return len(self.childs)
+            child_count=len(self.childs)
+            return child_count
         result=self.__dbsession__.query(self.__dbclass__).filter(self.__dbclass__.pid==self.dbid).all()
         if result is None or len(result)==0:
             self.childs={}
             return 0
         for i in result:
-            self.add_child(self.__class__(i.id,self.__foreignclass__))
-        return len(self.childs)    
-    
-    
-    
+            child_node=self.__class__(i.id,self.__foreignclass__)
+            self.add_child(child_node)
+            child_count+=1
+            if recursion:
+                child_count+=child_node.breed(recursion)
+        return len(self.childs)   
+    @classmethod
+    def get_node(cls,fdbid):
+        if cls.__nodemap__.has_key(fdbid):
+            return cls.__nodemap__[fdbid]
+        dbinfo=cls._get_dbinfo(fdbid)
+        if dbinfo is None:
+            return None
+        parent_node=cls.get_node(dbinfo.pid)
+        if dbinfo.pid !=0 and parent_node is None:
+            return None
+        self_node=cls(fdbid,cls.__foreignclass__)
+        if dbinfo.pid !=0:
+            parent_node.add_child(self_node)
+        return self_node
+    def print_structure(self):
+        print "%s+-%s" % (string.ljust('',self.level*4),self)
+        if self.childs:
+            for i in self.childs.values():
+                i.print_structure()
+            
 class Feature(NodeNet):
     """"""
+    __nodemap__={}
     def __init__(self,dbid=None,foreignclass=None):
         super(Feature,self).__init__(dbid,foreignclass)
-    
-
+    def __str__(self):
+        return "<%s:%s>" % (self.s.feature,self.s.detail)
+    def print_structure(self):
+        print "%s+-%s" % (string.ljust('',self.level*4),"%s---%s->%s" %(self,self.foreignnode.__class__.__name__,self.foreignnode) if self.foreignnode else self)
+        for i in self.childs.values():
+            i.print_structure()
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
+    __nodemap__={}
     def __init__(self,dbid=None,foreignclass=None):
         """Constructor"""
         super(Server,self).__init__(dbid,foreignclass)
