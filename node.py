@@ -105,6 +105,8 @@ class NodeNet(object):
             self.__class__.__nodemap__[self.dbid]=self
         if self.__foreignclass__:
             self.dockapply()
+        if self.__class__.current_node is None:
+            self.__class__.current_node=self
     @classmethod
     def cd(cls,dbid):
         dbid=string.strip(dbid)
@@ -176,6 +178,7 @@ class NodeNet(object):
 class Feature(NodeNet):
     """"""
     __nodemap__={}
+    current_node=None
     def __init__(self,dbid=None,foreignclass=None):
         super(Feature,self).__init__(dbid,foreignclass)
     def __str__(self):
@@ -191,6 +194,7 @@ class Feature(NodeNet):
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__={}
+    current_node=None
     def __init__(self,dbid=None,foreignclass=None):
         """Constructor"""
         super(Server,self).__init__(dbid,foreignclass)

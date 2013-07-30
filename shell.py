@@ -28,9 +28,9 @@ class PizzaShell(cmd.Cmd):
         self.feature=Feature()
         self.piece={}
         self.mode=Server
-        self.prompt="Pizza [%s]>" % self.mode.currentNode
+        self.prompt="Pizza [%s]>" % self.mode.current_node
     def do_pwd(self,line):
-        print self.currentNode
+        print self.mode.current_node
 
     def do_cd(self,line):
         line=string.strip(line)
@@ -39,7 +39,7 @@ class PizzaShell(cmd.Cmd):
             (dbid,info)=string.split(line,'[')
             (dbid,info)=string.split(info,':')
         cnode=self.mode.cd(dbid)
-        self.prompt="Pizza [%s]>" % self.mode.currentNode
+        self.prompt="Pizza [%s]>" % cnode
 
     def complete_cd(self,text,line,begidx,endidx):
         import readline
