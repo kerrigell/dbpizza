@@ -110,23 +110,24 @@ class NodeNet(object):
     @classmethod
     def cd(cls,dbid):
         dbid=string.strip(dbid)
+        cnode=cls.current_node
         if dbid == '.':
-            return cls.current_node
+            cnode=cls.current_node
         elif dbid == '..':
             if cls.current_node.parent is not None:
-                cls.current_node=cls.current_node.parent
+                cnode=cls.current_node.parent
         else:
             cdbid=int(dbid)
             if cdbid is None or cdbid ==0:
                 return cls.current_node
             else:
                 if cdbid is not None and cdbid != 0 and cls.current_node.childs.has_key(cdbid):
-                    cls.current_node=cls.current_node.childs[cdbid]
-                    if cls.current_node.childs is None:
-                        cls.current_node.breed()
-                    return cls.current_node
-                else:
-                    return cls.current_node
+                    cnode=cls.current_node.childs[cdbid]
+        if cnode.childs is None:
+            cnode.breed()
+        cls.current_node=cnode
+        return cls.current_node
+
         
     
     def add_child(self,child):

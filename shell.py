@@ -25,7 +25,9 @@ class PizzaShell(cmd.Cmd):
         self.currentNode=self.rootNode
         self.rootNode.breed()
         self.server=Server()
+        self.server.breed()
         self.feature=Feature()
+        self.feature.breed()
         self.piece={}
         self.mode=Server
         self.prompt="Pizza [%s]>" % self.mode.current_node
