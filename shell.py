@@ -44,7 +44,7 @@ class PizzaShell(cmd.Cmd):
     def complete_cd(self,text,line,begidx,endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
-        tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line[3:]) ==0]
+        tlist=[str(i) for i in self.mode.current_node.childs.values() if string.find(str(i),line[3:]) ==0]
         return tlist
     def do_mode(self,line):
         line=string.strip(line)
@@ -52,6 +52,7 @@ class PizzaShell(cmd.Cmd):
             self.mode=Feature
         elif line == 'server':
             self.mode=Server
+        self.prompt="Pizza [%s]>" % self.mode.current_node
     def complete_mode(self,text,line,begidx,endidx):
         return ['product','server']
     def do_put(self,line):
