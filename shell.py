@@ -15,6 +15,7 @@ import getopt
 import pdb
 
 from node import Server
+from node import Feature
 
 
 class PizzaShell(cmd.Cmd):
@@ -23,35 +24,36 @@ class PizzaShell(cmd.Cmd):
         self.rootNode=Server()
         self.currentNode=self.rootNode
         self.rootNode.breed()
+        self.server=Server()
+        self.feature=Feature()
         self.piece={}
-        self.prompt="Pizza [%s]>" % self.currentNode
+        self.mode=Server
+        self.prompt="Pizza [%s]>" % self.mode.currentNode
     def do_pwd(self,line):
         print self.currentNode
 
     def do_cd(self,line):
         line=string.strip(line)
-        if line == '..':
-            if self.currentNode <> self.rootNode:
-                self.currentNode=self.currentNode.parent
-                self.prompt="Pizza [%s]>" % self.currentNode
-                return
-        elif line == '':
-            return
-        else:
+        dbid=line
+        if string.find(line,'[') !=-1:
             (dbid,info)=string.split(line,'[')
             (dbid,info)=string.split(info,':')
-            if self.currentNode.childs.has_key(int(dbid)):
-                self.currentNode=self.currentNode.childs[int(dbid)]
-                self.prompt="Pizza [%s]>" % self.currentNode
-                if self.currentNode.childs is None:
-                    self.currentNode.breed()
+        cnode=self.mode.cd(dbid)
+        self.prompt="Pizza [%s]>" % self.mode.currentNode
 
     def complete_cd(self,text,line,begidx,endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
         tlist=[str(i) for i in self.currentNode.childs.values() if string.find(str(i),line[3:]) ==0]
         return tlist
-
+    def do_mode(self,line):
+        line=string.strip(line)
+        if line == 'product':
+            self.mode=Feature
+        elif line == 'server':
+            self.mode=Server
+    def complete_mode(self,text,line,begidx,endidx):
+        return ['product','server']
     def do_put(self,line):
         '''put a file to target server from ccs'''
         (lfile, taddr, rpath)=string.split(line)

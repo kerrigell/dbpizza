@@ -105,11 +105,28 @@ class NodeNet(object):
             self.__class__.__nodemap__[self.dbid]=self
         if self.__foreignclass__:
             self.dockapply()
-    def cd(self,dbid):
-        #search node with dbid 
-        resultnode=None
-        #set current node
-        self.__class__.current_node=resultnode
+    @classmethod
+    def cd(cls,dbid):
+        dbid=string.strip(dbid)
+        if dbid == '.':
+            return cls.current_node
+        elif dbid == '..':
+            if cls.current_node.parent is not None:
+                cls.current_node=cls.current_node.parent
+        else:
+            cdbid=int(dbid)
+            if cdbid is None or cdbid ==0:
+                return cls.current_node
+            else:
+                if cdbid is not None and cdbid != 0 and cls.current_node.childs.has_key(cdbid):
+                    cls.current_node=cls.current_node.childs[cdbid]
+                    if cls.current_node.childs is None:
+                        cls.current_node.breed()
+                    return cls.current_node
+                else:
+                    return cls.current_node
+        
+    
     def add_child(self,child):
         if child is None or  not isinstance(child,self.__class__):
             return False
@@ -167,6 +184,10 @@ class Feature(NodeNet):
         print "%s+-%s" % (string.ljust('',self.level*4),"%s---%s->%s" %(self,self.foreignnode.__class__.__name__,self.foreignnode) if self.foreignnode else self)
         for i in self.childs.values():
             i.print_structure()
+    def __str__(self):
+        if self.s is None:
+            return 'None'
+        return "%s[%s:%s]" % ( self.s.detail,self.dbid, '' if self.parent is None else self.parent.s.detail)
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__={}
