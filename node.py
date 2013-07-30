@@ -191,7 +191,7 @@ class Feature(NodeNet):
     def __str__(self):
         if self.s is None:
             return 'None'
-        return "%s[%s:%s]%s" % ( self.s.detail,self.dbid, '' if self.parent is None else self.parent.s.detail, '' if self.foreignnode is None else self.foreignnode)
+        return "%s[%s:%s]%s" % ( self.s.detail,self.dbid, '' if self.parent is None else self.parent.s.detail, '' if self.foreignnode is None else "-->%s" %self.foreignnode)
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__={}
