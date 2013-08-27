@@ -48,6 +48,9 @@ class PizzaShell(cmd.Cmd):
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
         tlist=[str(i) for i in self.mode.current_node.childs.values() if string.find(str(i),line[3:]) ==0]
         return tlist
+    def do_login(self,line):
+        if self.mode==Server:
+            self.mode.current_node.login()
     def do_mode(self,line):
         line=string.strip(line)
         if line == 'product':
