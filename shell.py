@@ -186,7 +186,7 @@ class PizzaShell(cmd.Cmd):
                     for j in self.piecis[i]['servers']:
                         print ' '.ljust(4,' '),j
         elif opts.run:
-            
+            pass
                 
     def do_ipsec(self,text,line,begidx,endidx):
         import shlex
