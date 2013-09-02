@@ -175,6 +175,7 @@ class NodeNet(object):
         if self.childs:
             for i in self.childs.values():
                 i.print_structure()
+
             
 class Feature(NodeNet):
     """"""
@@ -288,8 +289,8 @@ class Server(NodeNet):
             with settings(hide(*hiding_clause),warn_only=True):
                 #env.skip_bad_hosts=True
                 env.connection_attempts=2
-                env.disable_known_hosts=True
-                env.eagerly_disconnect=True
+                #env.disable_known_hosts=True
+                #env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=True
                 env.output_prefix=False if hide_output_prefix else False
@@ -395,4 +396,16 @@ class Server(NodeNet):
 
     def upload(self,local_path,uuid=None):
         pass
+    @classmethod
+    def piece(cls,line):
+        if cls.__dbclass__ is None:
+            return None
+        dbids=cls.__dbclass__.piece(line)
+        serverlist=[]
+        for i in dbids:
+            tnode=cls.get_node(i)
+            if tnode:
+                serverlist.append(tnode)
+        return serverlist
+                    
 

@@ -8,9 +8,12 @@ import os,sys
 import string
 import unittest
 import traceback
-import cmd
+#import cmd
 import subprocess
+import time
 
+import cmd2 as cmd
+from cmd2 import options,make_option
 import getopt
 import pdb
 
@@ -28,7 +31,7 @@ class PizzaShell(cmd.Cmd):
         self.server.breed()
         self.feature=Feature(foreignclass=Server)
         self.feature.breed(True)
-        self.piece={}
+        self.piecis={}
         self.mode=Server
         self.prompt="Pizza [%s]>" % self.mode.current_node
     def do_pwd(self,line):
@@ -59,7 +62,8 @@ class PizzaShell(cmd.Cmd):
             self.mode=Server
         self.prompt="Pizza [%s]>" % self.mode.current_node
     def complete_mode(self,text,line,begidx,endidx):
-        return ['product','server']
+        modelist=['product','server']
+        return [ f for f in modelist if f.startswith(text)]
     def do_put(self,line):
         '''put a file to target server from ccs'''
         (lfile, taddr, rpath)=string.split(line)
@@ -141,20 +145,49 @@ class PizzaShell(cmd.Cmd):
     def do_use(self,line):
         pass
 
-    def do_shell(self,line):
-        sub_cmd=subprocess.Popen(line,
-                                 shell=True,
-                                 stdout=subprocess.PIPE)
-        output=sub_cmd.communicate()[0]
-        print output
+    #def do_shell(self,line):
+        #sub_cmd=subprocess.Popen(line,
+                                 #shell=True,
+                                 #stdout=subprocess.PIPE)
+        #output=sub_cmd.communicate()[0]
+        #print output
 
     def do_node(self,line):
         import dbapi
         tt=dbapi.servers()
         print 'skdf'
-
-    def do_piece(self,line):
-        pass
+    @options([make_option('-c','--create',action='store_true',help='create piece'),
+              make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
+              make_option('-l','--list',action='store_true',help='list piece'),
+              make_option('-d','--delete',action='store_true',help='delete piece'),
+              make_option('-n','--name',type='string',help='piece name'),
+              make_option('-r','--run',help='run something on one piece')])
+    def do_piece(self,arg,opts=None):
+     #   parser=argparse.
+        print arg
+        arg=''.join(arg)
+        print arg
+        if opts.create and opts.name and opts.ploy:
+            piece={'ploy':opts.ploy,
+                   'createtime':time.ctime(),
+                   'servers':[]}
+            if self.mode == Server:
+                slist=self.mode.piece(opts.ploy)
+                piece['servers']=slist
+                self.piecis[opts.name]=piece
+                if slist:
+                    for i in slist:
+                        print i
+        elif opts.list:
+            for i in self.piecis.keys():
+                print i
+                if opts.name:
+                    print ' '.ljust(4,' '),'CreateTime:',self.piecis[i]['createtime']
+                    for j in self.piecis[i]['servers']:
+                        print ' '.ljust(4,' '),j
+        elif opts.run:
+            
+                
     def do_ipsec(self,text,line,begidx,endidx):
         import shlex
         tlist=shlex.shlex(line)
