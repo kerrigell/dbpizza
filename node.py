@@ -192,7 +192,7 @@ class Feature(NodeNet):
     def __str__(self):
         if self.s is None:
             return 'None'
-        return "%s[%s:%s]%s" % ( self.s.detail,self.dbid, '' if self.parent is None else self.parent.s.detail, '' if self.foreignnode is None else "-->%s" %self.foreignnode)
+        return ("%s[%s:%s]%s" % ( self.s.detail,self.dbid, '' if self.parent is None else self.parent.s.detail, '' if self.foreignnode is None else "-->%s" %self.foreignnode)).encode('gbk')
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__={}
@@ -213,7 +213,7 @@ class Server(NodeNet):
             self._print_error(e)
 
     def __str__(self):
-        return "%s:%s:%s[%03d:%s]" % (self.s.region,self.s.product,self.s.ip_oper,self.dbid,self.s.description)
+        return ("%s:%s:%s[%03d:%s]" % (self.s.region,self.s.product,self.s.ip_oper,self.dbid,self.s.description)).encode('gbk')
 
     def __len__(self):
         return self.level
