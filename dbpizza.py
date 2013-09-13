@@ -33,7 +33,8 @@ class PizzaShell(cmd.Cmd):
         self.feature.breed(True)
         self.piecis={}
         self.mode=Server
-        self.prompt="Pizza [%s]>" % self.mode.current_node
+        self.prompt=("Pizza [%s]>" % self.mode.current_node).encode('gbk')
+
     def do_pwd(self,line):
         print self.mode.current_node
 
@@ -44,7 +45,7 @@ class PizzaShell(cmd.Cmd):
             (dbid,info)=string.split(line,'[')
             (dbid,info)=string.split(info,':')
         cnode=self.mode.cd(dbid)
-        self.prompt="Pizza [%s]>" % cnode
+        self.prompt=("Pizza [%s]>" % cnode).encode('gbk')
 
     def complete_cd(self,text,line,begidx,endidx):
         import readline
@@ -60,7 +61,7 @@ class PizzaShell(cmd.Cmd):
             self.mode=Feature
         elif line == 'server':
             self.mode=Server
-        self.prompt="Pizza [%s]>" % self.mode.current_node
+        self.prompt=("Pizza [%s]>" % self.mode.current_node).encode('gbk')
     def complete_mode(self,text,line,begidx,endidx):
         modelist=['product','server']
         return [ f for f in modelist if f.startswith(text)]
