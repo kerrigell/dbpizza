@@ -27,6 +27,8 @@ class PizzaShell(cmd.Cmd):
         self.rootNode=Server()
         self.currentNode=self.rootNode
         self.rootNode.breed()
+        
+        #using
         self.server=Server()
         self.server.breed()
         self.feature=Feature(foreignclass=Server)
@@ -87,7 +89,7 @@ class PizzaShell(cmd.Cmd):
         pos=len(string.split(line))
         if pos == 2 or pos == 4:
             # import rlcompleter
-            # readline.parse_and_bind("tab: complete")
+            # readline.parse_and_bind("tab: complete")   
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             import glob
             return glob.glob('%s*' % text)
@@ -107,9 +109,9 @@ class PizzaShell(cmd.Cmd):
             elif opt in ('-R'):
                 extent=True
         if infect:
-            self.currentNode.infect_execute(cmd,extent)
+            self.server.current_node.infect_execute(cmd,extent)
         else:
-            self.currentNode.execute(cmd)
+            self.server.current_node.execute(cmd)
 
     def do_get(self,line):
         opts,args = getopt.getopt(string.split(line),'iR',)
@@ -242,5 +244,7 @@ def main():
     else:
         PizzaShell().cmdloop()
 
-if __name__=='__main__':
+
+
+if __name__=='__main__':  
     main()
