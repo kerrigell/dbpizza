@@ -271,11 +271,11 @@ class Server(NodeNet):
           #  traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
-            puts("Error: %s \n #%s" % (host_string,e))
+            puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
         except Exception,e:
           #  traceback.print_exc()
-            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
+            puts(red("Error: %s \n #%s" % (host_string,e)))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
             return 0
     def login(self,cmd=None,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
@@ -304,14 +304,14 @@ class Server(NodeNet):
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
-            puts("Error: %s \n #%s" % (host_string,e))
+            puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
         except Exception,e:
             #pdb.set_trace()
             #traceback.print_exc()
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
-            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
+            puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
         
     @staticmethod
