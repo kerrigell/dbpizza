@@ -271,7 +271,7 @@ class Server(NodeNet):
           #  traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
-            puts("Error: %s \n #%s" % (host_string,e.args[0])
+            puts("Error: %s \n #%s" % (host_string,e.args[0]))
             return 0
         except Exception,e:
           #  traceback.print_exc()
@@ -304,7 +304,7 @@ class Server(NodeNet):
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
-            puts("Error: %s \n #%s" % (host_string,e.args[0])
+            puts("Error: %s \n #%s" % (host_string,e.args[0]))
             return 0
         except Exception,e:
             #pdb.set_trace()
