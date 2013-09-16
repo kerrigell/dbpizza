@@ -246,11 +246,13 @@ class Server(NodeNet):
         return _search(addr,root)
 
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
+        host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
+        gateway_string="%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
             if self.level >2:
                 raise "Don't supply operation on 4 round"
-            env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
-            env.gateway = "%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
+            env.host_string =host_string
+            env.gateway = gateway_string
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [ x for x in hiding_clause if x ]
             with settings(hide(*hiding_clause),warn_only=True):
@@ -266,24 +268,24 @@ class Server(NodeNet):
                 else:
                     return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
         except NetworkError,e:
-            pdb.set_trace()
-            traceback.print_exc()
+          #  traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
-         #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
+            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
             return 0
         except Exception,e:
-            pdb.set_trace()
-            traceback.print_exc()
-         #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
+          #  traceback.print_exc()
+            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
             return 0
     def login(self,cmd=None,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
+        host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
+        gateway_string="%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
             if self.level >2:
                 raise "Don't supply operation on 4 round"
-            env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
-            env.gateway = "%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
+            env.host_string =host_string
+            env.gateway = gateway_string
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [ x for x in hiding_clause if x ]
             with settings(hide(*hiding_clause),warn_only=True):
@@ -297,17 +299,19 @@ class Server(NodeNet):
                 open_shell(cmd)
 
         except NetworkError,e:
-            pdb.set_trace()
-            traceback.print_exc()
+            #pdb.set_trace()
+            #traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
+            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
             return 0
         except Exception,e:
-            pdb.set_trace()
-            traceback.print_exc()
+            #pdb.set_trace()
+            #traceback.print_exc()
          #   puts('%s Error: #%d %s' % (target.address,e.args[0], e.args[1]))
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
+            puts("Error: %s \n #%d %s" % (host_string,e.args[0], e.args[1]))
             return 0
         
     @staticmethod
