@@ -97,21 +97,19 @@ class PizzaShell(cmd.Cmd):
             '''search server list like aaa.*'''
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
+    @options([make_option('-P','--Piece',action='string',help='piece name'),
+              make_option('-c','--command',action='string',help='command')])
+    def do_cmd(self,arg,opts=None):
+        if opts.Piece and opts.command:
+            if self.piecis.has_key(opts.Piece):
+                for s in self.piecis[opts.Piece]['servers']:
+                    result=s.execute(opts.command)
+            else:
+                print 'piece name not exist'
+                return
+        elif opts.command:
+            self.server.current_node.execute(opts.command)
 
-    def do_cmd(self,line):
-        opts,args = getopt.getopt(string.split(line),'iR',)
-        cmd=' '.join(args)
-        infect=False
-        extent=False
-        for opt,arg in opts:
-            if opt in ('-i'):
-                infect=True
-            elif opt in ('-R'):
-                extent=True
-        if infect:
-            self.server.current_node.infect_execute(cmd,extent)
-        else:
-            self.server.current_node.execute(cmd)
 
     def do_get(self,line):
         opts,args = getopt.getopt(string.split(line),'iR',)
@@ -163,13 +161,10 @@ class PizzaShell(cmd.Cmd):
               make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
               make_option('-l','--list',action='store_true',help='list piece'),
               make_option('-d','--delete',action='store_true',help='delete piece'),
-              make_option('-n','--name',type='string',help='piece name'),
-              make_option('-r','--run',help='run something on one piece')])
+              make_option('-n','--name',type='string',help='piece name')])
     def do_piece(self,arg,opts=None):
      #   parser=argparse.
-        print arg
         arg=''.join(arg)
-        print arg
         if opts.create and opts.name and opts.ploy:
             piece={'ploy':opts.ploy,
                    'createtime':time.ctime(),
