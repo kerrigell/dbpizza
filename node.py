@@ -354,6 +354,7 @@ class Server(NodeNet):
 
     def download(self,path,uuid=None):
         try:
+            filename = [ x for x in path.split('/') if x ][-1] 
             parent = self.parent
             local_ip = self.s.ip_oper
             if uuid == -1:
@@ -374,6 +375,7 @@ class Server(NodeNet):
                         uuid = uuid if uuid else muuid.uuid1()
                         if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
+                            self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)

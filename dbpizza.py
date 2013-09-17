@@ -20,7 +20,7 @@ import pdb
 from node import Server
 from node import Feature
 
-
+import paramiko
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
@@ -136,9 +136,15 @@ class PizzaShell(cmd.Cmd):
 
     def do_ls(self,line):
         pass
-
-    def do_put(self,line):
-        pass
+    @options([make_option('-p','--path',type='string',help='source path')])    
+    def do_put(self,arg,opts=None):
+        if opts.path:
+            import os.path
+            if os.path.exists(opts.path):
+                self.server.current_node.download(opts.path)
+            else:
+                print 'Error: Path not exist'
+        
 
     def do_instance(self,line):
         pass
@@ -185,7 +191,11 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-                
+    @options([make_option('-c','--create',action='store_true',help='create piece'),
+              make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
+              make_option('-l','--list',action='store_true',help='list piece'),
+              make_option('-d','--delete',action='store_true',help='delete piece'),
+              make_option('-n','--name',type='string',help='piece name')])
     def do_ipsec(self,text,line,begidx,endidx):
         import shlex
         tlist=shlex.shlex(line)
