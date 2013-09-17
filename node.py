@@ -371,12 +371,12 @@ class Server(NodeNet):
                 else:
                     return self.download(path,uuid)
             else:
-                if parent is None or parent.level == 0:
+                if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
-                        if parent.execute("scp -r %s %s:/tmp/%s" % (path,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
+                        parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                        if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
-                            
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
