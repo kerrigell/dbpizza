@@ -105,7 +105,7 @@ class PizzaShell(cmd.Cmd):
                 for s in self.piecis[opts.Piece]['servers']:
                     result=s.execute(opts.command)
             else:
-                print 'piece name not exist'
+                print self.colorize('piece name not exist','red')
                 return
         elif opts.command:
             self.server.current_node.execute(opts.command)
@@ -127,15 +127,7 @@ class PizzaShell(cmd.Cmd):
 
 
 
-    def do_exit(self,line):
-        print '%s: %s' % ('bye',line)
-        exit()
 
-    def do_EOF(self,line):
-        return True
-
-    def do_ls(self,line):
-        pass
     @options([make_option('-p','--path',type='string',help='source path')])    
     def do_put(self,arg,opts=None):
         if opts.path:
@@ -143,7 +135,7 @@ class PizzaShell(cmd.Cmd):
             if os.path.exists(opts.path):
                 self.server.current_node.download(opts.path)
             else:
-                print 'Error: Path not exist'
+                print self.colorize('Error: Path not exist','red')
         
 
     def do_instance(self,line):
