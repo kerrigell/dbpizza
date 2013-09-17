@@ -97,8 +97,8 @@ class PizzaShell(cmd.Cmd):
             '''search server list like aaa.*'''
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
-    @options([make_option('-P','--Piece',action='string',help='piece name'),
-              make_option('-c','--command',action='string',help='command')])
+    @options([make_option('-P','--Piece',type='string',help='piece name'),
+              make_option('-c','--command',type='string',help='command')])
     def do_cmd(self,arg,opts=None):
         if opts.Piece and opts.command:
             if self.piecis.has_key(opts.Piece):
