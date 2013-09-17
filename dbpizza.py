@@ -109,6 +109,7 @@ class PizzaShell(cmd.Cmd):
                 return
         elif opts.command:
             self.server.current_node.execute(opts.command)
+            self.pf
 
 
     def do_get(self,line):
@@ -125,7 +126,10 @@ class PizzaShell(cmd.Cmd):
         if infect:
             self.currentNode.infect_download(path=path,extent=extent,uuid=uuid)
 
-
+    def do_test(self,line):
+        self.poutput('output')
+        self.pfeedback('feedback')
+        self.perror('error')
 
 
     @options([make_option('-p','--path',type='string',help='source path')])    
@@ -136,25 +140,7 @@ class PizzaShell(cmd.Cmd):
                 self.server.current_node.download(opts.path)
             else:
                 print self.colorize('Error: Path not exist','red')
-        
 
-    def do_instance(self,line):
-        pass
-
-    def do_use(self,line):
-        pass
-
-    #def do_shell(self,line):
-        #sub_cmd=subprocess.Popen(line,
-                                 #shell=True,
-                                 #stdout=subprocess.PIPE)
-        #output=sub_cmd.communicate()[0]
-        #print output
-
-    def do_node(self,line):
-        import dbapi
-        tt=dbapi.servers()
-        print 'skdf'
     @options([make_option('-c','--create',action='store_true',help='create piece'),
               make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
               make_option('-l','--list',action='store_true',help='list piece'),
@@ -184,9 +170,6 @@ class PizzaShell(cmd.Cmd):
         elif opts.run:
             pass
     @options([make_option('-c','--create',action='store_true',help='create piece'),
-              make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
-              make_option('-l','--list',action='store_true',help='list piece'),
-              make_option('-d','--delete',action='store_true',help='delete piece'),
               make_option('-n','--name',type='string',help='piece name')])
     def do_ipsec(self,text,line,begidx,endidx):
         import shlex
@@ -218,19 +201,19 @@ class Logger(object):
     def isatty(self):
         return False
 
-def import_file(modulename):
-    dirname = os.path.dirname(os.path.abspath(modulename))
-    filename, ext = os.path.splitext(os.path.basename(modulename))
-    if ext.lower() != '.py':
-        return {}, {}
-    if sys.modules.has_key(filename):
-        del sys.modules[filename]
-    if dirname:
-        sys.path.insert(0, dirname)
-    mod = __import__(filename)
-    if dirname:
-        del sys.path[0]
-    return mod
+#def import_file(modulename):
+    #dirname = os.path.dirname(os.path.abspath(modulename))
+    #filename, ext = os.path.splitext(os.path.basename(modulename))
+    #if ext.lower() != '.py':
+        #return {}, {}
+    #if sys.modules.has_key(filename):
+        #del sys.modules[filename]
+    #if dirname:
+        #sys.path.insert(0, dirname)
+    #mod = __import__(filename)
+    #if dirname:
+        #del sys.path[0]
+    #return mod
 
 def main():
     #log_file=r"dbpizza.log"
