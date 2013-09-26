@@ -120,7 +120,7 @@ class PizzaShell(cmd.Cmd):
             return
         if opts.piece:
             if self.piecis.has_key(opts.piece):
-                for key,value in self.piecis.iteritems():
+                for value in self.piecis[opts.piece].servers:
                     value.download(arg[0])
             else:
                 print self.colorize('Error: No this piece','red')
