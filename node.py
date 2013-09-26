@@ -244,7 +244,31 @@ class Server(NodeNet):
                     return result
         root=self if (self.root == None) else self.root
         return _search(addr,root)
-
+    def job(self,ffile,task,*args):
+            #,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
+        try:
+            if self.level >2:
+                raise "Don't supply operation on 4 round"
+            env.host_string ='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
+            env.gateway = "%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
+            hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
+            hiding_clause = [ x for x in hiding_clause if x ]
+            with settings(hide('running','stdout','stderr'),warn_only=True):  #*hiding_clause),warn_only=True):
+                env.skip_bad_hosts=True
+                env.connection_attempts=2
+                env.disable_known_hosts=True
+                env.eagerly_disconnect=True
+                env.abort_on_prompts=True
+                env.warn_only=True
+                env.output_prefix=False
+                result=execute(task,*args)
+                print result
+        except NetworkError,e:
+            puts(red("Error: %s \n #%s" % (host_string,e)))
+            return 0
+        except Exception,e:
+            puts(red("Error: %s \n #%s" % (host_string,e)))
+            return 0
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
         host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string="%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
@@ -294,7 +318,7 @@ class Server(NodeNet):
                 #env.disable_known_hosts=True
                 #env.eagerly_disconnect=True
                 env.abort_on_prompts=True
-                env.warn_only=True
+                #env.warn_only=True
                 env.output_prefix=False if hide_output_prefix else False
                 open_shell(cmd)
 

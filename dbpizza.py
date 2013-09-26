@@ -11,6 +11,7 @@ import traceback
 #import cmd
 import subprocess
 import time
+import os.path
 
 import cmd2 as cmd
 from cmd2 import options,make_option
@@ -38,6 +39,7 @@ class PizzaShell(cmd.Cmd):
         self.prompt="Pizza [%s]>" % self.mode.current_node
 
     def do_pwd(self,line):
+        slis=[]
         print self.mode.current_node
 
     def do_cd(self,line):
@@ -111,35 +113,20 @@ class PizzaShell(cmd.Cmd):
             self.server.current_node.execute(opts.command)
             self.pf
 
-
-    def do_get(self,line):
-        opts,args = getopt.getopt(string.split(line),'iR',)
-        path=' '.join(args)
-        infect=False
-        extent=False
-        for opt,arg in opts:
-            if opt in ('-i'):
-                infect=True
-            elif opt in ('-R'):
-                extent=True
-        uuid=self.currentNode.download(path)
-        if infect:
-            self.currentNode.infect_download(path=path,extent=extent,uuid=uuid)
-
-    def do_test(self,line):
-        self.poutput('output')
-        self.pfeedback('feedback')
-        self.perror('error')
-
-
-    @options([make_option('-p','--path',type='string',help='source path')])    
-    def do_put(self,arg,opts=None):
-        if opts.path:
-            import os.path
-            if os.path.exists(opts.path):
-                self.server.current_node.download(opts.path)
+    @options([make_option('-P','--piece',type='string',help='piece name')])    
+    def do_get(self,arg,opts=None):
+        if not os.path.exists(arg[0]):
+            print self.colorize('Error: Path not exist','red')
+            return
+        if opts.piece:
+            if self.piecis.has_key(opts.piece):
+                for key,value in self.piecis.iteritems():
+                    value.download(arg[0])
             else:
-                print self.colorize('Error: Path not exist','red')
+                print self.colorize('Error: No this piece','red')
+        else:
+            self.server.current_node.download(arg[0])
+                
 
     @options([make_option('-c','--create',action='store_true',help='create piece'),
               make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
