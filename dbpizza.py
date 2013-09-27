@@ -115,18 +115,24 @@ class PizzaShell(cmd.Cmd):
 
     @options([make_option('-P','--piece',type='string',help='piece name')])    
     def do_get(self,arg,opts=None):
-        if not os.path.exists(arg[0]):
-            print self.colorize('Error: Path not exist','red')
-            return
-        if opts.piece:
-            if self.piecis.has_key(opts.piece):
-                for value in self.piecis[opts.piece]['servers']:
-                    value.download(arg[0])
+        for path in string.split(arg):
+            if not os.path.exists(arg[0]):
+                print self.colorize('Error: Path not exist','red')
             else:
-                print self.colorize('Error: No this piece','red')
-        else:
-            self.server.current_node.download(arg[0])
-                
+                if opts.piece:
+                    if self.piecis.has_key(opts.piece):
+                        for value in self.piecis[opts.piece]['servers']:
+                            value.download(path)
+                    else:
+                        print self.colorize('Error: No this piece','red')
+                else:
+                    self.server.current_node.download(path)
+    def complete_get(self,text,line,begidx,endidx):
+        import readline
+        readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
+        import glob
+        return glob.glob('%s*' % text)
+
 
     @options([make_option('-c','--create',action='store_true',help='create piece'),
               make_option('-p','--ploy',type='string',help='the ploy for choice servers'),
@@ -156,14 +162,36 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-    @options([make_option('-c','--create',action='store_true',help='create piece'),
-              make_option('-n','--name',type='string',help='piece name')])
-    def do_ipsec(self,text,line,begidx,endidx):
-        import shlex
-        tlist=shlex.shlex(line)
-        tlen=len(tlist)
-        print tlist
-    def complete_ipsec():
+    @options([make_option('-a','--add',action='store_true',help='create piece'),
+              make_option('-l','--list',type='string',help='list ipsec'),
+              make_option('--source',type='string',help='source address'),
+              make_option('--desc',type='string',help='desc address'),
+              make_option('--dport',type='string',help='dport'),
+              make_option('-r','--rload',action='store_true',help='rload ipsec')
+             ])
+    def do_ipsec(self,args,opts=None):
+        ipsec='''
+        IPTABLES=/sbin/iptables;
+        $IPTABLES -F;
+        $IPTABLES -Z;
+        $IPTABLES -X;
+        
+        $IPTABLES -t mangle -F;
+        $IPTABLES -t mangle -Z;
+        $IPTABLES -t mangle -X;
+        
+        $IPTABLES -P INPUT ACCEPT ;  
+        
+        
+        $IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
+        $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
+        $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
+        $IPTABLES -P INPUT  ACCEPT;
+        
+        '''
+        if opts.rload:
+            self.server.current_node.execute(ipsec)
+    def complete_ipsec(self,text,line,begidx,endidx):
         pass
 
 class Logger(object):
