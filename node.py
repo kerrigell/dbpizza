@@ -380,6 +380,7 @@ class Server(NodeNet):
 
     def download(self,path,uuid=None):
         try:
+            pdb.set_trace()
             filename = [ x for x in path.split('/') if x ][-1] 
             parent = self.parent
             local_ip = self.s.ip_oper
