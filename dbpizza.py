@@ -194,9 +194,9 @@ class PizzaShell(cmd.Cmd):
             #self.server.current_node.execute(ipsec)
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
-              make_option('-d','--deploy',action='store_true',help='check monitor deploy auto'),
-              make_option('-s','--step',action='store_true',help='check monitor deploy status'),
-        make_option('-P','--piece',type='string',help='piece name')])
+              make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
+              make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
+        make_option('-p','--piece',type='string',help='the name of a filter list')])
     def do_monitor(self,args,opts=None):
         serverlist=[]
         if opts.piece:
@@ -218,7 +218,7 @@ class PizzaShell(cmd.Cmd):
             ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
             ['update your nrpe commands',                                'update_nrpe'    ],
             ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
-            ['test monitor script',                                      'test_script'   ]
+            ['test monitor script',                                      'test_script'    ]
             ]
         oper=None
         if opts.step:
