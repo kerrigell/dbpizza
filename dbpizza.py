@@ -195,7 +195,7 @@ class PizzaShell(cmd.Cmd):
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
         make_option('-P','--piece',type='string',help='piece name')])
-    def monitor(self,args,opts=None):
+    def do_monitor(self,args,opts=None):
         serverlist=[]
         if opts.piece:
             if self.piecis.has_key(opts.piece):
