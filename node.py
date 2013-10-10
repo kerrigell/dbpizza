@@ -446,14 +446,16 @@ class Server(NodeNet):
 class IPsec(object):
     pass
 class Monitor(object):
+    config=None
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
         if type(srv) != Server: 
             raise "param type is not Server"
         self.server=srv
         self.ip_monitor=self.server.s.ip_monitor
-        self.config=ConfigParser.SafeConfigParser()
-        self.config.read("config/monitor.ini")
+        if self.config is None:
+            self.config=ConfigParser.SafeConfigParser()
+            self.config.read("config/monitor.ini")
         self.status={}
     def title(self):
         print str(self.server)
@@ -506,6 +508,187 @@ class Monitor(object):
         names.sort()
         for name in names:
             print '%-40s    %s' % (name, self.status[name])  
+    def upgrade_perl(self):
+        base_dir = self.config.get('basic', 'base_dir')
+        file_name = self.config.get('tools', 'perl')
+        file = base_dir + "/client/tools/" + file_name
+        print file
+        UUID = None
+        if self.status['version_perl'] == 'v5.8.5':
+            UUID = self.server.download(file, uuid=UUID)
+            self.server.execute("""
+                    cd /tmp/ && \
+                    tar zxf perl-5.8.9.tar.gz && \
+                    cd perl-5.8.9 && \
+                    ./Configure -de &> /dev/null && \
+                    make &> /dev/null && \
+                    make test &> /dev/null && \
+                    make install &> /dev/null
+                    """,hide_puts=True)
+    
 
+    def config_iptables(self):
+        self.title()
+        if self.status['is_ping_opened'] == 'False':
+            self.server.execute("""
+                    /sbin/iptables -I INPUT -s %s -p icmp -j ACCEPT
+                    """ % self.ip_monitor,hide_puts=True)
+        if self.status['is_5666_opened'] == 'False':
+            self.server.execute("""
+                    /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
+                    """ % self.ip_monitor,hide_puts=True)
+
+    def deploy_script(self):
+        base_dir = self.config.get('basic', 'base_dir')
+        scripts = self.config.options('script')
+        for script in scripts:
+            UUID = None
+            file_name = self.config.get('script', script)
+            file = base_dir + "/client/libexec/" + file_name
+            AP = "\/usr\/local\/nagios\/libexec\/%s" % file_name
+            OP = "/usr/local/nagios/libexec/%s" % file_name
+            if self.status['is_installed_%s' % script] == 'False':
+                UUID = self.server.download(file, uuid=UUID)
+            if self.status['is_installed_%s' % script] == 'False':
+                self.server.execute("""
+                        mv /tmp/%s /usr/local/nagios/libexec/ &&
+                        chmod +x /usr/local/nagios/libexec/%s;
+                        grep -q nagios /etc/sudoers && \
+                        (grep %s /etc/sudoers &> /dev/null \
+                        || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
+                        || echo \"nagios ALL=NOPASSWD: %s\" \
+                        >> /etc/sudoers
+                        """ % (file_name, file_name, AP, AP, OP) ,hide_puts=True)
+        self.title()
+        self.server.execute("""
+                sed -i \
+                's/^Defaults    requiretty/#Defaults    requiretty/g'\
+                /etc/sudoers
+                """,hide_puts=True)
+
+    def install_tools(self):
+        base_dir = self.config.get('basic', 'base_dir')
+        self.title()
+        # Install Sys-Statistics-Linux
+        UUID = None
+        file_name = self.config.get('tools', 'Linux_pm')
+        file = base_dir + "/client/tools/" + file_name
+        if server.status['is_installed_Linux_pm'] == 'False':
+            UUID = self.server.download(file, uuid=UUID)
+        if server.status['is_installed_Linux_pm'] == 'False':
+            self.server.execute("""
+                    cd /tmp && \
+                    tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
+                    cd Sys-Statistics-Linux-0.66 && \
+                    perl Makefile.PL &> /dev/null; \
+                    make &> /dev/null && \
+                    make test &> /dev/null && make install &> /dev/null
+                    """,hide_puts=True)
+
+        # create user: nagios
+        self.server.execute("""
+                chattr -i /etc/shadow /etc/passwd; \
+                groupadd nagios; \
+                useradd -M -s /sbin/nologin nagios -g nagios; \
+                mkdir -p /usr/local/nagios/libexec/;
+                """,hide_puts=True)
+
+        # Install nagios-plugins
+        UUID = None
+        file_name = self.config.get('tools', 'nagios_plugin')
+        file = base_dir + "/client/tools/" + file_name
+        if self.server.status['is_installed_nagios_plugin'] == 'False':
+            UUID = server.download(file, uuid=UUID)
+        if self.server.status['is_installed_nagios_plugin'] == 'False':
+            self.server.execute("""
+                cd /tmp && \
+                tar zxf nagios-plugins-1.4.15.tar.gz && \
+                cd nagios-plugins-1.4.15 && \
+                ./configure --with-nagios-user=nagios \
+                --with-nagios-group=nagios \
+                --with-openssl=/usr/bin/openssl \
+                --enable-perl-modules \
+                --enable-redhat-pthread-workaround \
+                &>/dev/null && \
+                make &>/dev/null && \
+                make install &>/dev/null
+                """,hide_puts=True)
+
+        # Install nrpe
+        UUID = None
+        UUID2 = None
+        file_name = self.config.get('tools', 'nrpe')
+        file_name2 = self.config.get('tools', 'xinetd_nrpe')
+        file = base_dir + "/client/tools/" + file_name
+        file2 = base_dir + "/client/" + file_name2
+        if self.server.status['is_installed_nrpe'] == 'False':
+            UUID = self.server.download(file, uuid=UUID)
+            UUID2 = self.server.download(file, uuid=UUID2)
+        if self.server.status['is_installed_nrpe'] == 'False':
+            self.server.execute("""
+                    cd /tmp && \
+                    tar zxf nrpe-2.12.tar.gz && \
+                    cd nrpe-2.12 && \
+                    ./configure  > /dev/null 2>&1 ; \
+                    make all > /dev/null 2>&1 && \
+                    make install-plugin &>/dev/null && \
+                    make install-daemon  &>/dev/null && \
+                    make install-daemon-config &>/dev/null && \
+                    make install-xinetd  &>/dev/null;
+                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe:
+                    killall nrpe ;
+                    /etc/init.d/xinetd restart && \
+                    chkconfig --level 345 xinetd on
+                    """ % self.ip_monitor,hide_puts=True)
+
+        # Install utils_pm
+        UUID = None
+        file_name = self.config.get('tools', 'utils_pm')
+        file = base_dir + "/client/tools/" + file_name
+        if self.server.status['is_installed_utils_pm'] == 'False':
+            UUID = self.server.download(file, uuid=UUID)
+            self.server.execute("""
+                    mv /tmp/%s /usr/local/nagios/libexec
+                    """ % file_name,hide_puts=True)
+
+    def test_script(self):
+        self.title(server)
+        commands = self.config.items('test_commands')
+        command_lines = ""
+        for (command, command_line) in commands:
+            command_lines += (command_line + ';')
+        print self.server.execute(command_lines,hide_puts=True)
+
+    def update_nrpe(self):
+        self.title(server)
+        nrpes = self.config.items('nrpe')
+        shell = ""
+        for name, value in nrpes:
+            nrpe_line = "command[" + name + "]=" + value
+            shell += """
+                    sed -i '/command[%s/d' \
+                    /usr/local/nagios/etc/nrpe.cfg;
+                    echo "%s" >> \
+                    /usr/local/nagios/etc/nrpe.cfg;
+                    """ % (name, nrpe_line)
+        self.server.execute(shell,hide_puts=True)
+            
+    def review_nrpe(self):
+        self.title(server)
+        print self.server.execute("""
+                egrep -v '^#|^$' \
+                /usr/local/nagios/etc/nrpe.cfg \
+                | egrep '^command\[.*\]'
+                """,hide_puts=True)
+
+    def deploy(self):
+        self.check()
+        self.upgrade_perl()
+        self.install_tools()
+        self.config_iptables()
+        self.deploy_script()
+        self.update_nrpe()
+    def config_centreon(self):
+        pass
         
         

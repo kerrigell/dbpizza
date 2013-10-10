@@ -194,6 +194,8 @@ class PizzaShell(cmd.Cmd):
             #self.server.current_node.execute(ipsec)
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
+              make_option('-d','--deploy',action='store_true',help='check monitor deploy auto'),
+              make_option('-s','--step',action='store_true',help='check monitor deploy status'),
         make_option('-P','--piece',type='string',help='piece name')])
     def do_monitor(self,args,opts=None):
         serverlist=[]
@@ -208,13 +210,30 @@ class PizzaShell(cmd.Cmd):
         monitorlist=[]
         for s in serverlist:
             monitorlist.append(Monitor(s))
-        
+        monopers=[
+            ['check current status',                                     'check'          ],
+            ['upgrade perl from v5.8.5 to v5.8.9',                       'upgrade_perl'   ],
+            ['instal nrpe and nagios plug-in',                           'install_tools'  ],
+            ['deploy all monitor scripts',                               'deploy_script'  ],
+            ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
+            ['update your nrpe commands',                                'update_nrpe'    ],
+            ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
+            ['test monitor script',                                      'test_script'   ]
+            ]
         oper=None
-        if opts.check:
+        if opts.step:
+            sauce = self.select([x[0] for x in monopers],'Please choice what you want?')
+            dopers=dict(monopers)
+            if dopers.has_key(sauce):
+                oper=dopers[sauce]
+        elif opts.check:
             oper='check'
+        elif opts.deploy:
+            oper='deploy'
         for item in monitorlist:
-            operfun=getattr(item,oper)
-            operfun()
+            if oper:
+                operfun=getattr(item,oper)
+                operfun()
 
 
     def complete_ipsec(self,text,line,begidx,endidx):
