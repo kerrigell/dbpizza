@@ -457,9 +457,10 @@ class Monitor(object):
             self.config=ConfigParser.SafeConfigParser()
             self.config.read("config/monitor.ini")
         self.status={}
+
     def title(self):
         print str(self.server)
-    def check(self):
+    def check(self,output=True):
         scripts = self.config.options('script')
         script_shell = ""
         for script in scripts:
@@ -503,12 +504,15 @@ class Monitor(object):
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
         self.status = dict([ x.split()[0].split(':') for x in raw_status.split('\n') if x ])
-        self.title()
-        names=self.status.keys()
-        names.sort()
-        for name in names:
-            print '%-40s    %s' % (name, self.status[name])  
+        if output:
+            self.title()
+            names=self.status.keys()
+            names.sort()
+            for name in names:
+                print '%-40s    %s' % (name, self.status[name])  
     def upgrade_perl(self):
+        if len(self.status) == 0:
+            self.check(output=False)
         base_dir = self.config.get('basic', 'base_dir')
         file_name = self.config.get('tools', 'perl')
         file = base_dir + "/client/tools/" + file_name
@@ -528,6 +532,8 @@ class Monitor(object):
     
 
     def config_iptables(self):
+        if len(self.status) == 0:
+            self.check(output=False)        
         self.title()
         if self.status['is_ping_opened'] == 'False':
             self.server.execute("""
@@ -539,6 +545,8 @@ class Monitor(object):
                     """ % self.ip_monitor,hide_puts=True)
 
     def deploy_script(self):
+        if len(self.status) == 0:
+            self.check(output=False)        
         base_dir = self.config.get('basic', 'base_dir')
         scripts = self.config.options('script')
         for script in scripts:
@@ -567,6 +575,8 @@ class Monitor(object):
                 """,hide_puts=True)
 
     def install_tools(self):
+        if len(self.status) == 0:
+            self.check(output=False)        
         base_dir = self.config.get('basic', 'base_dir')
         self.title()
         # Install Sys-Statistics-Linux
@@ -652,7 +662,7 @@ class Monitor(object):
                     mv /tmp/%s /usr/local/nagios/libexec
                     """ % file_name,hide_puts=True)
 
-    def test_script(self):
+    def test_script(self):     
         self.title(server)
         commands = self.config.items('test_commands')
         command_lines = ""
