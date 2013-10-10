@@ -20,6 +20,7 @@ import pdb
 
 from node import Server
 from node import Feature
+from node import Monitor
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -116,7 +117,7 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('-P','--piece',type='string',help='piece name')])    
     def do_get(self,arg,opts=None):
         for path in string.split(arg):
-            if not os.path.exists(arg[0]):
+            if not os.path.exists(path):
                 print self.colorize('Error: Path not exist','red')
             else:
                 if opts.piece:
@@ -189,8 +190,33 @@ class PizzaShell(cmd.Cmd):
         $IPTABLES -P INPUT  ACCEPT;
         
         '''
-        if opts.rload:
-            self.server.current_node.execute(ipsec)
+        #if opts.rload:
+            #self.server.current_node.execute(ipsec)
+
+    @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
+        make_option('-P','--piece',type='string',help='piece name')])
+    def monitor(self,args,opts=None):
+        serverlist=[]
+        if opts.piece:
+            if self.piecis.has_key(opts.piece):
+                for value in self.piecis[opts.piece]['servers']:
+                    serverlist.append(value)
+            else:
+                print self.colorize('Error: No this piece','red')
+        else:
+            serverlist.append(self.server.current_node)
+        monitorlist=[]
+        for s in serverlist:
+            monitorlist.append(Monitor(s))
+        
+        oper=None
+        if opts.check:
+            oper='check'
+        for item in monitorlist:
+            operfun=getattr(item,oper)
+            operfun()
+
+
     def complete_ipsec(self,text,line,begidx,endidx):
         pass
 

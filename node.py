@@ -16,6 +16,7 @@ import traceback
 import uuid as muuid
 import pdb
 import string
+import ConfigParser
 
 reload(sys)
 sys.setdefaultencoding('latin1')
@@ -444,3 +445,75 @@ class Server(NodeNet):
 
 class IPsec(object):
     pass
+class Monitor(object):
+    def __init__(self,srv):
+        if srv is None:raise "Server Is Null"
+        if type(srv) != Server: 
+            raise "param type is not Server"
+        self.server=srv
+        self.ip_monitor=self.server.s.ip_monitor
+        self.config=ConfigParser.SafeConfigParser()
+        self.config.read("config/monitor.ini")
+        self.status={}
+    def title(self):
+        print str(self.server)
+    def check(self):
+        scripts = self.config.options('script')
+        script_shell = ""
+        for script in scripts:
+            script_shell += """
+                echo -n "is_installed_%s:";
+                test -x /usr/local/nagios/libexec/%s \
+                && echo True || echo False;
+                echo \;""" % (script, script)
+        shell="""
+            %s
+
+            echo -n "is_installed_Linux_pm:"
+            INC=`perl -e 'print \"@INC\"'`;
+            find ${INC} -name 'Linux.pm' -print 2> /dev/null \
+            | grep -q 'Linux.pm' && echo True || echo False;
+            echo \;
+            
+            echo -n "is_installed_nagios_plugin:";
+            test -d /usr/local/nagios/libexec && echo True || echo False;
+            echo \;
+
+            echo -n "is_installed_nrpe:";
+            test -d /usr/local/nagios/etc && echo True || echo False;
+            echo \;
+
+            echo -n "is_installed_utils_pm:";
+            test -e /usr/local/nagios/libexec/utils.pm \
+            && echo True || echo False;
+            echo \;
+
+            echo -n "version_perl:";
+            perl -v |  egrep v[0-9\.]+ -o
+            echo \;
+
+            echo -n "is_ping_opened:";
+            /sbin/iptables -nvL | grep icmp | grep -q '0.0.0.0\|%s' &>/dev/null\
+            && echo True || echo False
+            echo \;
+
+            echo -n "is_5666_opened:";
+            /sbin/iptables -nvL | grep 5666 | grep -q '%s' &>/dev/null\
+            && echo True || echo False
+            echo \;
+
+            echo -n "is_configured_nrpe:";
+            grep -q '%s' /etc/xinetd.d/nrpe &>/dev/null \
+            && echo True || echo False
+            echo \;
+            """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
+        raw_status=self.server.execute(shell)
+        self.status = dict([ x.split()[0].split(':') for x in raw_status.split(';') if x ])
+        self.title()
+        names=self.status.keys()
+        names.sort()
+        for name in names:
+            print '%-40s    %s' % (name, server.status[name])  
+
+        
+        
