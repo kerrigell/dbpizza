@@ -505,7 +505,7 @@ class Monitor(object):
         names=self.status.keys()
         names.sort()
         for name in names:
-            print '%-40s    %s' % (name, server.status[name])  
+            print '%-40s    %s' % (name, self.status[name])  
 
         
         
