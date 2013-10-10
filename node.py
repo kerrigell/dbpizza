@@ -443,3 +443,4 @@ class Server(NodeNet):
                     
 
 class IPsec(object):
+    pass
