@@ -583,7 +583,7 @@ class Monitor(object):
         UUID = None
         file_name = self.config.get('tools', 'Linux_pm')
         file = base_dir + "/client/tools/" + file_name
-        pdb.set_trace()
+
         if self.status['is_installed_Linux_pm'] == 'False':
             UUID = self.server.download(file, uuid=UUID)
         if self.status['is_installed_Linux_pm'] == 'False':
