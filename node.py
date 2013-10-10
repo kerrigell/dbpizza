@@ -594,7 +594,7 @@ class Monitor(object):
                     perl Makefile.PL &> /dev/null; \
                     make &> /dev/null && \
                     make test &> /dev/null && make install &> /dev/null
-                    """,hide_puts=True)
+                    """)
 
         # create user: nagios
         self.server.execute("""
@@ -602,7 +602,7 @@ class Monitor(object):
                 groupadd nagios; \
                 useradd -M -s /sbin/nologin nagios -g nagios; \
                 mkdir -p /usr/local/nagios/libexec/;
-                """,hide_puts=True)
+                """)
 
         # Install nagios-plugins
         UUID = None
@@ -623,7 +623,7 @@ class Monitor(object):
                 &>/dev/null && \
                 make &>/dev/null && \
                 make install &>/dev/null
-                """,hide_puts=True)
+                """)
 
         # Install nrpe
         UUID = None
@@ -650,7 +650,7 @@ class Monitor(object):
                     killall nrpe ;
                     /etc/init.d/xinetd restart && \
                     chkconfig --level 345 xinetd on
-                    """ % self.ip_monitor,hide_puts=True)
+                    """ % self.ip_monitor)
 
         # Install utils_pm
         UUID = None
@@ -660,10 +660,10 @@ class Monitor(object):
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
                     mv /tmp/%s /usr/local/nagios/libexec
-                    """ % file_name,hide_puts=True)
+                    """ % file_name)
 
     def test_script(self):     
-        self.title(server)
+        self.title()
         commands = self.config.items('test_commands')
         command_lines = ""
         for (command, command_line) in commands:
@@ -671,7 +671,7 @@ class Monitor(object):
         print self.server.execute(command_lines,hide_puts=True)
 
     def update_nrpe(self):
-        self.title(server)
+        self.title()
         nrpes = self.config.items('nrpe')
         shell = ""
         for name, value in nrpes:
@@ -685,7 +685,7 @@ class Monitor(object):
         self.server.execute(shell,hide_puts=True)
             
     def review_nrpe(self):
-        self.title(server)
+        self.title()
         print self.server.execute("""
                 egrep -v '^#|^$' \
                 /usr/local/nagios/etc/nrpe.cfg \
