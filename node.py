@@ -573,9 +573,9 @@ class Monitor(object):
         UUID = None
         file_name = self.config.get('tools', 'Linux_pm')
         file = base_dir + "/client/tools/" + file_name
-        if self.server.status['is_installed_Linux_pm'] == 'False':
+        if self.status['is_installed_Linux_pm'] == 'False':
             UUID = self.server.download(file, uuid=UUID)
-        if self.server.status['is_installed_Linux_pm'] == 'False':
+        if self.status['is_installed_Linux_pm'] == 'False':
             self.server.execute("""
                     cd /tmp && \
                     tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
@@ -597,9 +597,9 @@ class Monitor(object):
         UUID = None
         file_name = self.config.get('tools', 'nagios_plugin')
         file = base_dir + "/client/tools/" + file_name
-        if self.server.status['is_installed_nagios_plugin'] == 'False':
+        if self.status['is_installed_nagios_plugin'] == 'False':
             UUID = server.download(file, uuid=UUID)
-        if self.server.status['is_installed_nagios_plugin'] == 'False':
+        if self.status['is_installed_nagios_plugin'] == 'False':
             self.server.execute("""
                 cd /tmp && \
                 tar zxf nagios-plugins-1.4.15.tar.gz && \
@@ -621,10 +621,10 @@ class Monitor(object):
         file_name2 = self.config.get('tools', 'xinetd_nrpe')
         file = base_dir + "/client/tools/" + file_name
         file2 = base_dir + "/client/" + file_name2
-        if self.server.status['is_installed_nrpe'] == 'False':
+        if self.status['is_installed_nrpe'] == 'False':
             UUID = self.server.download(file, uuid=UUID)
             UUID2 = self.server.download(file, uuid=UUID2)
-        if self.server.status['is_installed_nrpe'] == 'False':
+        if self.status['is_installed_nrpe'] == 'False':
             self.server.execute("""
                     cd /tmp && \
                     tar zxf nrpe-2.12.tar.gz && \
@@ -645,7 +645,7 @@ class Monitor(object):
         UUID = None
         file_name = self.config.get('tools', 'utils_pm')
         file = base_dir + "/client/tools/" + file_name
-        if self.server.status['is_installed_utils_pm'] == 'False':
+        if self.status['is_installed_utils_pm'] == 'False':
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
                     mv /tmp/%s /usr/local/nagios/libexec
