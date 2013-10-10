@@ -38,6 +38,9 @@ class t_server(Base):
     os_type = Column(Enum('Linux','Windows'))
     os_release = Column(Enum('RHEL_5_3','RHEL_4_8','RHEL_4_6','CENT_6_3','WIN2003','WIN2008'))
     os_arch = Column(Enum('x86_64','i386'))
+    ip_monitor=Column(VARCHAR(16))
+    ip_ntp_server=Column(VARCHAR(16))
+    serial=Column(VARCHAR(50))
     def __repr__(self):
         return "<Server('%s','%s','%s')>" % (self.region, self.product, self.ip_oper)
     @classmethod
