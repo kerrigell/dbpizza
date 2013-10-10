@@ -573,9 +573,9 @@ class Monitor(object):
         UUID = None
         file_name = self.config.get('tools', 'Linux_pm')
         file = base_dir + "/client/tools/" + file_name
-        if server.status['is_installed_Linux_pm'] == 'False':
+        if self.server.status['is_installed_Linux_pm'] == 'False':
             UUID = self.server.download(file, uuid=UUID)
-        if server.status['is_installed_Linux_pm'] == 'False':
+        if self.server.status['is_installed_Linux_pm'] == 'False':
             self.server.execute("""
                     cd /tmp && \
                     tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
