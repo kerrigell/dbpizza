@@ -64,6 +64,7 @@ class NodeNet(object):
         if cls.__nodemap__.has_key(dbid) and cls.__nodemap__[dbid].s is not None:
             return cls.__nodemap__[dbid].s
         result=None
+        
         if dbid is None:
             result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.pid==0).all()
         else:
@@ -381,11 +382,12 @@ class Server(NodeNet):
             filename = [ x for x in path.split('/') if x ][-1] 
             parent = self.parent
             local_ip = self.s.ip_oper
+            local_user=self.s.loginuser
             if uuid == -1:
                 return -1
             elif uuid is not None:
                 if parent.exists("/tmp/%s" % uuid):
-                    if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
+                    if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                         puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                         self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         return uuid
@@ -399,7 +401,7 @@ class Server(NodeNet):
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
                         parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,hide_output_prefix=True,hide_puts=True)
-                        if parent.execute("scp -r /tmp/%s %s:/tmp/%s" % (uuid,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
+                        if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
                             puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                             return uuid
                         else:
@@ -440,3 +442,4 @@ class Server(NodeNet):
         return serverlist
                     
 
+class IPsec(object):

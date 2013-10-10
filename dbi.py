@@ -16,6 +16,7 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 class t_server(Base):
     __tablename__ = 't_server'
     __searchword__ = None
@@ -86,3 +87,15 @@ class t_feature(Base):
     server_id = Column(Integer)
     fabric = Column(VARCHAR(50))
     exec_info=Column(VARCHAR(200))
+    
+class t_ipsec(Base):
+    __tablename__='t_ipsec'
+    id = Column(Integer, primary_key=True)
+    dbid = Column(Integer)
+    chain = Column(VARCHAR(50))
+    source_addr = Column(VARCHAR(50))
+    dest_addr = Column(VARCHAR(50))
+    protocal = Column(VARCHAR(50))
+    dport = Column(VARCHAR(50))
+    status = Column(Integer)
+    description = Column(VARCHAR(100))
