@@ -693,11 +693,17 @@ class Monitor(object):
                 """,hide_puts=True)
 
     def deploy(self):
+        print "check monitor status"
         self.check()
+        print "update perl"
         self.upgrade_perl()
+        print "install tools"
         self.install_tools()
+        print "config iptables"
         self.config_iptables()
+        print "deploy monitor script"
         self.deploy_script()
+        print "update nrpe"
         self.update_nrpe()
     def config_centreon(self):
         pass
