@@ -644,7 +644,7 @@ class Monitor(object):
                     make install-daemon  &>/dev/null && \
                     make install-daemon-config &>/dev/null && \
                     make install-xinetd  &>/dev/null;
-                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe:
+                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe;
                     killall nrpe ;
                     /etc/init.d/xinetd restart && \
                     chkconfig --level 345 xinetd on
