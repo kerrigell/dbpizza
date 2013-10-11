@@ -635,18 +635,18 @@ class Monitor(object):
             UUID1 = self.server.download(file1, uuid=UUID1)
             UUID2 = self.server.download(file2, uuid=UUID2)
             self.server.execute("""
-                    cd /tmp && \
-                    tar zxf nrpe-2.12.tar.gz && \
-                    cd nrpe-2.12 && \
-                    ./configure  ; \
-                    make all  && \
-                    make install-plugin  && \
-                    make install-daemon   && \
-                    make install-daemon-config  && \
-                    make install-xinetd  ;
-                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe;
-                    killall nrpe ;
-                    /etc/init.d/xinetd restart && \
+                    cd /tmp && 
+                    tar zxf nrpe-2.12.tar.gz && 
+                    cd nrpe-2.12 && 
+                    ./configure  && 
+                    make all  && 
+                    make install-plugin  && 
+                    make install-daemon   && 
+                    make install-daemon-config  && 
+                    make install-xinetd  &&
+                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&
+                    killall nrpe &&
+                    /etc/init.d/xinetd restart && 
                     chkconfig --level 345 xinetd on
                     """ % self.ip_monitor)
             
