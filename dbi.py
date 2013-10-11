@@ -6,11 +6,12 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime
+from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime,DATETIME
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.types import SchemaType,TypeDecorator,Enum
 from sqlalchemy.orm import sessionmaker
 
+import time,datetime
 engine = create_engine('mysql://root@dbpizzzahost/dbpizza?charset=utf8')
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
@@ -94,11 +95,25 @@ class t_feature(Base):
 class t_ipsec(Base):
     __tablename__='t_ipsec'
     id = Column(Integer, primary_key=True)
-    dbid = Column(Integer)
-    chain = Column(VARCHAR(50))
+    server_id = Column(Integer)
+    chain = Column(Enum('INPUT','OUTPUT','FORWARD'))
     source_addr = Column(VARCHAR(50))
     dest_addr = Column(VARCHAR(50))
-    protocal = Column(VARCHAR(50))
+    protocal = Column(Enum('tcp','udp','icmp','all'))
     dport = Column(VARCHAR(50))
-    status = Column(Integer)
+    #
+    status = Column(Integer) 
     description = Column(VARCHAR(100))
+    createdate=Column(DATETIME)
+    modifydate=Column(DATETIME)
+    def __init__(self,server_id,protocal,source_addr,dport,description,status=0,chain='INPUT'):
+        self.chain=chain
+        self.server_id=server_id
+        self.chain=chain
+        self.source_addr=source_addr
+        self.protocal=protocal
+        self.dport=dport
+        self.status=status
+        self.description=description
+        self.createdate=time.localtime(time.time())
+        self.modifydate=self.createdate

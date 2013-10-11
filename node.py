@@ -446,7 +446,65 @@ class Server(NodeNet):
                     
 
 class IPsec(object):
-    pass
+    # db table class
+    __dbclass__=None
+    # db session
+    __dbsession__=None
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname=cls.__name__
+        dbclassname="t_%s" % string.lower(selfclassname)
+        dbclass=None
+        dbsession=None        
+        import importlib
+        mo=importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo,dbclassname):
+                dbclass= getattr(mo,dbclassname)
+            if hasattr(mo,'session'):
+                dbsession=getattr(mo,'session')
+            if dbclass and dbsession:
+                cls.__dbsession__=dbsession
+                cls.__dbclass__=dbclass
+                return True
+            else:
+                return False
+    @classmethod
+    def _get_dbinfo(cls,dbid=None):
+        if not cls._get_dbclass():
+            return None
+        result=None
+        
+        if dbid is not None:
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==dbid).all()
+        return result
+    def __init__(self,srv):
+        if srv is None:raise "Server Is Null"
+        if type(srv) != Server: 
+            raise "param type is not Server"
+        self.server=srv
+        if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
+            self._get_dbclass()
+        # 需要重载赋值，实现从已有map中恢复实例
+        #if self.__class__.__nodemap__.has_key(dbid) and isinstance(self.__class__.__nodemap__[dbid],self.__class__):
+            #self=self.__class__.__nodemap__[dbid]
+            #return
+        self.s=self._get_dbinfo(self.server.dbid) 
+    def add_filter(self,protocal,source_addr,dport,description,status=0,chain='INPUT'):
+        
+        self.__class__.__dbsession__.add(self.__class__.__dbclass__(server_id=self.server.dbid,
+                                                                    protocal=protocal,
+                                                                    source_addr=source_addr,
+                                                                    dport=dport,
+                                                                    description=description,
+                                                                    status=status,
+                                                                    chain=chain)
+                                         )
+
 class Monitor(object):
     config=None
     def __init__(self,srv):

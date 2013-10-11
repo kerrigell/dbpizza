@@ -21,6 +21,7 @@ import pdb
 from node import Server
 from node import Feature
 from node import Monitor
+from node import IPsec
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -170,28 +171,28 @@ class PizzaShell(cmd.Cmd):
               make_option('--dport',type='string',help='dport'),
               make_option('-r','--rload',action='store_true',help='rload ipsec')
              ])
-    def do_ipsec(self,args,opts=None):
-        ipsec='''
-        IPTABLES=/sbin/iptables;
-        $IPTABLES -F;
-        $IPTABLES -Z;
-        $IPTABLES -X;
+    #def do_ipsec(self,args,opts=None):
+        #ipsec='''
+        #IPTABLES=/sbin/iptables;
+        #$IPTABLES -F;
+        #$IPTABLES -Z;
+        #$IPTABLES -X;
         
-        $IPTABLES -t mangle -F;
-        $IPTABLES -t mangle -Z;
-        $IPTABLES -t mangle -X;
+        #$IPTABLES -t mangle -F;
+        #$IPTABLES -t mangle -Z;
+        #$IPTABLES -t mangle -X;
         
-        $IPTABLES -P INPUT ACCEPT ;  
+        #$IPTABLES -P INPUT ACCEPT ;  
         
         
-        $IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
-        $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
-        $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
-        $IPTABLES -P INPUT  ACCEPT;
+        #$IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
+        #$IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
+        #$IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
+        #$IPTABLES -P INPUT  ACCEPT;
         
-        '''
-        #if opts.rload:
-            #self.server.current_node.execute(ipsec)
+        #'''
+        ##if opts.rload:
+            ##self.server.current_node.execute(ipsec)
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
@@ -234,11 +235,18 @@ class PizzaShell(cmd.Cmd):
             if oper:
                 operfun=getattr(item,oper)
                 operfun()
-
-
-    def complete_ipsec(self,text,line,begidx,endidx):
-        pass
-
+    @options([make_option('-a','--add',action='store_true',help='create piece'),
+              make_option('-l','--list',type='string',help='list ipsec'),
+              make_option('--source',type='string',help='source address'),
+              make_option('--desc',type='string',help='desc address'),
+              make_option('--dport',type='string',help='dport'),
+              make_option('--description',type='string',help='filter description'),
+              make_option('-r','--rload',action='store_true',help='rload ipsec')
+             ])
+    def do_ipsec(self,args,opts=None):
+        if opts.add:
+            cipsec=IPsec(self.currentNode)
+            cipsec.add_filter('tcp','10.10.19.2','22,3389','test filter')
 class Logger(object):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.stdout
