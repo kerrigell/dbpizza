@@ -228,7 +228,15 @@ class PizzaShell(cmd.Cmd):
     def do_ipsec(self,args,opts=None):
         cipsec=IPsec(self.server.current_node)
         if opts.add:
-            cipsec.add_filter(opts.protocal,opts.source,opts.dport,opts.description)
+            if opts.protocal and opts.source and opts.dport and opts.description:
+                cipsec.add_filter(opts.protocal,opts.source,opts.dport,opts.description)
+            else:
+                print '''Need surport correct value for those:
+                --source=
+                --protocal=
+                --dport=
+                --description
+                '''
             return
         if opts.list:
             ripsec=cipsec.list()
@@ -254,6 +262,7 @@ class PizzaShell(cmd.Cmd):
             print "delete filter",
             cipsec.del_filter(int(string.split(sauce)[0]))
             print "ok"
+            return
             
         
         
