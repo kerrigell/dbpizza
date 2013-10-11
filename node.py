@@ -516,16 +516,16 @@ class IPsec(object):
             pip_private=self.server.parent.s.ip_private
             pip_oper=self.server.parent.s.ip_oper
             if len(pip_oper):
-                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT #cc:%s
+                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT #cc:%s
                             ''' % (pip_oper,self.server)
             if len(pip_private):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s
                             ''' % (pip_private,self.server)
             if len(pip_public):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s
                                         ''' % (pip_public,self.server)
         for i in ripsec:
-            filterlist += '''$IPTABLES -I %s -s %s -p %s --dport %s -j ACCEPT #%s
+            filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT #%s
             ''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
 
             
