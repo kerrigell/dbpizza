@@ -506,8 +506,14 @@ class IPsec(object):
                                                                     chain=chain)
                                          )
         dbsession.commit()
+    def del_filter(self,dbid):
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in dbsession.query(dbclass).filter_by(id = dbid):
+            dbsession.delete(instance)
+        dbsession.commit()        
     def list(self):
-        return self.__class__._get_dbinfo(self.server.dbid)
+        return self.__class__._get_dbinfo(self.server.dbid)      
     def make_script(self):
         ripsec=self.list()
         if len(ripsec)==0:

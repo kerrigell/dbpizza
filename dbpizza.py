@@ -214,14 +214,15 @@ class PizzaShell(cmd.Cmd):
             if oper:
                 operfun=getattr(item,oper)
                 operfun()
-    @options([make_option('-a','--add',action='store_true',help='create piece'),
-              make_option('-l','--list',action='store_true',help='list ipsec'),
-              make_option('-s','--show',action='store_true',help='show  ipsec script'),
+    @options([make_option('-a','--add',action='store_true',help='add ipsec filter'),
               make_option('--source',type='string',help='source address'),
               make_option('--desc',type='string',help='desc address'),
               make_option('--protocal',type='string',help='protocal'),
               make_option('--dport',type='string',help='dport'),
-              make_option('--description',type='string',help='filter description'),
+              make_option('--description',type='string',help='filter description'),              
+              make_option('-d','--delete',action='store_true',help='delete ipsec filter'),
+              make_option('-l','--list',action='store_true',help='list ipsec'),
+              make_option('-s','--show',action='store_true',help='show  ipsec script'),
               make_option('-r','--reload',action='store_true',help='reload ipsec')
              ])
     def do_ipsec(self,args,opts=None):
@@ -231,9 +232,9 @@ class PizzaShell(cmd.Cmd):
             return
         if opts.list:
             ripsec=cipsec.list()
-            print "%-10s    %20s    %20s   %s" % ("Chain",'Source','dport','description')
+            print "%5s%8s%20s%20s  %s" % ("dbid","Chain",'Source','dport','description')
             for i in ripsec:
-                print "%-10s    %20s    %20s   %s" % (i.chain,i.source_addr,i.dport,i.description)
+                print "%5s%8s%20s%20s  %s" % (i.id,i.chain,i.source_addr,i.dport,i.description)
             return
         if opts.show:
             print cipsec.make_script()
@@ -242,6 +243,18 @@ class PizzaShell(cmd.Cmd):
             print 'start reload ipsec',
             cipsec.reload()
             print 'ok'
+            return
+        if opts.delete:
+            ripsec=cipsec.list()
+            print "      %5s%8s%20s%20s  %s" % ("dbid","Chain",'Source','dport','description')
+            infolist=[]
+            for i in ripsec:
+                infolist.append("%5s%8s%20s%20s  %s" % (i.id,i.chain,i.source_addr,i.dport,i.description))
+            sauce=self.select(infolist)
+            print "delete filter",
+            cipsec.del_filter(int(string.split(sauce)[0]))
+            print "ok"
+            
         
         
         ##if opts.rload:
