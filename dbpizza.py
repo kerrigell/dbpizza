@@ -244,7 +244,7 @@ class PizzaShell(cmd.Cmd):
             for i in ripsec:
                 print "%5s%8s%20s%20s  %s" % (i.id,i.chain,i.source_addr,i.dport,i.description)
             return
-        if opts.show:
+        if opts.script:
             print cipsec.make_script()
             return
         if opts.reload:
