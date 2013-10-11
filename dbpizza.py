@@ -232,11 +232,10 @@ class PizzaShell(cmd.Cmd):
                 cipsec.add_filter(opts.protocal,opts.source,opts.dport,opts.description)
             else:
                 print '''Need surport correct value for those:
-                --source=
-                --protocal=
-                --dport=
-                --description
-                '''
+        --source=
+        --protocal=
+        --dport=
+        --description='''
             return
         if opts.list:
             ripsec=cipsec.list()
