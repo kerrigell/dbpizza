@@ -518,40 +518,36 @@ class IPsec(object):
             pip_private=self.server.parent.s.ip_private
             pip_oper=self.server.parent.s.ip_oper
             if len(pip_oper):
-                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT #cc:%s
-                            ''' % (pip_oper,self.server)
+                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT #cc:%s\n''' % (pip_oper,self.server)
             if len(pip_private):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s
-                            ''' % (pip_private,self.server)
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s\n''' % (pip_private,self.server)
             if len(pip_public):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s
-                                        ''' % (pip_public,self.server)
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp -m multiport --dport 22 -j ACCEPT  #cc:%s\n''' % (pip_public,self.server)
         for i in ripsec:
-            filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT #%s
-            ''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
+            filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT #%s\n''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
 
             
         ipsec_temp='''
-    IPTABLES=/sbin/iptables;
-    $IPTABLES -F;
-    $IPTABLES -Z;
-    $IPTABLES -X;
-    
-    $IPTABLES -t mangle -F;
-    $IPTABLES -t mangle -Z;
-    $IPTABLES -t mangle -X;
-    
+IPTABLES=/sbin/iptables;
+$IPTABLES -F;
+$IPTABLES -Z;
+$IPTABLES -X;
 
-    $IPTABLES -P INPUT  ACCEPT;
-    
-    $IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
-    $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
-    
-    %s
-    
-    $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
-    $IPTABLES -P INPUT  DROP;
-    $IPTABLES -P OUTPUT ACCEPT ;
+$IPTABLES -t mangle -F;
+$IPTABLES -t mangle -Z;
+$IPTABLES -t mangle -X;
+
+
+$IPTABLES -P INPUT  ACCEPT;
+
+$IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
+$IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
+
+%s
+
+$IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
+$IPTABLES -P INPUT  DROP;
+$IPTABLES -P OUTPUT ACCEPT ;
     
     ''' % filterlist
         return ipsec_temp  
