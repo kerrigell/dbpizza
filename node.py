@@ -670,7 +670,7 @@ class Monitor(object):
         command_lines = ""
         for (command, command_line) in commands:
             command_lines += (command_line + ';')
-        print self.server.execute(command_lines,hide_puts=True)
+        self.server.execute(command_lines)
 
     def update_nrpe(self):
         self.title()
@@ -684,15 +684,15 @@ class Monitor(object):
                     echo "%s" >> \
                     /usr/local/nagios/etc/nrpe.cfg;
                     """ % (name, nrpe_line)
-        self.server.execute(shell,hide_puts=True)
+        self.server.execute(shell)
             
     def review_nrpe(self):
         self.title()
-        print self.server.execute("""
+        self.server.execute("""
                 egrep -v '^#|^$' \
                 /usr/local/nagios/etc/nrpe.cfg \
                 | egrep '^command\[.*\]'
-                """,hide_puts=True)
+                """)
 
     def deploy(self):
         print "check monitor status"
