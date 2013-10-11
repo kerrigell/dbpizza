@@ -222,7 +222,8 @@ class PizzaShell(cmd.Cmd):
               make_option('--description',type='string',help='filter description'),              
               make_option('-d','--delete',action='store_true',help='delete ipsec filter'),
               make_option('-l','--list',action='store_true',help='list ipsec'),
-              make_option('-s','--show',action='store_true',help='show  ipsec script'),
+              make_option('--script',action='store_true',help='show  ipsec script'),
+              make_option('--status',action='store_true',help='show  current ipsec status'),
               make_option('-r','--reload',action='store_true',help='reload ipsec')
              ])
     def do_ipsec(self,args,opts=None):
@@ -261,6 +262,9 @@ class PizzaShell(cmd.Cmd):
             print "delete filter",
             cipsec.del_filter(int(string.split(sauce)[0]))
             print "ok"
+            return
+        if opts.status:
+            self.server.current_node.execute("iptables -nvL")
             return
             
         
