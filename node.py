@@ -510,6 +510,8 @@ class IPsec(object):
         return self.__class__._get_dbinfo(self.server.dbid)
     def make_script(self):
         ripsec=self.list()
+        if len(ripsec)==0:
+            return ''
         filterlist=''
         if self.server.parent is not None :
             pip_public=self.server.parent.s.ip_public
@@ -548,7 +550,7 @@ class IPsec(object):
     %s
     
     $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
-    $IPTABLES -P INPUT  ACCEPT;
+    $IPTABLES -P INPUT  DROP;
     $IPTABLES -P OUTPUT ACCEPT ;
     
     ''' % filterlist
