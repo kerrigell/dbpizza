@@ -493,10 +493,11 @@ class IPsec(object):
         #if self.__class__.__nodemap__.has_key(dbid) and isinstance(self.__class__.__nodemap__[dbid],self.__class__):
             #self=self.__class__.__nodemap__[dbid]
             #return
-        self.s=self._get_dbinfo(self.server.dbid) 
+        #self.s=self._get_dbinfo(self.server.dbid) 
     def add_filter(self,protocal,source_addr,dport,description,status=0,chain='INPUT'):
-        
-        self.__class__.__dbsession__.add(self.__class__.__dbclass__(server_id=self.server.dbid,
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        dbsession.add(dbclass(server_id=self.server.dbid,
                                                                     protocal=protocal,
                                                                     source_addr=source_addr,
                                                                     dport=dport,
@@ -504,7 +505,56 @@ class IPsec(object):
                                                                     status=status,
                                                                     chain=chain)
                                          )
+        dbsession.commit()
+    def list(self):
+        return self.__class__._get_dbinfo(self.server.dbid)
+    def make_script(self):
+        ripsec=self.list()
+        filterlist=''
+        if self.server.parent is not None :
+            pip_public=self.server.parent.s.ip_public
+            pip_private=self.server.parent.s.ip_private
+            pip_oper=self.server.parent.s.ip_oper
+            if len(pip_oper):
+                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT #cc:%s
+                            ''' % (pip_oper,self.server)
+            if len(pip_private):
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s
+                            ''' % (pip_private,self.server)
+            if len(pip_public):
+                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s
+                                        ''' % (pip_public,self.server)
+        for i in ripsec:
+            filterlist += '''$IPTABLES -I %s -s %s -p %s --dport %s -j ACCEPT #%s
+            ''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
 
+            
+        ipsec_temp='''
+    IPTABLES=/sbin/iptables;
+    $IPTABLES -F;
+    $IPTABLES -Z;
+    $IPTABLES -X;
+    
+    $IPTABLES -t mangle -F;
+    $IPTABLES -t mangle -Z;
+    $IPTABLES -t mangle -X;
+    
+
+    $IPTABLES -P INPUT  ACCEPT;
+    
+    $IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
+    $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
+    
+    %s
+    
+    $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
+    $IPTABLES -P INPUT  ACCEPT;
+    $IPTABLES -P OUTPUT ACCEPT ;
+    
+    ''' % filterlist
+        return ipsec_temp  
+    def reload(self):
+        self.server.execute(self.make_script())
 class Monitor(object):
     config=None
     def __init__(self,srv):

@@ -171,28 +171,7 @@ class PizzaShell(cmd.Cmd):
               make_option('--dport',type='string',help='dport'),
               make_option('-r','--rload',action='store_true',help='rload ipsec')
              ])
-    #def do_ipsec(self,args,opts=None):
-        #ipsec='''
-        #IPTABLES=/sbin/iptables;
-        #$IPTABLES -F;
-        #$IPTABLES -Z;
-        #$IPTABLES -X;
-        
-        #$IPTABLES -t mangle -F;
-        #$IPTABLES -t mangle -Z;
-        #$IPTABLES -t mangle -X;
-        
-        #$IPTABLES -P INPUT ACCEPT ;  
-        
-        
-        #$IPTABLES -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT;
-        #$IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
-        #$IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
-        #$IPTABLES -P INPUT  ACCEPT;
-        
-        #'''
-        ##if opts.rload:
-            ##self.server.current_node.execute(ipsec)
+
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
@@ -236,17 +215,40 @@ class PizzaShell(cmd.Cmd):
                 operfun=getattr(item,oper)
                 operfun()
     @options([make_option('-a','--add',action='store_true',help='create piece'),
-              make_option('-l','--list',type='string',help='list ipsec'),
+              make_option('-l','--list',action='store_true',help='list ipsec'),
+              make_option('-s','--show',action='store_true',help='show  ipsec script'),
               make_option('--source',type='string',help='source address'),
               make_option('--desc',type='string',help='desc address'),
+              make_option('--protocal',type='string',help='protocal'),
               make_option('--dport',type='string',help='dport'),
               make_option('--description',type='string',help='filter description'),
-              make_option('-r','--rload',action='store_true',help='rload ipsec')
+              make_option('-r','--reload',action='store_true',help='reload ipsec')
              ])
     def do_ipsec(self,args,opts=None):
+        cipsec=IPsec(self.server.current_node)
         if opts.add:
-            cipsec=IPsec(self.currentNode)
-            cipsec.add_filter('tcp','10.10.19.2','22,3389','test filter')
+            cipsec.add_filter(opts.protocal,opts.source,opts.dport,opts.description)
+            return
+        if opts.list:
+            ripsec=cipsec.list()
+            print "%-10s    %20s    %20s   %s" % ("Chain",'Source','dport','description')
+            for i in ripsec:
+                print "%-10s    %20s    %20s   %s" % (i.chain,i.source_addr,i.dport,i.description)
+            return
+        if opts.show:
+            print cipsec.make_script()
+            return
+        if opts.reload:
+            print 'start reload ipsec',
+            cipsec.reload()
+            print 'ok'
+        
+        
+        ##if opts.rload:
+            ##self.server.current_node.execute(ipsec) 
+ 
+ 
+ 
 class Logger(object):
     def __init__(self, filename="Default.log"):
         self.terminal = sys.stdout
