@@ -150,8 +150,8 @@ class PizzaShell(cmd.Cmd):
             pass
     def _get_operation_list(self,opts):
         serverlist=[]
-        if opts.piece:
-            if self.piecis.has_key(opts.piece):
+        if opts is not None:
+            if hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
                 for value in self.piecis[opts.piece]['servers']:
                     serverlist.append(value)
         else:
