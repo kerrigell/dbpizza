@@ -85,19 +85,19 @@ class PizzaShell(cmd.Cmd):
     #def help_put(self):
         #print '\n'.join(['put <localfile> <targetserver> <remotepath>','put a file to target server from ccs'])
 
-    def complete_put(self,text,line,begidx,endidx):
-        import readline
-        pos=len(string.split(line))
-        if pos == 2 or pos == 4:
-            # import rlcompleter
-            # readline.parse_and_bind("tab: complete")   
-            readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
-            import glob
-            return glob.glob('%s*' % text)
-        if pos == 3:
-            '''search server list like aaa.*'''
-            readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
-            return self.root.search_list(text)
+    #def complete_put(self,text,line,begidx,endidx):
+        #import readline
+        #pos=len(string.split(line))
+        #if pos == 2 or pos == 4:
+            ## import rlcompleter
+            ## readline.parse_and_bind("tab: complete")   
+            #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
+            #import glob
+            #return glob.glob('%s*' % text)
+        #if pos == 3:
+            #'''search server list like aaa.*'''
+            #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
+            #return self.root.search_list(text)
     @options([make_option('-P','--Piece',type='string',help='piece name')])
     def do_cmd(self,arg,opts=None):
         for s in self._get_operation_list(opts):
@@ -150,10 +150,9 @@ class PizzaShell(cmd.Cmd):
             pass
     def _get_operation_list(self,opts):
         serverlist=[]
-        if opts is not None:
-            if hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
-                for value in self.piecis[opts.piece]['servers']:
-                    serverlist.append(value)
+        if opts is not None and hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
+            for value in self.piecis[opts.piece]['servers']:
+                serverlist.append(value)
         else:
             serverlist.append(self.server.current_node)  
         return serverlist
