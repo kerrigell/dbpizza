@@ -27,10 +27,7 @@ import paramiko
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.rootNode=Server()
-        self.currentNode=self.rootNode
-        self.rootNode.breed()
-        
+      
         #using
         self.server=Server()
         self.server.breed()
@@ -71,22 +68,22 @@ class PizzaShell(cmd.Cmd):
     def complete_mode(self,text,line,begidx,endidx):
         modelist=['product','server']
         return [ f for f in modelist if f.startswith(text)]
-    def do_put(self,line):
-        '''put a file to target server from ccs'''
-        (lfile, taddr, rpath)=string.split(line)
-        if not (os.path.isfile(lfile) and os.path.exists(lfile)):
-            print 'Error: not exists or not a file %s' % lfile
-            return
-        tsrv=self.root.search(taddr)
-        if tsrv == None:
-            print 'Error: not find %s' % taddr
-            return
-        print 'Send a file from %s to %s' % (self.root, tsrv)
-        self.root.putfile(lfile,tsrv,rpath)
-        print 'Send finished'
+    #def do_put(self,line):
+        #'''put a file to target server from ccs'''
+        #(lfile, taddr, rpath)=string.split(line)
+        #if not (os.path.isfile(lfile) and os.path.exists(lfile)):
+            #print 'Error: not exists or not a file %s' % lfile
+            #return
+        #tsrv=self.root.search(taddr)
+        #if tsrv == None:
+            #print 'Error: not find %s' % taddr
+            #return
+        #print 'Send a file from %s to %s' % (self.root, tsrv)
+        #self.root.putfile(lfile,tsrv,rpath)
+        #print 'Send finished'
 
-    def help_put(self):
-        print '\n'.join(['put <localfile> <targetserver> <remotepath>','put a file to target server from ccs'])
+    #def help_put(self):
+        #print '\n'.join(['put <localfile> <targetserver> <remotepath>','put a file to target server from ccs'])
 
     def complete_put(self,text,line,begidx,endidx):
         import readline
@@ -101,34 +98,21 @@ class PizzaShell(cmd.Cmd):
             '''search server list like aaa.*'''
             readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             return self.root.search_list(text)
-    @options([make_option('-P','--Piece',type='string',help='piece name'),
-              make_option('-c','--command',type='string',help='command')])
+    @options([make_option('-P','--Piece',type='string',help='piece name')])
     def do_cmd(self,arg,opts=None):
-        if opts.Piece and opts.command:
-            if self.piecis.has_key(opts.Piece):
-                for s in self.piecis[opts.Piece]['servers']:
-                    result=s.execute(opts.command)
-            else:
-                print self.colorize('piece name not exist','red')
-                return
-        elif opts.command:
-            self.server.current_node.execute(opts.command)
-            self.pf
+        for s in self._get_operation_list(opts):
+            s.execute(arg)
+        
 
     @options([make_option('-P','--piece',type='string',help='piece name')])    
     def do_get(self,arg,opts=None):
         for path in string.split(arg):
             if not os.path.exists(path):
                 print self.colorize('Error: Path not exist','red')
+                continue
             else:
-                if opts.piece:
-                    if self.piecis.has_key(opts.piece):
-                        for value in self.piecis[opts.piece]['servers']:
-                            value.download(path)
-                    else:
-                        print self.colorize('Error: No this piece','red')
-                else:
-                    self.server.current_node.download(path)
+                for s in self._get_operation_list(opts):
+                    s.download(path)
     def complete_get(self,text,line,begidx,endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
@@ -164,13 +148,15 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-    @options([make_option('-a','--add',action='store_true',help='create piece'),
-              make_option('-l','--list',type='string',help='list ipsec'),
-              make_option('--source',type='string',help='source address'),
-              make_option('--desc',type='string',help='desc address'),
-              make_option('--dport',type='string',help='dport'),
-              make_option('-r','--rload',action='store_true',help='rload ipsec')
-             ])
+    def _get_operation_list(self,opts):
+        serverlist=[]
+        if opts.piece:
+            if self.piecis.has_key(opts.piece):
+                for value in self.piecis[opts.piece]['servers']:
+                    serverlist.append(value)
+        else:
+            serverlist.append(self.server.current_node)  
+        return serverlist
 
 
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
@@ -178,17 +164,8 @@ class PizzaShell(cmd.Cmd):
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
         make_option('-p','--piece',type='string',help='the name of a filter list')])
     def do_monitor(self,args,opts=None):
-        serverlist=[]
-        if opts.piece:
-            if self.piecis.has_key(opts.piece):
-                for value in self.piecis[opts.piece]['servers']:
-                    serverlist.append(value)
-            else:
-                print self.colorize('Error: No this piece','red')
-        else:
-            serverlist.append(self.server.current_node)
         monitorlist=[]
-        for s in serverlist:
+        for s in self._get_operation_list(opts):
             monitorlist.append(Monitor(s))
         monopers=[
             ['check current status',                                     'check'          ],
@@ -216,7 +193,6 @@ class PizzaShell(cmd.Cmd):
                 operfun()
     @options([make_option('-a','--add',action='store_true',help='add ipsec filter'),
               make_option('--source',type='string',help='source address'),
-              make_option('--desc',type='string',help='desc address'),
               make_option('--protocal',type='string',help='protocal'),
               make_option('--dport',type='string',help='dport'),
               make_option('--description',type='string',help='filter description'),              
@@ -267,10 +243,7 @@ class PizzaShell(cmd.Cmd):
             self.server.current_node.execute("iptables -nvL")
             return
             
-        
-        
-        ##if opts.rload:
-            ##self.server.current_node.execute(ipsec) 
+
  
  
  

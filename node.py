@@ -554,6 +554,7 @@ $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
 $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
 $IPTABLES -P INPUT  DROP;
 $IPTABLES -P OUTPUT ACCEPT ;
+service iptables save
     
     ''' % filterlist
         return ipsec_temp  
@@ -835,4 +836,10 @@ class Monitor(object):
     def config_centreon(self):
         pass
         
-        
+
+class Info(object):
+    def __init__(self,srv):
+        if srv is None:raise "Server Is Null"
+        if type(srv) != Server: 
+            raise "param type is not Server"
+        self.server=srv    
