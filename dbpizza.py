@@ -192,9 +192,9 @@ class PizzaShell(cmd.Cmd):
                 operfun()
     @options([make_option('-a','--add',action='store_true',help='add ipsec filter'),
               make_option('--source',type='string',help='source address'),
-              make_option('--protocal',type='string',help='protocal'),
+              make_option('--protocal',type='choice',choices=['tcp','udp','imcp','all'],help='protocal'),
               make_option('--dport',type='string',help='dport'),
-              make_option('--description',type='string',help='filter description'),              
+          #    make_option('--description',type='string',help='filter description'),              
               make_option('-d','--delete',action='store_true',help='delete ipsec filter'),
               make_option('-l','--list',action='store_true',help='list ipsec'),
               make_option('--script',action='store_true',help='show  ipsec script'),
@@ -204,8 +204,8 @@ class PizzaShell(cmd.Cmd):
     def do_ipsec(self,args,opts=None):
         cipsec=IPsec(self.server.current_node)
         if opts.add:
-            if opts.protocal and opts.source and opts.dport and opts.description:
-                cipsec.add_filter(opts.protocal,opts.source,opts.dport,opts.description)
+            if opts.protocal and opts.source and opts.dport :
+                cipsec.add_filter(opts.protocal,opts.source,opts.dport,args)
             else:
                 print '''Need surport correct value for those:
         --source=
