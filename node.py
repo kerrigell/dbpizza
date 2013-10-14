@@ -855,9 +855,9 @@ class Info(object):
             result=self.server.execute(cmd,hide_puts=True)
             print "updating the field of \'%s\' with (%s)..." % (field,result),
             if len(string.split(result,'\n'))>1:
-                print "the result is not expected."
+                print "value not expected."
                 return
-            if not self.server.s.update_value(field,result):
+            if self.server.s.update_value(field,result) == 1:
                 print "Success"
             else:
                 print "Failure"
