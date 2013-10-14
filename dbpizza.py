@@ -245,7 +245,8 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('--ip_ilo',action='store_true',help='ilo ip'),
               make_option('--ip_public',action='store_true',help='public ip'),
               make_option('--ip_private',action='store_true',help='privte ip'),
-              make_option('-e','--edit',action='store_true',help='edit info')])        
+              make_option('-e','--edit',action='store_true',help='edit info'),
+              make_option('-P','--piece',type='string',help='piece name')])        
     def do_info(self,arg,opts=None):
         infolist=[]
         for s in self._get_operation_list(opts):
