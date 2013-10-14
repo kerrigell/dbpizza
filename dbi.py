@@ -82,6 +82,15 @@ class t_server(Base):
         result = result.all()
         return [ i.id for i in result]
 
+    def update_value(self,col,value):
+        if hasattr(self,col):
+            setattr(self,col,value)
+            session.commit()
+            return 1
+        else:
+            print 'this tables has no field of \'%s\'' % col
+            return 0
+
 class t_feature(Base):
     __tablename__ = 't_feature'
     id = Column(Integer, primary_key=True)
@@ -115,6 +124,6 @@ class t_ipsec(Base):
         self.dport=dport
         self.status=status
         self.description=description
-        #self.createdate=time.localtime(time.time())
-        #self.modifydate=self.createdate
+        self.createdate=datetime.datetime.now()
+        self.modifydate=datetime.datetime.now()
         

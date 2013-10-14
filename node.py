@@ -838,8 +838,25 @@ class Monitor(object):
         
 
 class Info(object):
+    shell={
+        'wlan':["""ifconfig eth1|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_public'],
+        'nlan':["""ifconfig eth0|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_private'],
+        'ilo':["""ipmitool lan print|grep 'IP Address'|grep -v 'IP Address Source'|awk -F":" '{print $2}'""",'ip_ilo']
+        }
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
         if type(srv) != Server: 
             raise "param type is not Server"
-        self.server=srv    
+        self.server=srv 
+    def rollback_info(self,index):
+        if self.shell.has_key(index):
+            cmd=self.shell[index][0]
+            field=self.shell[index][1]
+            result=self.server.execute(cmd,hide_puts=True)
+            print "updating the field of \'%s\' with (%s)..." % (field,result),
+            if not self.server.s.update(field,result):
+                print "Success"
+            else:
+                print "Failure"
+    
+        

@@ -22,6 +22,7 @@ from node import Server
 from node import Feature
 from node import Monitor
 from node import IPsec
+from node import Info
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -241,6 +242,22 @@ class PizzaShell(cmd.Cmd):
         if opts.status:
             self.server.current_node.execute("iptables -nvL")
             return
+    @options([make_option('--ip_ilo',action='store_true',help='ilo'),
+              make_option('-e','--edit',action='store_true',help='edit info')])        
+    def do_info(self,arg,opts=None):
+        infolist=[]
+        for s in self._get_operation_list(opts):
+            infolist.append(Info(s))
+        for i in infolist:
+            if opts.edit:
+                if opts.ip_ilo:
+                    i.rollback_info('ilo')
+                if opts.ip_public:
+                    i.rollback_info('wlan')
+                if opts.ip_private:
+                    i.rollback_info('nlan')
+                    
+        
             
 
  
