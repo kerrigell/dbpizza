@@ -242,7 +242,9 @@ class PizzaShell(cmd.Cmd):
         if opts.status:
             self.server.current_node.execute("iptables -nvL")
             return
-    @options([make_option('--ip_ilo',action='store_true',help='ilo'),
+    @options([make_option('--ip_ilo',action='store_true',help='ilo ip'),
+              make_option('--ip_public',action='store_true',help='public ip'),
+              make_option('--ip_private',action='store_true',help='privte ip'),
               make_option('-e','--edit',action='store_true',help='edit info')])        
     def do_info(self,arg,opts=None):
         infolist=[]
