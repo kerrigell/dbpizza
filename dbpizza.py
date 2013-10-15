@@ -105,7 +105,8 @@ class PizzaShell(cmd.Cmd):
             s.execute(arg)
         
 
-    @options([make_option('-P','--piece',type='string',help='piece name')])    
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('--desc_path',type='string',help='piece name')])    
     def do_get(self,arg,opts=None):
         for path in string.split(arg):
             if not os.path.exists(path):
@@ -113,7 +114,7 @@ class PizzaShell(cmd.Cmd):
                 continue
             else:
                 for s in self._get_operation_list(opts):
-                    s.download(path)
+                    s.download(path,targetpath=opts.desc_path if opts.desc_path else None)
     def complete_get(self,text,line,begidx,endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
