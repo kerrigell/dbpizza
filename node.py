@@ -306,7 +306,7 @@ class Server(NodeNet):
                     puts(yellow("%s ReturnCode:%s" % (str(self),result.return_code if hasattr(result,'return_code') else '')),show_prefix=showprefix,flush=True)
                 if result.succeeded:
                     if not hide_puts:
-                        puts(green(result),showprefix=showprefix,flush=True)
+                        puts(green(result),show_prefix=showprefix,flush=True)
                     out.succeed=True
                 if result.failed:
                     out.succeed=False
