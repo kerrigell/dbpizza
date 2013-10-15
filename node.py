@@ -867,7 +867,7 @@ class Info(object):
             cmd=self.shell[index][0]
             field=self.shell[index][1]
             result=self.server.execute(cmd,hide_puts=True)
-            if result.succeed and result.return_code ==0:
+            if result.succeed and result.return_code ==0 and result.result.split('\n')==1:
                 print "updating the field of \'%s\' with (%s)..." % (field,result.result),
                 if self.server.s.update_value(field,result.result) == 1:
                     print "Success"
