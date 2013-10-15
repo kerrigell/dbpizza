@@ -272,6 +272,10 @@ class Server(NodeNet):
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
+        out={}
+        out.return_code=-99
+        out.result=''
+        out.succeed=False
         host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string="%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
@@ -289,21 +293,39 @@ class Server(NodeNet):
                 env.abort_on_prompts=True
                 env.warn_only=True
                 env.output_prefix=False if hide_output_prefix else False
-                if hide_puts is True:
-                    return run(cmd,shell=False)
-                else:
-                    return Server._print_result(run(cmd,shell=False),showprefix=False,info=str(self))
+                result= run(cmd,shell=False)
+                out.result=str(result)
+                if hasattr(result,'return_code'):
+                    out.return_code=result.return_code                
+                if not hide_puts:
+                    puts(yellow("%s ReturnCode:%s" % (info,result.return_code if hasattr(result,'return_code') else '')),show_prefix=showprefix,flush=True)
+                if result.succeeded:
+                    if not hide_puts:
+                        puts(green(result),showprefix=showprefix,flush=True)
+                    out.succeed=True
+                if result.failed:
+                    out.succeed=False
+                    if not hide_puts:
+                        puts(red(result),show_prefix=showprefix,flush=True)
+            return out
         except NetworkError,e:
           #  traceback.print_exc()
            # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
           #  return ''
-            puts(red("Error: %s \n #%s" % (host_string,e)))
-            return 0
+            out.succeed=False
+            out.result="Error: %s \n #%s" % (host_string,e)
+            if not hide_puts:
+                puts(red(out.result))
+            return out
         except Exception,e:
           #  traceback.print_exc()
-            puts(red("Error: %s \n #%s" % (host_string,e)))
+            out.succeed=False
+            out.result="Error: %s \n #%s" % (host_string,e)
+            if not hide_puts:
+                puts(red(out.result))
+            return out
          #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
-            return 0
+
     def login(self,cmd=None,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
         host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string="%s@%s" % (self.parent.s.loginuser,self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
@@ -341,36 +363,21 @@ class Server(NodeNet):
             return 0
         
     @staticmethod
-    def _print_result(result,hopevalue=None,showprefix=None,info=''):
-        code=-99
-        try:
-            code=result.return_code
-        except:
-            pass
+    def _print_result(result,showprefix=None,info=''):
+        puts(yellow("%s ReturnCode:%s" % (info,result.return_code if hasattr(result,'return_code') else '')),show_prefix=showprefix,flush=True)
         if result.succeeded:
-            if len(result):
-                puts(yellow("%s ReturnCode:%s" % (info,result.return_code if code <> -99 else ''))
-                            + green('\n' + result)
-                            ,show_prefix=showprefix,flush=True)
-                if hopevalue and result != hopevalue:
-                    puts(red("The Result is not hope"),show_prefix=showprefix)
-                    return 0
-                return 1
+            puts(green(result),showprefix=showprefix,flush=True)
         if result.failed:
-            #result.return_code == 1
-            puts(yellow("ReturnCode:%s" % result.return_code if code <> -99 else '')
-                    + red('\n' + result)
-                    ,show_prefix=showprefix,flush=True)
-            return 0
+            puts(yellow(red(result),show_prefix=showprefix,flush=True))
 
-    def infect_execute(self,cmd,extent=False):
-        '''infect a file or command to childs or whole'''
-        if self.childs is None:
-            self.breed()
-        for i in self.childs.values():
-            i.execute(cmd)
-            if extent:
-                i.infect_execute(cmd,extent)
+    #def infect_execute(self,cmd,extent=False):
+        #'''infect a file or command to childs or whole'''
+        #if self.childs is None:
+            #self.breed()
+        #for i in self.childs.values():
+            #i.execute(cmd)
+            #if extent:
+                #i.infect_execute(cmd,extent)
 
 
     def exists(self,path):
@@ -389,8 +396,8 @@ class Server(NodeNet):
                 return -1
             elif uuid is not None:
                 if parent.exists("/tmp/%s" % uuid):
-                    if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
-                        puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
+                    puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
+                    if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
                         self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         return uuid
                     else:
@@ -403,8 +410,8 @@ class Server(NodeNet):
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
                         parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,hide_output_prefix=True,hide_puts=True)
-                        if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True):
-                            puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
+                        puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
+                        if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
                             self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                             return uuid
                         else:
@@ -618,13 +625,14 @@ class Monitor(object):
             && echo True || echo False
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
-        self.status = dict([ x.split()[0].split(':') for x in raw_status.split('\n') if x ])
-        if output:
-            self.title()
-            names=self.status.keys()
-            names.sort()
-            for name in names:
-                print '%-40s    %s' % (name, self.status[name])  
+        if raw_status.succeed:
+            self.status = dict([ x.split()[0].split(':') for x in raw_status.result.split('\n') if x ])
+            if output:
+                self.title()
+                names=self.status.keys()
+                names.sort()
+                for name in names:
+                    print '%-40s    %s' % (name, self.status[name])  
     def upgrade_perl(self):
         if len(self.status) == 0:
             self.check(output=False)
@@ -839,8 +847,9 @@ class Monitor(object):
 
 class Info(object):
     shell={
-        'wlan':["""ifconfig eth1|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_public'],
-        'nlan':["""ifconfig eth0|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_private'],
+        
+        'wlan':["""/sbin/ifconfig eth1|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_public'],
+        'nlan':["""/sbin/ifconfig eth0|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_private'],
         'ilo':["""ipmitool lan print|grep 'IP Address'|grep -v 'IP Address Source'|awk -F":" '{print $2}'""",'ip_ilo']
         }
     def __init__(self,srv):
@@ -853,13 +862,14 @@ class Info(object):
             cmd=self.shell[index][0]
             field=self.shell[index][1]
             result=self.server.execute(cmd,hide_puts=True)
-            print "updating the field of \'%s\' with (%s)..." % (field,result),
-            if len(string.split(result,'\n'))>1:
-                print "value not expected."
-                return
-            if self.server.s.update_value(field,result) == 1:
-                print "Success"
+            if result.succeed and result.return_code ==0:
+                print "updating the field of \'%s\' with (%s)..." % (field,result),
+                if self.server.s.update_value(field,result) == 1:
+                    print "Success"
+                else:
+                    print "Failure"
             else:
-                print "Failure"
+                print "The value [%s] is not expected." % result
+
     
         

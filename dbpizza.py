@@ -252,6 +252,7 @@ class PizzaShell(cmd.Cmd):
         for s in self._get_operation_list(opts):
             infolist.append(Info(s))
         for i in infolist:
+            print i.server
             if opts.edit:
                 if opts.ip_ilo:
                     i.rollback_info('ilo')
