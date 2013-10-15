@@ -272,7 +272,12 @@ class Server(NodeNet):
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
     def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
-        out={}
+        class ExecuteOut(object):
+            def __init__(self):
+                self.return_code=-99
+                self.result=''
+                self.succeed=False
+        out=ExecuteOut()
         out.return_code=-99
         out.result=''
         out.succeed=False
