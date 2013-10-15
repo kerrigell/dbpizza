@@ -390,9 +390,8 @@ class Server(NodeNet):
         env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         return fexists(path)
 
-    def download(self,path,uuid=None):
+    def download(self,path,uuid=None,targetpath='/tmp'):
         try:
-            
             filename = [ x for x in path.split('/') if x ][-1] 
             parent = self.parent
             local_ip = self.s.ip_oper
@@ -403,7 +402,7 @@ class Server(NodeNet):
                 if parent.exists("/tmp/%s" % uuid):
                     puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
                     if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
-                        self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                        self.execute("mv /tmp/%s %s/%s" %(uuid, filename,targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         return uuid
                     else:
                         puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
@@ -417,7 +416,7 @@ class Server(NodeNet):
                         parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                         if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
-                            self.execute("cp -r /tmp/%s /tmp/%s" %(uuid, filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                            self.execute("mv /tmp/%s %s/%s" %(uuid, filename,targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
@@ -874,7 +873,7 @@ class Info(object):
                 else:
                     print "Failure"
             else:
-                print "The value [%s] is not expected." % result
+                print "The value [%s] is not expected." % result.result
 
     
         
