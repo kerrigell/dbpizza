@@ -271,7 +271,7 @@ class Server(NodeNet):
         except Exception,e:
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None):
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code=-99
