@@ -193,6 +193,7 @@ class PizzaShell(cmd.Cmd):
                 operfun=getattr(item,oper)
                 operfun()
     @options([make_option('-a','--add',action='store_true',help='add ipsec filter'),
+              make_option('--chain',type='choice',choices=['INPUT','OUTPUT','FORWARD'],help='protocal'),
               make_option('--source',type='string',help='source address'),
               make_option('--protocal',type='choice',choices=['tcp','udp','imcp','all'],help='protocal'),
               make_option('--dport',type='string',help='dport'),
@@ -207,9 +208,10 @@ class PizzaShell(cmd.Cmd):
         cipsec=IPsec(self.server.current_node)
         if opts.add:
             if opts.protocal and opts.source and opts.dport :
-                cipsec.add_filter(opts.protocal,opts.source,opts.dport,args)
+                cipsec.add_filter(opts.protocal,opts.source,opts.dport,args,chain= opts.chain if opts.chain else 'INPUT')
             else:
                 print '''Need surport correct value for those:
+        [--chain=]
         --source=
         --protocal=
         --dport=
