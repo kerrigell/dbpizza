@@ -303,7 +303,7 @@ class Server(NodeNet):
                 if hasattr(result,'return_code'):
                     out.return_code=result.return_code                
                 if not hide_puts:
-                    puts(yellow("%s ReturnCode:%s" % (info,result.return_code if hasattr(result,'return_code') else '')),show_prefix=showprefix,flush=True)
+                    puts(yellow("%s ReturnCode:%s" % (str(self),result.return_code if hasattr(result,'return_code') else '')),show_prefix=showprefix,flush=True)
                 if result.succeeded:
                     if not hide_puts:
                         puts(green(result),showprefix=showprefix,flush=True)
