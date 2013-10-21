@@ -938,8 +938,8 @@ class SysInfo(object):
                 self.server.s.update_value(check_info.record_field,check_return) 
         return check_return
     def check_all(self,do_update=False):
-        for citem in self.__class__.__checklist__:
-            print "Check [%s]=%s" % (citem.check_name,self.check_item(citem.id,do_update))
+        for key,value in self.__class__.__checklist__.iteritems():
+            print "Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))
 
             
                     
