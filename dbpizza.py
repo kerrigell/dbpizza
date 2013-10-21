@@ -22,7 +22,7 @@ from node import Server
 from node import Feature
 from node import Monitor
 from node import IPsec
-from node import Info
+from node import SysInfo
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -202,7 +202,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-l','--list',action='store_true',help='list ipsec'),
               make_option('--script',action='store_true',help='show  ipsec script'),
               make_option('--status',action='store_true',help='show  current ipsec status'),
-              make_option('-r','--reload',action='store_true',help='reload ipsec')
+              make_option('--reload',action='store_true',help='reload ipsec')
              ])
     def do_ipsec(self,args,opts=None):
         cipsec=IPsec(self.server.current_node)
@@ -248,12 +248,13 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('--ip_ilo',action='store_true',help='ilo ip'),
               make_option('--ip_public',action='store_true',help='public ip'),
               make_option('--ip_private',action='store_true',help='privte ip'),
+              make_option('--check_all',action='store_true',help='check all'),
               make_option('-e','--edit',action='store_true',help='edit info'),
               make_option('-P','--piece',type='string',help='piece name')])        
     def do_info(self,arg,opts=None):
         infolist=[]
         for s in self._get_operation_list(opts):
-            infolist.append(Info(s))
+            infolist.append(SysInfo(s))
         for i in infolist:
             print i.server
             if opts.edit:
@@ -263,6 +264,10 @@ class PizzaShell(cmd.Cmd):
                     i.rollback_info('wlan')
                 if opts.ip_private:
                     i.rollback_info('nlan')
+                if opts.check_all:
+                    inf=SysInfo(self.server.current_node)
+                    result=inf.check_item(1)
+                    print result
                     
         
             

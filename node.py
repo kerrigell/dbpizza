@@ -568,6 +568,7 @@ $IPTABLES -I OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT ;
 
 $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
 $IPTABLES -P INPUT  DROP;
+$IPTABLES -P FORWARD DROP ;
 $IPTABLES -P OUTPUT ACCEPT ;
 service iptables save
     
@@ -853,7 +854,48 @@ class Monitor(object):
         pass
         
 
-class Info(object):
+class SysInfo(object):
+    # db table class
+    __dbclass__=None
+    # db session
+    __dbsession__=None
+    
+    __checklist__={}
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname=cls.__name__
+        dbclassname="t_%s" % string.lower(selfclassname)
+        dbclass=None
+        dbsession=None        
+        import importlib
+        mo=importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo,dbclassname):
+                dbclass= getattr(mo,dbclassname)
+            if hasattr(mo,'session'):
+                dbsession=getattr(mo,'session')
+            if dbclass and dbsession:
+                cls.__dbsession__=dbsession
+                cls.__dbclass__=dbclass
+                return True
+            else:
+                return False
+    @classmethod
+    def _get_dbinfo(cls,sys_type=None,dbid=None):
+        if not cls._get_dbclass():
+            return None
+        result=None
+        
+        if sys_type is not None:
+            if dbid is not None:
+                result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.sys_type==sys_type and cls.__dbclass__.id==dbid).first()
+            else:
+                result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.sys_type==sys_type ).all()
+        return result    
     shell={
         
         'wlan':["""/sbin/ifconfig eth1|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_public'],
@@ -865,12 +907,46 @@ class Info(object):
         if type(srv) != Server: 
             raise "param type is not Server"
         self.server=srv 
+        if len(self.__class__.__checklist__) == 0:
+            tlist=self._get_dbinfo(self.server.s.os_type)
+            for i in tlist:
+                self.__class__.__checklist__[i.id]=i
+        self.check_result={}
+
+    def check_item(self,dbid=None,do_update=False):
+        check_info=None
+        check_return=None
+        if self.__class__.__checklist__.has_key(dbid):
+            check_info=self.__class__.__checklist__[dbid]
+        else:
+            return None
+        if self.check_result.has_key(dbid):
+            check_return=self.check_result[dbid]
+            return None
+        if not check_info.record_table and check_info.record_field and check_info.check_cmd:
+            return None
+        if check_info.need_id:
+            need_result=self.check_item(check_info.need_id,do_update=False)
+            if need_result not in string.split("%s" % check_info.need_value,';'):
+                return None
+        execute_result=self.server.execute(check_info.check_cmd,hide_puts=True)
+        if result.succeed and result.return_code ==0 :
+            # reg result
+            self.check_result[dbid]=execute_result.result
+            check_return=execute_result.result
+            if do_update:
+                self.server.s.update_value(check_info.record_field,execute_result.result) 
+
+            
+                    
+                    
+                
     def rollback_info(self,index):
         if self.shell.has_key(index):
             cmd=self.shell[index][0]
             field=self.shell[index][1]
             result=self.server.execute(cmd,hide_puts=True)
-            if result.succeed and result.return_code ==0 and result.result.split('\n')==1:
+            if result.succeed :
                 print "updating the field of \'%s\' with (%s)..." % (field,result.result),
                 if self.server.s.update_value(field,result.result) == 1:
                     print "Success"

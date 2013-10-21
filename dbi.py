@@ -127,3 +127,18 @@ class t_ipsec(Base):
         self.createdate=datetime.datetime.now()
         self.modifydate=datetime.datetime.now()
         
+class t_sysinfo(Base):
+    __tablename__='t_sysinfo'
+    id = Column(Integer, primary_key=True)
+    need_id = Column(Integer)
+    need_value = Column(VARCHAR(50))
+    check_name = Column(VARCHAR(40))
+    check_cmd = Column(VARCHAR(255))
+    sys_type = Column(Enum('Windows','Linux'))
+    result_reg = Column(VARCHAR(50))
+    record_table = Column(VARCHAR(50))
+    record_field = Column(VARCHAR(50))
+
+    
+    
+        
