@@ -957,7 +957,7 @@ class SysInfo(object):
                 else:
                     print "Failure"
             else:
-                print "The value [%s] is not expected." % result.result
+                print ("The value [%s] is not expected." % result.result).encode('gbk')
 
     
         
