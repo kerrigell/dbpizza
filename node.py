@@ -930,7 +930,7 @@ class SysInfo(object):
             if need_result not in string.split("%s" % check_info.need_value,';'):
                 return None
         execute_result=self.server.execute(check_info.check_cmd,hide_puts=True)
-        if result.succeed and result.return_code ==0 :
+        if execute_result.succeed and execute_result.return_code ==0 :
             # reg result
             self.check_result[dbid]=execute_result.result
             check_return=execute_result.result
