@@ -266,8 +266,8 @@ class PizzaShell(cmd.Cmd):
                     i.rollback_info('nlan')
                 if opts.check_all:
                     inf=SysInfo(self.server.current_node)
-                    result=inf.check_item(1)
-                    print result
+                    inf.check_all()
+
                     
         
             

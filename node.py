@@ -932,10 +932,14 @@ class SysInfo(object):
         execute_result=self.server.execute(check_info.check_cmd,hide_puts=True)
         if execute_result.succeed and execute_result.return_code ==0 :
             # reg result
-            self.check_result[dbid]=execute_result.result
-            check_return=execute_result.result
+            check_return=string.strip(execute_result.result)
+            self.check_result[dbid]=check_return
             if do_update:
-                self.server.s.update_value(check_info.record_field,execute_result.result) 
+                self.server.s.update_value(check_info.record_field,check_return) 
+        return check_return
+    def check_all(self,do_update=False):
+        for citem in self.__class__.__checklist__:
+            print "Check [%s]=%s" % (citem.check_name,self.check_item(citem.id,do_update))
 
             
                     
