@@ -939,7 +939,7 @@ class SysInfo(object):
         return check_return
     def check_all(self,do_update=False):
         for key,value in self.__class__.__checklist__.iteritems():
-            print "Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))
+            print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
 
             
                     
@@ -957,7 +957,7 @@ class SysInfo(object):
                 else:
                     print "Failure"
             else:
-                print ("The value [%s] is not expected." % result.result).encode('gbk')
+                print ("The value [%s] is not expected." % result.result)
 
     
         
