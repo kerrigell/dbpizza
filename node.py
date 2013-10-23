@@ -404,7 +404,7 @@ class Server(NodeNet):
                     if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
                         if not self.exists(targetpath):
                             self.execute("mkdir -p %s" %(targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
-                        self.execute("mv /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                        self.execute("cp -r /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         return uuid
                     else:
                         puts(red("%s+-->%s:%s"%(string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
@@ -418,9 +418,9 @@ class Server(NodeNet):
                         parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         puts(yellow("%s+-->%s" % (string.ljust(' ',self.level*4),str(self))),show_prefix=False)
                         if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
-                            if not self.exists(targetpath):
-                                self.execute("mkdir -p %s" %(targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)                            
-                            self.execute("mv /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                          #  if not self.exists(targetpath):
+                          #      self.execute("mkdir -p %s" %(targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)                            
+                          #  self.execute("cp -r  /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                             return uuid
                         else:
                             puts(red("%s+-->%s:%s" % (string.ljust(' ',self.level*4,),str(self),"Transfer Failed!")),show_prefix=False)
@@ -896,12 +896,7 @@ class SysInfo(object):
             else:
                 result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.sys_type==sys_type ).all()
         return result    
-    shell={
-        
-        'wlan':["""/sbin/ifconfig eth1|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_public'],
-        'nlan':["""/sbin/ifconfig eth0|grep 'inet addr'|awk '{print $1$2}'|awk -F":" '{print $2}'""",'ip_private'],
-        'ilo':["""ipmitool lan print|grep 'IP Address'|grep -v 'IP Address Source'|awk -F":" '{print $2}'""",'ip_ilo']
-        }
+
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
         if type(srv) != Server: 
@@ -941,23 +936,3 @@ class SysInfo(object):
         for key,value in self.__class__.__checklist__.iteritems():
             print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
 
-            
-                    
-                    
-                
-    def rollback_info(self,index):
-        if self.shell.has_key(index):
-            cmd=self.shell[index][0]
-            field=self.shell[index][1]
-            result=self.server.execute(cmd,hide_puts=True)
-            if result.succeed :
-                print "updating the field of \'%s\' with (%s)..." % (field,result.result),
-                if self.server.s.update_value(field,result.result) == 1:
-                    print "Success"
-                else:
-                    print "Failure"
-            else:
-                print ("The value [%s] is not expected." % result.result)
-
-    
-        

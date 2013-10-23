@@ -245,10 +245,7 @@ class PizzaShell(cmd.Cmd):
         if opts.status:
             self.server.current_node.execute("iptables -nvL")
             return
-    @options([make_option('--ip_ilo',action='store_true',help='ilo ip'),
-              make_option('--ip_public',action='store_true',help='public ip'),
-              make_option('--ip_private',action='store_true',help='privte ip'),
-              make_option('--check_all',action='store_true',help='check all'),
+    @options([make_option('--check_all',action='store_true',help='check all'),
               make_option('-e','--edit',action='store_true',help='edit info'),
               make_option('-P','--piece',type='string',help='piece name')])        
     def do_info(self,arg,opts=None):
@@ -258,12 +255,6 @@ class PizzaShell(cmd.Cmd):
         for i in infolist:
             print i.server
             if opts.edit:
-                if opts.ip_ilo:
-                    i.rollback_info('ilo')
-                if opts.ip_public:
-                    i.rollback_info('wlan')
-                if opts.ip_private:
-                    i.rollback_info('nlan')
                 if opts.check_all:
                     inf=SysInfo(self.server.current_node)
                     inf.check_all()
