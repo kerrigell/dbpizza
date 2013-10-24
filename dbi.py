@@ -17,6 +17,17 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
 
+class t_region(Base):
+    __tablename__='t_region'
+    id=Column(Integer, primary_key=True)
+    code=Column(VARCHAR(3))
+    name=Column(VARCHAR(50))
+    
+class t_product(Base):
+    __tablename__='t_product'
+    id=Column(Integer, primary_key=True)
+    code=Column(VARCHAR(20))
+    name=Column(VARCHAR(50))    
 
 class t_server(Base):
     __tablename__ = 't_server'

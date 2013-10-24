@@ -458,6 +458,18 @@ class Server(NodeNet):
             if tnode:
                 serverlist.append(tnode)
         return serverlist
+    def add_child_info(self,ip_oper,description,region,loginuser='root'):
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        dbsession.add(dbclass(pid=self.dbid,
+                              ip_oper=ip_oper,
+                              description=description,
+                              region=region,
+                              product=product,
+                              role=role,
+                              loginuser=loginuser
+                            ))
+        dbsession.commit()
                     
 
 class IPsec(object):
@@ -531,8 +543,6 @@ class IPsec(object):
         return self.__class__._get_dbinfo(self.server.dbid)      
     def make_script(self):
         ripsec=self.list()
-        if len(ripsec)==0:
-            return ''
         filterlist=''
         if self.server.parent is not None :
             pip_public=self.server.parent.s.ip_public
@@ -632,6 +642,10 @@ class Monitor(object):
             echo -n "is_configured_nrpe:";
             grep -q '%s' /etc/xinetd.d/nrpe &>/dev/null \
             && echo True || echo False
+            
+            echo -n "is_openssl_devel:";
+            rpm  -qa | grep openssl-devel &>/dev/null \
+            && echo True || echo False            
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
         if raw_status.succeed:
@@ -710,12 +724,12 @@ class Monitor(object):
             self.check(output=False)        
         base_dir = self.config.get('basic', 'base_dir')
         self.title()
+        
         # Install Sys-Statistics-Linux
-        UUID = None
-        file_name = self.config.get('tools', 'Linux_pm')
-        file = base_dir + "/client/tools/" + file_name
-
         if self.status['is_installed_Linux_pm'] == 'False':
+            UUID = None
+            file_name = self.config.get('tools', 'Linux_pm')
+            file = base_dir + "/client/tools/" + file_name          
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
                     cd /tmp && \
@@ -735,10 +749,10 @@ class Monitor(object):
                 """)
 
         # Install nagios-plugins
-        UUID = None
-        file_name = self.config.get('tools', 'nagios_plugin')
-        file = base_dir + "/client/tools/" + file_name
         if self.status['is_installed_nagios_plugin'] == 'False':
+            UUID = None
+            file_name = self.config.get('tools', 'nagios_plugin')
+            file = base_dir + "/client/tools/" + file_name            
             UUID = server.download(file, uuid=UUID)
             self.server.execute("""
                 cd /tmp && \
@@ -753,15 +767,41 @@ class Monitor(object):
                 make &>/dev/null && \
                 make install &>/dev/null
                 """)
+        # Install openssl-devel
+        if self.status['is_openssl_devel'] == 'False':
+            print '''Please install those pacages:
+                libcom_err-devel-1.41.12-14.el6_4.2.x86_64                                                                                                                    1/6 
+                keyutils-libs-devel-1.4-4.el6.x86_64                                                                                                                          2/6 
+                libsepol-devel-2.0.41-4.el6.x86_64                                                                                                                            3/6 
+                libselinux-devel-2.0.94-5.3.el6_4.1.x86_64                                                                                                                    4/6 
+                krb5-devel-1.10.3-10.el6_4.6.x86_64                                                                                                                           5/6 
+                openssl-devel-1.0.0-27.el6_4.2.x86_64  '''
+            #UUID = None
+            #file_name = self.config.get('tools', 'openssl_devel')
+            #file = base_dir + "/client/tools/" + file_name
+            #UUID = server.download(file, uuid=UUID)
+            #self.server.execute("""
+                #cd /tmp && \
+                #tar zxf nagios-plugins-1.4.15.tar.gz && \
+                #cd nagios-plugins-1.4.15 && \
+                #./configure --with-nagios-user=nagios \
+                #--with-nagios-group=nagios \
+                #--with-openssl=/usr/bin/openssl \
+                #--enable-perl-modules \
+                #--enable-redhat-pthread-workaround \
+                #&>/dev/null && \
+                #make &>/dev/null && \
+                #make install &>/dev/null
+                #""")        
 
         # Install nrpe
-        UUID1 = None
-        UUID2 = None
-        file_name1 = self.config.get('tools', 'nrpe')
-        file_name2 = self.config.get('tools', 'xinetd_nrpe')
-        file1 = base_dir + "/client/tools/" + file_name1
-        file2 = base_dir + "/client/" + file_name2
-        if self.status['is_installed_nrpe'] == 'False':
+        if self.status['is_installed_nrpe'] == 'False' and self.status['is_openssl_devel']=='True':
+            UUID1 = None
+            UUID2 = None
+            file_name1 = self.config.get('tools', 'nrpe')
+            file_name2 = self.config.get('tools', 'xinetd_nrpe')
+            file1 = base_dir + "/client/tools/" + file_name1
+            file2 = base_dir + "/client/" + file_name2
             UUID1 = self.server.download(file1, uuid=UUID1)
             UUID2 = self.server.download(file2, uuid=UUID2)
             self.server.execute("""
@@ -774,6 +814,7 @@ class Monitor(object):
                     make install-daemon   && 
                     make install-daemon-config  && 
                     make install-xinetd  &&
+                    echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
                     sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&
                     killall nrpe &&
                     /etc/init.d/xinetd restart && 
@@ -798,10 +839,10 @@ class Monitor(object):
             
 
         # Install utils_pm
-        UUID = None
-        file_name = self.config.get('tools', 'utils_pm')
-        file = base_dir + "/client/tools/" + file_name
         if self.status['is_installed_utils_pm'] == 'False':
+            UUID = None
+            file_name = self.config.get('tools', 'utils_pm')
+            file = base_dir + "/client/tools/" + file_name           
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
                     mv /tmp/%s /usr/local/nagios/libexec
@@ -929,7 +970,7 @@ class SysInfo(object):
             # reg result
             check_return=string.strip(execute_result.result)
             self.check_result[dbid]=check_return
-            if do_update:
+            if do_update and check_info.record_field and check_info.record_table:
                 self.server.s.update_value(check_info.record_field,check_return) 
         return check_return
     def check_all(self,do_update=False):

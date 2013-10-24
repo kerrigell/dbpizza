@@ -99,7 +99,7 @@ class PizzaShell(cmd.Cmd):
             #'''search server list like aaa.*'''
             #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             #return self.root.search_list(text)
-    @options([make_option('-P','--Piece',type='string',help='piece name')])
+    @options([make_option('-p','--piece',type='string',help='piece name')])
     def do_cmd(self,arg,opts=None):
         for s in self._get_operation_list(opts):
             s.execute(arg)
@@ -246,18 +246,17 @@ class PizzaShell(cmd.Cmd):
             self.server.current_node.execute("iptables -nvL")
             return
     @options([make_option('--check_all',action='store_true',help='check all'),
-              make_option('-e','--edit',action='store_true',help='edit info'),
-              make_option('-P','--piece',type='string',help='piece name')])        
+              make_option('--update',action='store_true',help='update database'),
+              make_option('-p','--piece',type='string',help='piece name')])        
     def do_info(self,arg,opts=None):
         infolist=[]
         for s in self._get_operation_list(opts):
             infolist.append(SysInfo(s))
         for i in infolist:
             print i.server
-            if opts.edit:
-                if opts.check_all:
-                    inf=SysInfo(self.server.current_node)
-                    inf.check_all()
+            if opts.check_all:
+                inf=SysInfo(self.server.current_node)
+                inf.check_all(do_update= True if opts.update else False)
 
                     
         
