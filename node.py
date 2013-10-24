@@ -545,15 +545,16 @@ class IPsec(object):
         ripsec=self.list()
         filterlist=''
         if self.server.parent is not None :
-            pip_public=self.server.parent.s.ip_public
-            pip_private=self.server.parent.s.ip_private
-            pip_oper=self.server.parent.s.ip_oper
-            if len(pip_oper):
-                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT #cc:%s\n''' % (pip_oper,self.server)
-            if len(pip_private):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s\n''' % (pip_private,self.server)
-            if len(pip_public):
-                filterlist+= '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT  #cc:%s\n''' % (pip_public,self.server)
+            parent_iplist=[]
+            parent_iplist.append(self.server.parent.s.ip_public)
+            parent_iplist.append(self.server.parent.s.ip_private)
+            parent_iplist.append(self.server.parent.s.ip_oper)
+            parent_iplist=[ i for i in parent_iplist if i ]
+            parent_iplist=list(set(parent_iplist))
+
+            for item in parent_iplist:
+                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT #cc:%s\n''' % (item,self.server.parent)
+
         for i in ripsec:
             filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT #%s\n''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
 
