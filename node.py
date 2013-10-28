@@ -504,8 +504,8 @@ class Server(NodeNet):
                     print 'send failure'
                 break
             if f.level > t.level:
-                cmd='scp -r %s@%s:%s %s %s ' % (f.user
-                                                , f.address
+                cmd='scp -r %s@%s:%s %s %s ' % (f.s.loginuser
+                                                , f.s.ip_oper
                                                 ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,tpath
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
@@ -513,8 +513,8 @@ class Server(NodeNet):
                 t.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             else:
                 cmd='scp -r %s %s@%s:%s %s' % ( '%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
-                                                ,t.user
-                                                ,t.address
+                                                ,t.s.loginuser
+                                                ,t.s.ip_oper
                                                 ,'%s/%s' %(tpath,tmpfile)
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
                 print cmd
