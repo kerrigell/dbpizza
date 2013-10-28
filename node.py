@@ -477,7 +477,7 @@ class Server(NodeNet):
 
         if not len(lfile):
             return None
-        walkpath=self._walk(self,dest_server)
+        walkpath=self.walk(self,dest_server)
         if not walkpath:
             puts(red("Error: Not found the correct way from %s to %s" ))
             return None
