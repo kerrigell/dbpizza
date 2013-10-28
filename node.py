@@ -471,7 +471,66 @@ class Server(NodeNet):
                             ))
         dbsession.commit()
                     
+    def sendto(self,local_file,dest_server,dest_path,uuid=None):
+        import os.path
+        (lpath,lfile) = os.path.split(local_file)
 
+        if not len(lfile):
+            return None
+        walkpath=self._walk(self,dest_server)
+        if not walkpath:
+            puts(red("Error: Not found the correct way from %s to %s" ))
+            return None
+        tpath='/tmp'
+        ltpath=None
+        
+        if uuid is None:
+            uuid=muuid.uuid1()
+        tmpfile=uuid
+        
+        puts(yellow("%s+-->%s"%(string.ljust(' ',self.level*4,),str(self))),show_prefix=False)
+        
+        for (f,t) in map(None,walkpath,walkpath[1:]):
+            puts(yellow("%s+-->%s"%(string.ljust(' ',f.level*4,)+str(f),str(t))),show_prefix=False)
+            if t == None:
+                f.execute('mv %s/%s %s/%s' % (tpath
+                                              ,tmpfile,
+                                              dest_path,
+                                              lfile))
+                print 'mv %s to %s' % (tmpfile, '%s/%s' % (dest_path, lfile))
+                print 'send finished'
+                break
+            if f.level > t.level:
+                cmd='scp -r %s@%s:%s %s %s ' % (f.user
+                                                , f.address
+                                                ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
+                                                ,tpath
+                                                ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                print cmd
+                t.execute(cmd)
+            else:
+                cmd='scp -r %s %s@%s:%s %s' % ( '%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
+                                                ,t.user
+                                                ,t.address
+                                                ,'%s/%s' %(tpath,tmpfile)
+                                                ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                print cmd
+                f.execute(cmd)
+            if not ltpath:
+                ltpath=tpath
+    @classmethod     
+    def walk(cls,source_server,dest_server):
+        #seach child
+        if source_server is None or dest_server is None or type(source_server) != cls or type(dest_server) !=cls:
+            return []        
+        start=[source_server] + [x for x in source_server] 
+        end=[dest_server] +[x for x in dest_server]
+        same=[x for x in start if x in end]
+        result=start[:start.index(same[0])] +same[0:1]+ end[:end.index(same[0])][::-1]
+        #   end=end.reverse()
+        #tmp=start + end
+        #result=sorted(set(tmp),key=tmp.index)
+        return result          
 class IPsec(object):
     # db table class
     __dbclass__=None
@@ -977,4 +1036,7 @@ class SysInfo(object):
     def check_all(self,do_update=False):
         for key,value in self.__class__.__checklist__.iteritems():
             print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
+            
+class MySQL(object):
+    pass
 

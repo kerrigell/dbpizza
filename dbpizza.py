@@ -164,7 +164,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
         make_option('-p','--piece',type='string',help='the name of a filter list')])
-    def do_monitor(self,args,opts=None):
+    def do_nagios(self,args,opts=None):
         monitorlist=[]
         for s in self._get_operation_list(opts):
             monitorlist.append(Monitor(s))
@@ -257,6 +257,20 @@ class PizzaShell(cmd.Cmd):
             if opts.check_all:
                 inf=SysInfo(self.server.current_node)
                 inf.check_all(do_update= True if opts.update else False)
+    @options([make_option('-d','--dest',type='string',action='store_true',help='check all'),
+              make_option('-f','--file',type='string',action='store_true',help='check all'),
+          make_option('--update',action='store_true',help='update database'),
+          make_option('-p','--piece',type='string',help='piece name')])  
+    def do_trans(self,arg,opts=None):
+        if opts.dest:
+            line=string.strip(opts.dest)
+            dbid=line
+            if string.find(line,'[') !=-1:
+                (dbid,info)=string.split(line,'[')
+                (dbid,info)=string.split(info,':')
+            dnode=self.server.get_node(int(dbid))
+            self.server.sendto(opts.file,dnode,'/tmp/')
+        
 
                     
         
