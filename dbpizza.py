@@ -257,8 +257,8 @@ class PizzaShell(cmd.Cmd):
             if opts.check_all:
                 inf=SysInfo(self.server.current_node)
                 inf.check_all(do_update= True if opts.update else False)
-    @options([make_option('-d','--dest',type='string',action='store_true',help='check all'),
-              make_option('-f','--file',type='string',action='store_true',help='check all'),
+    @options([make_option('-d','--dest',type='string',,help='check all'),
+              make_option('-f','--file',type='string',,help='check all'),
           make_option('--update',action='store_true',help='update database'),
           make_option('-p','--piece',type='string',help='piece name')])  
     def do_trans(self,arg,opts=None):
