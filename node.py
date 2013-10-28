@@ -493,12 +493,15 @@ class Server(NodeNet):
         for (f,t) in map(None,walkpath,walkpath[1:]):
             puts(yellow("%s+-->%s"%(string.ljust(' ',f.level*4,)+str(f),str(t))),show_prefix=False)
             if t == None:
-                f.execute('mv %s/%s %s/%s' % (tpath
+                #parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed
+                if f.execute('mv %s/%s %s/%s' % (tpath
                                               ,tmpfile,
                                               dest_path,
-                                              lfile))
-                print 'mv %s to %s' % (tmpfile, '%s/%s' % (dest_path, lfile))
-                print 'send finished'
+                                              lfile)
+                             ,hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed:
+                    print 'send finished'
+                else:
+                    print 'send failure'
                 break
             if f.level > t.level:
                 cmd='scp -r %s@%s:%s %s %s ' % (f.user
@@ -506,8 +509,8 @@ class Server(NodeNet):
                                                 ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,tpath
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
-                print cmd
-                t.execute(cmd)
+                
+                t.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             else:
                 cmd='scp -r %s %s@%s:%s %s' % ( '%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,t.user
@@ -515,7 +518,7 @@ class Server(NodeNet):
                                                 ,'%s/%s' %(tpath,tmpfile)
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
                 print cmd
-                f.execute(cmd)
+                f.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             if not ltpath:
                 ltpath=tpath
     @classmethod     

@@ -268,8 +268,8 @@ class PizzaShell(cmd.Cmd):
             if string.find(line,'[') !=-1:
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')
-            dnode=self.server.get_node(int(dbid))
-            self.server.sendto(opts.file,dnode,'/tmp/')
+            dnode=self.server.current_node.get_node(int(dbid))
+            self.server.current_node.sendto(opts.file,dnode,'/tmp/')
         
 
                     
