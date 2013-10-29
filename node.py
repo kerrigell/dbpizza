@@ -507,7 +507,7 @@ class Server(NodeNet):
                 cmd='scp -r %s@%s:%s %s %s ' % (f.s.loginuser
                                                 , f.s.ip_oper
                                                 ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
-                                                ,tpath
+                                                ,'%s/%s' % (tpath,tmpfile)
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
                 print cmd
                 
