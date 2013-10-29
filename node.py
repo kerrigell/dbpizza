@@ -940,6 +940,14 @@ class Monitor(object):
                 /usr/local/nagios/etc/nrpe.cfg \
                 | egrep '^command\[.*\]'
                 """)
+    def update_nrpe_ntp(self):
+        self.title()
+        ntp=string.strip(self.server.s.ip_ntp_server)
+        if len(ntp) > 0:
+            self.server.execute("""
+                    sed -i 's/NTP_SERVER_IP/%s/g' \
+                    /usr/local/nagios/etc/nrpe.cfg
+                    """ % ntp)    
 
     def deploy(self):
         print "check monitor status"
@@ -954,6 +962,8 @@ class Monitor(object):
         self.deploy_script()
         print "update nrpe"
         self.update_nrpe()
+        print "update ntp server in nrpe.cfg"
+        self.update_nrpe_ntp()
     def config_centreon(self):
         pass
         

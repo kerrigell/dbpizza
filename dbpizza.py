@@ -175,6 +175,7 @@ class PizzaShell(cmd.Cmd):
             ['deploy all monitor scripts',                               'deploy_script'  ],
             ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
             ['update your nrpe commands',                                'update_nrpe'    ],
+            ['update ntp server address in your nrpe.cfg',               'update_nrpe_ntp'],
             ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
             ['test monitor script',                                      'test_script'    ]
             ]
