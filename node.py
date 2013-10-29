@@ -509,6 +509,7 @@ class Server(NodeNet):
                                                 ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,tpath
                                                 ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                print cmd
                 
                 t.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             else:
