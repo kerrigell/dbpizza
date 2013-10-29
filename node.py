@@ -926,7 +926,7 @@ class Monitor(object):
         for name, value in nrpes:
             nrpe_line = "command[" + name + "]=" + value
             shell += """
-                    sed -i '/command[%s/d' \
+                    sed -i '/command\[%s/d' \
                     /usr/local/nagios/etc/nrpe.cfg;
                     echo "%s" >> \
                     /usr/local/nagios/etc/nrpe.cfg;
