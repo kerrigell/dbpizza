@@ -504,20 +504,22 @@ class Server(NodeNet):
                     print 'send failure'
                 break
             if f.level > t.level:
-                cmd='scp -r %s@%s:%s %s %s ' % (f.s.loginuser
+                cmd='scp -r %s@%s:%s %s' % (f.s.loginuser
                                                 , f.s.ip_oper
                                                 ,'%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,'%s/%s' % (tpath,tmpfile)
-                                                ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                                        #        ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                                        )
                 print cmd
                 
                 t.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             else:
-                cmd='scp -r %s %s@%s:%s %s' % ( '%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
+                cmd='scp -r %s %s@%s:%s' % ( '%s/%s' % (ltpath if ltpath else lpath,tmpfile if ltpath else lfile)
                                                 ,t.s.loginuser
                                                 ,t.s.ip_oper
                                                 ,'%s/%s' %(tpath,tmpfile)
-                                                ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                                           #     ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
+                                           )
                 print cmd
                 f.execute(cmd,hide_stdout=False,hide_output_prefix=True,hide_puts=True)
             if not ltpath:
