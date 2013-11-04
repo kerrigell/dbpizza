@@ -1107,6 +1107,7 @@ class Transfer(object):
                         else:
                             self.trans_list[dst_srv.dbid][2]='Not OK'                        
                 if dst_srv == None:
+                    print self.trans_list[src_srv.dbid][1]
                     if self.trans_list.has_key(src_srv.dbid) and self.trans_list[src_srv.dbid][1]==1:
                         if src_srv.exists(os.path.join(tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
