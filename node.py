@@ -1077,7 +1077,7 @@ class Transfer(object):
         if not self.server.exists(path):
             print "source is not exists"
             return
-        if len(self.dest_servers)===0:
+        if len(self.dest_servers)==0:
             return
         self.trans_list={}
         tmppath=''
