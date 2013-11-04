@@ -1077,15 +1077,15 @@ class Transfer(object):
         self.trans_list={}
         tmppath=''
         try:
-            tmppath=environ["TMP"]
+            tmppath=os.environ["TMP"]
         except:
             pass
         if len(tmppath)==0 :tmppath='/tmp'
         #对目标服务器按level进行排序，先传输level数值大的，可以增加
-        for value in self.dest_servers.reverse(lambda p1,p2:cmp(p1.s.level,p2.s.level,reverse=True)):
+        for value in self.dest_servers if len(self.dest_servers)<2 else self.dest_servers.sort(lambda p1,p2:cmp( 0 if p1 is None else p1.s.level,0 if p2 is None else p2.s.level),reverse=True):
             #记录uuid使用次数，初始是-1.正常结束时0，每传递加1，有问题为-2【记录机器为传输目标机器】
             #记录传输过程的执行结果，文本记录
-            walkpath=self.server.walk(self.server,dest_server)
+            walkpath=self.server.walk(self.server,value)
             for (src_srv,dst_srv) in map(None,walkpath,walkpath[1:]):
                 if src_srv is not None and not self.trans_list.has_key(src_srv.dbid):
                     self.trans_list[src_srv.dbid]=[src_srv,0,None]

@@ -271,7 +271,7 @@ class PizzaShell(cmd.Cmd):
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')
             dnode=self.server.current_node.get_node(int(dbid))
-            tra=Transfer(self.server.current_node,opts.dest)
+            tra=Transfer(self.server.current_node,opts.file)
             tra.add_server(dnode)
             tra.send('/tmp/aa/')
           #  self.server.current_node.sendto(opts.file,dnode,'/tmp/')
