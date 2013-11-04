@@ -1074,7 +1074,7 @@ class Transfer(object):
                 self.dest_servers.append(srv)
                 
     def send(self,dest_path):
-        if not self.server.exists(path):
+        if not self.server.exists(dest_path):
             print "source is not exists"
             return
         if len(self.dest_servers)==0:
