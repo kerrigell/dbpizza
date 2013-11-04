@@ -1066,8 +1066,8 @@ class Transfer(object):
         # ServerID: [ Server, status, Result]
         self.dest_servers=[]
         
-        if self.server.exists(path):
-            self.source_path=path
+        #if self.server.exists(path):
+            #self.source_path=path
     def add_server(self,*srvlist):
         for srv in srvlist:
             if type(srv)==Server:
