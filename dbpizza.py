@@ -23,6 +23,7 @@ from node import Feature
 from node import Monitor
 from node import IPsec
 from node import SysInfo
+from node import Transfer
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -270,7 +271,10 @@ class PizzaShell(cmd.Cmd):
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')
             dnode=self.server.current_node.get_node(int(dbid))
-            self.server.current_node.sendto(opts.file,dnode,'/tmp/')
+            tra=Transfer(self.server.current_node,opts.dest)
+            tra.add_server(dnode)
+            tra.send('/tmp/aa/')
+          #  self.server.current_node.sendto(opts.file,dnode,'/tmp/')
         
 
                     

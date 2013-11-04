@@ -17,6 +17,7 @@ import uuid as muuid
 import pdb
 import string
 import ConfigParser
+import os.path
 
 reload(sys)
 sys.setdefaultencoding('latin1')
@@ -1052,6 +1053,106 @@ class SysInfo(object):
     def check_all(self,do_update=False):
         for key,value in self.__class__.__checklist__.iteritems():
             print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
+            
+class Transfer(object):
+    def __init__(self,server,path):
+        
+        (self._lpath,self._lfile) = os.path.split(path)
+        self.server=server
+        self.source_path=None
+        self.uuid=str(muuid.uuid1())
+        # ServerID: [ Server, status, Result]
+        self.trans_list=None
+        # ServerID: [ Server, status, Result]
+        self.dest_servers=[]
+        
+        if self.server.exists(path):
+            self.source_path=path
+    def add_server(self,*srvlist):
+        for srv in srvlist:
+            if type(srv)==Server:
+                self.dest_servers.append(srv)
+                
+    def send(self,dest_path):
+        self.trans_list={}
+        tmppath=''
+        try:
+            tmppath=environ["TMP"]
+        except:
+            pass
+        if len(tmppath)==0 :tmppath='/tmp'
+        #对目标服务器按level进行排序，先传输level数值大的，可以增加
+        for value in self.dest_servers.reverse(lambda p1,p2:cmp(p1.s.level,p2.s.level,reverse=True)):
+            #记录uuid使用次数，初始是-1.正常结束时0，每传递加1，有问题为-2【记录机器为传输目标机器】
+            #记录传输过程的执行结果，文本记录
+            walkpath=self.server.walk(self.server,dest_server)
+            for (src_srv,dst_srv) in map(None,walkpath,walkpath[1:]):
+                if src_srv is not None and not self.trans_list.has_key(src_srv.dbid):
+                    self.trans_list[src_srv.dbid]=[src_srv,0,None]
+                if dst_srv is not None and not self.trans_list.has_key(dst_srv.dbid):
+                    self.trans_list[dst_srv.dbid]=[dst_srv,0,None]                    
+                    
+                print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv))
+                if src_srv == self.server:
+                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
+                        self.trans_list[dst_srv.dbid][1]+=1     
+                    else:
+                        exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path
+                                                                        ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
+                                                                        ,os.path.join(tmppath,self.uuid)
+                                                                        ))
+                        if exe_result.succeed:
+                            self.trans_list[dst_srv.dbid][1]+=1
+                            self.trans_list[dst_srv.dbid][2]='OK'
+                        else:
+                            self.trans_list[dst_srv.dbid][2]='Not OK'                        
+                if dst_srv == None:
+                    if self.trans_list.has_key(src_srv.dbid) and self.trans_list[dst_srv.dbid][1]==1:
+                        if src_srv.exists(os.path.join(tmppath,self.uuid)):
+                            if not src_srv.exists(dest_path):
+                                src_srv.execute("mkdir -p %s" % dest_path)
+                            exe_result=src_srv.execute("mv %s %s" % (os.path.join(tmppath,self.uuid)
+                                                             ,os.path.join(dest_path,self._lfile)
+                                                             ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                            if exe_result.succeed:
+                                self.trans_list[src_srv.dbid][1]=0
+                                print 'send finished'
+                            else:
+                                print 'send failed:%' % exe_result.result
+                        else:
+                            print 'No target:%s' % os.path.join(tmppath,self.uuid)
+                    break
+                if src_srv.level > dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
+                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
+                        self.trans_list[dst_srv.dbid][1]+=1
+                    else:
+                        exe_result=dst_srv.execute("scp -r %s:%s %s" % ("%s@%s" %(src_srv.s.loginuser,src_srv.s.ip_oper)
+                                                                        ,os.path.join(tmppath,self.uuid)
+                                                                        ,os.path.join(tmppath)
+                                                                        ))
+                        if exe_result.succeed:
+                            self.trans_list[dst_srv.dbid][1]+=1
+                            self.trans_list[dst_srv.dbid][2]='OK'
+                        else:
+                            self.trans_list[dst_srv.dbid][2]='Not OK'
+                elif src_srv.level < dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
+                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
+                        self.trans_list[dst_srv.dbid][1]+=1   
+                    else:
+                        exe_result=src_srv.execute("scp -r %s %s:%s" % (os.path.join(tmppath,self.uuid)
+                                                                        ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
+                                                                        ,os.path.join(tmppath)
+                                                                        ))
+                        if exe_result.succeed:
+                            self.trans_list[dst_srv.dbid][1]+=1
+                            self.trans_list[dst_srv.dbid][2]='OK'
+                        else:
+                            self.trans_list[dst_srv.dbid][2]='Not OK'
+                    
+                
+
+
+
             
 class MySQL(object):
     pass
