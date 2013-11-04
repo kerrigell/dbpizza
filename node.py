@@ -1066,7 +1066,7 @@ class Transfer(object):
         # ServerID: [ Server, status, Result]
         self.dest_servers=[]
         
-        #if self.server.exists(path):
+        
         self.source_path=path
     def add_server(self,*srvlist):
         for srv in srvlist:
@@ -1074,6 +1074,11 @@ class Transfer(object):
                 self.dest_servers.append(srv)
                 
     def send(self,dest_path):
+        if not self.server.exists(path):
+            print "source is not exists"
+            return
+        if len(self.dest_servers)===0:
+            return
         self.trans_list={}
         tmppath=''
         try:
@@ -1105,7 +1110,8 @@ class Transfer(object):
                             self.trans_list[dst_srv.dbid][1]+=1
                             self.trans_list[dst_srv.dbid][2]='OK'
                         else:
-                            self.trans_list[dst_srv.dbid][2]='Not OK'                        
+                            self.trans_list[dst_srv.dbid][2]='Not OK' 
+                    continue
                 if dst_srv == None:
                     print self.trans_list[src_srv.dbid][1]
                     if self.trans_list.has_key(src_srv.dbid) and self.trans_list[src_srv.dbid][1]==1:

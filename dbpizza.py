@@ -259,22 +259,15 @@ class PizzaShell(cmd.Cmd):
             if opts.check_all:
                 inf=SysInfo(self.server.current_node)
                 inf.check_all(do_update= True if opts.update else False)
-    @options([make_option('-d','--dest',type='string',help='check all'),
-              make_option('-f','--file',type='string',help='check all'),
-          make_option('--update',action='store_true',help='update database'),
-          make_option('-p','--piece',type='string',help='piece name')])  
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('-t','--target',type='string',help='trans target'),
+              make_option('-d','--deploy_dir',type='string',help='trans target')])  
     def do_trans(self,arg,opts=None):
-        if opts.dest:
-            line=string.strip(opts.dest)
-            dbid=line
-            if string.find(line,'[') !=-1:
-                (dbid,info)=string.split(line,'[')
-                (dbid,info)=string.split(info,':')
-            dnode=self.server.current_node.get_node(int(dbid))
-            tra=Transfer(self.server.current_node,opts.file)
-            tra.add_server(dnode)
-            tra.send('/tmp/aa/')
-          #  self.server.current_node.sendto(opts.file,dnode,'/tmp/')
+        trans_task=Transfer(self.server.current_node,opts.target)
+        for s in self._get_operation_list(opts):
+            trans_task.add_server(s)
+        trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
+
         
 
                     
