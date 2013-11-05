@@ -1098,20 +1098,6 @@ class Transfer(object):
                     self.trans_list[dst_srv.dbid]=[dst_srv,0,None]                    
                     
                 print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv))
-                if src_srv == self.server:
-                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
-                        self.trans_list[dst_srv.dbid][1]+=1     
-                    else:
-                        exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path
-                                                                        ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
-                                                                        ,os.path.join(tmppath,self.uuid)
-                                                                        ))
-                        if exe_result.succeed:
-                            self.trans_list[dst_srv.dbid][1]+=1
-                            self.trans_list[dst_srv.dbid][2]='OK'
-                        else:
-                            self.trans_list[dst_srv.dbid][2]='Not OK' 
-                    continue
                 if dst_srv == None:
                     print self.trans_list[src_srv.dbid][1]
                     if self.trans_list.has_key(src_srv.dbid) and self.trans_list[src_srv.dbid][1]==1:
@@ -1134,7 +1120,7 @@ class Transfer(object):
                         self.trans_list[dst_srv.dbid][1]+=1
                     else:
                         exe_result=dst_srv.execute("scp -r %s:%s %s" % ("%s@%s" %(src_srv.s.loginuser,src_srv.s.ip_oper)
-                                                                        ,os.path.join(tmppath,self.uuid)
+                                                                        ,self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,os.path.join(tmppath)
                                                                         ))
                         if exe_result.succeed:
@@ -1146,7 +1132,7 @@ class Transfer(object):
                     if dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1   
                     else:
-                        exe_result=src_srv.execute("scp -r %s %s:%s" % (os.path.join(tmppath,self.uuid)
+                        exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
                                                                         ,os.path.join(tmppath)
                                                                         ))
