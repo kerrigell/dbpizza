@@ -297,7 +297,7 @@ class Server(NodeNet):
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
-                env.warn_only=False
+                env.warn_only=True
                 env.output_prefix=False if hide_output_prefix else False
                 result= run(cmd,shell=False)
                 out.result=str(result)
@@ -1153,7 +1153,7 @@ class Transfer(object):
                             print 'No target:%s' % os.path.join(tmppath,self.uuid)                        
                     continue
                 if src_srv.level > dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
-                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
+                    if self.trans_list[dst_srv.dbid][1]>0 or dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1
                     else:
                         print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
@@ -1170,7 +1170,7 @@ class Transfer(object):
                             print 'not ok'
                             break
                 elif src_srv.level < dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
-                    if dst_srv.exists(os.path.join(tmppath,self.uuid)):
+                    if self.trans_list[dst_srv.dbid][1]>0 or dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1   
                     else:
                         print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
