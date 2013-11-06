@@ -389,7 +389,15 @@ class Server(NodeNet):
     def exists(self,path):
         env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
         env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
-        return fexists(path)
+        result=False
+        try:
+            result=fexists(path)
+        except NetworkError,e:
+            result=False
+        except except Exception,e:
+            result=False
+            
+        return result
 
     def download(self,path,uuid=None,targetpath='/tmp'):
         try:
@@ -1120,7 +1128,7 @@ class Transfer(object):
                                 src_srv.execute("mkdir -p %s" % dest_path)
                             exe_result=src_srv.execute("mv %s %s" % (os.path.join(tmppath,self.uuid)
                                                              ,os.path.join(dest_path,self._lfile)
-                                                             ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                                                             ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
                                 self.trans_list[src_srv.dbid][1]=0
                                 print 'move finished'
@@ -1134,7 +1142,7 @@ class Transfer(object):
                                 src_srv.execute("mkdir -p %s" % dest_path)
                             exe_result=src_srv.execute("cp -r  %s %s" % (os.path.join(tmppath,self.uuid)
                                                              ,os.path.join(dest_path,self._lfile)
-                                                             ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                                                             ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
                               #  self.trans_list[src_srv.dbid][1]=0
                                 print 'copy finished'
