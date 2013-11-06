@@ -1125,7 +1125,7 @@ class Transfer(object):
                     if self.trans_list[src_srv.dbid][1]==1:
                         if src_srv.exists(os.path.join(tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
-                                src_srv.execute("mkdir -p %s" % dest_path)
+                                src_srv.execute("mkdir -p %s" % dest_path,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             exe_result=src_srv.execute("mv %s %s" % (os.path.join(tmppath,self.uuid)
                                                              ,os.path.join(dest_path,self._lfile)
                                                              ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
@@ -1139,7 +1139,7 @@ class Transfer(object):
                     elif self.trans_list[src_srv.dbid][1]>1:
                         if src_srv.exists(os.path.join(tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
-                                src_srv.execute("mkdir -p %s" % dest_path)
+                                src_srv.execute("mkdir -p %s" % dest_path,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             exe_result=src_srv.execute("cp -r  %s %s" % (os.path.join(tmppath,self.uuid)
                                                              ,os.path.join(dest_path,self._lfile)
                                                              ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
@@ -1167,7 +1167,7 @@ class Transfer(object):
                         else:
                             self.trans_list[dst_srv.dbid][2]='Not OK'
                             print 'not ok'
-                            continue
+                            break
                 elif src_srv.level < dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
                     if dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1   
@@ -1184,7 +1184,7 @@ class Transfer(object):
                         else:
                             self.trans_list[dst_srv.dbid][2]='Not OK'
                             print 'not ok'
-                            continue
+                            break
                     
                 
 
