@@ -394,7 +394,7 @@ class Server(NodeNet):
             result=fexists(path)
         except NetworkError,e:
             result=False
-        except except Exception,e:
+        except Exception,e:
             result=False
             
         return result
