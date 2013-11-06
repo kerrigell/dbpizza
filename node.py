@@ -1097,7 +1097,7 @@ class Transfer(object):
                 if dst_srv is not None and not self.trans_list.has_key(dst_srv.dbid):
                     self.trans_list[dst_srv.dbid]=[dst_srv,0,None]                    
                     
-                print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
+             #   print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
                 #if src_srv == self.server:
                     #if dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         #self.trans_list[dst_srv.dbid][1]+=1     
@@ -1112,9 +1112,9 @@ class Transfer(object):
                         #else:
                             #self.trans_list[dst_srv.dbid][2]='Not OK' 
                     #continue
-                if dst_srv == None:
-                    print self.trans_list[src_srv.dbid][1]
-                    if self.trans_list.has_key(src_srv.dbid) and self.trans_list[src_srv.dbid][1]==1:
+                if dst_srv == None and self.trans_list.has_key(src_srv.dbid):
+                    print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
+                    if self.trans_list[src_srv.dbid][1]==1:
                         if src_srv.exists(os.path.join(tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path)
@@ -1123,16 +1123,31 @@ class Transfer(object):
                                                              ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
                                 self.trans_list[src_srv.dbid][1]=0
-                                print 'send finished'
+                                print 'move finished'
                             else:
-                                print 'send failed:%' % exe_result.result
+                                print 'move failed:%' % exe_result.result
                         else:
                             print 'No target:%s' % os.path.join(tmppath,self.uuid)
-                    break
+                    elif self.trans_list[src_srv.dbid][1]>1:
+                        if src_srv.exists(os.path.join(tmppath,self.uuid)):
+                            if not src_srv.exists(dest_path):
+                                src_srv.execute("mkdir -p %s" % dest_path)
+                            exe_result=src_srv.execute("cp -r  %s %s" % (os.path.join(tmppath,self.uuid)
+                                                             ,os.path.join(dest_path,self._lfile)
+                                                             ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                            if exe_result.succeed:
+                              #  self.trans_list[src_srv.dbid][1]=0
+                                print 'copy finished'
+                            else:
+                                print 'copy failed:%' % exe_result.result
+                        else:
+                            print 'No target:%s' % os.path.join(tmppath,self.uuid)                        
+                    continue
                 if src_srv.level > dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
                     if dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1
                     else:
+                        print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
                         exe_result=dst_srv.execute("scp -r %s:%s %s" % ("%s@%s" %(src_srv.s.loginuser,src_srv.s.ip_oper)
                                                                         ,self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,os.path.join(tmppath,self.uuid) if src_srv==self.server else os.path.join(tmppath)
@@ -1144,11 +1159,12 @@ class Transfer(object):
                         else:
                             self.trans_list[dst_srv.dbid][2]='Not OK'
                             print 'not ok'
-                            break
+                            continue
                 elif src_srv.level < dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
                     if dst_srv.exists(os.path.join(tmppath,self.uuid)):
                         self.trans_list[dst_srv.dbid][1]+=1   
                     else:
+                        print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
                         exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
                                                                         ,os.path.join(tmppath,self.uuid) if src_srv==self.server else os.path.join(tmppath)
@@ -1160,7 +1176,7 @@ class Transfer(object):
                         else:
                             self.trans_list[dst_srv.dbid][2]='Not OK'
                             print 'not ok'
-                            break
+                            continue
                     
                 
 
