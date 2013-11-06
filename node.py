@@ -297,7 +297,7 @@ class Server(NodeNet):
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
-                env.warn_only=True
+                env.warn_only=False
                 env.output_prefix=False if hide_output_prefix else False
                 result= run(cmd,shell=False)
                 out.result=str(result)
@@ -1120,8 +1120,7 @@ class Transfer(object):
                         #else:
                             #self.trans_list[dst_srv.dbid][2]='Not OK' 
                     #continue
-                if str(dst_srv) == 'sg:common:54.254.178.166[271:Amazon新加坡DB中控]':
-                    pdb.set_trace()
+
                 if dst_srv == None and self.trans_list.has_key(src_srv.dbid):
                     print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
                     if self.trans_list[src_srv.dbid][1]==1:
