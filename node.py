@@ -1136,7 +1136,7 @@ class Transfer(object):
                         exe_result=dst_srv.execute("scp -r %s:%s %s" % ("%s@%s" %(src_srv.s.loginuser,src_srv.s.ip_oper)
                                                                         ,self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,os.path.join(tmppath,self.uuid) if src_srv==self.server else os.path.join(tmppath)
-                                                                        ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                                                                        ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1]+=1
                             self.trans_list[dst_srv.dbid][2]='OK'
@@ -1152,7 +1152,7 @@ class Transfer(object):
                         exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path if src_srv==self.server else os.path.join(tmppath,self.uuid)
                                                                         ,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
                                                                         ,os.path.join(tmppath,self.uuid) if src_srv==self.server else os.path.join(tmppath)
-                                                                        ),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
+                                                                        ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1]+=1
                             self.trans_list[dst_srv.dbid][2]='OK'
