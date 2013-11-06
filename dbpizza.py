@@ -271,7 +271,7 @@ class PizzaShell(cmd.Cmd):
             if string.find(line,'[') !=-1:
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')   
-                trans_task.add_server(self.server.current_node.get_node(dbid))
+                trans_task.add_server(self.server.current_node.get_node(int(dbid)))
         if opts.piece:
             for s in self._get_operation_list(opts):
                 trans_task.add_server(s)
