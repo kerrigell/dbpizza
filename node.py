@@ -1191,7 +1191,7 @@ class Transfer(object):
                 
     def clear(self):
         for key,value in self.trans_list.iteritems():
-            print "%8s%40%5s%s" % (key,value[0],value[1],value[2])
+            print "%8s%40s%5s%s" % (key,value[0],value[1],value[2])
         
 
 
