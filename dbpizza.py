@@ -261,11 +261,20 @@ class PizzaShell(cmd.Cmd):
                 inf.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-t','--target',type='string',help='trans target'),
-              make_option('-d','--deploy_dir',type='string',help='trans target')])  
+              make_option('-d','--deploy_dir',type='string',help='trans target'),
+              make_option('-w','--who',type='string',help='trans target')])  
     def do_trans(self,arg,opts=None):
         trans_task=Transfer(self.server.current_node,opts.target)
-        for s in self._get_operation_list(opts):
-            trans_task.add_server(s)
+        if opts.who:
+            line=string.strip(opts.who)
+            dbid=line
+            if string.find(line,'[') !=-1:
+                (dbid,info)=string.split(line,'[')
+                (dbid,info)=string.split(info,':')   
+                trans_task.add_server(self.server.current_node.get_node(dbid))
+        if opts.piece:
+            for s in self._get_operation_list(opts):
+                trans_task.add_server(s)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
 
