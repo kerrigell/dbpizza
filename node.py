@@ -1191,8 +1191,9 @@ class Transfer(object):
                 
     def clear(self):
         for key,value in self.trans_list.iteritems():
-            print "%14s%50s%5s%s" % (key,value[0],value[1],value[2]),
+            
             if value[1]>1:
+                print "%14s%50s%5s%s" % (key,value[0],value[1],value[2]),
                 exe_result=value[0].execute("cd %s; rm -rf %s" %( self.tmppath,self.uuid),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                 if exe_result.succeed:
                     value[1]=0
@@ -1200,6 +1201,8 @@ class Transfer(object):
                 else:
                     value[1]=-2
                     print 'fail'
+            else:
+                print "%14s%50s%5s%s" % (key,value[0],value[1],value[2])
         
 
 
