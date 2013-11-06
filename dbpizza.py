@@ -267,6 +267,7 @@ class PizzaShell(cmd.Cmd):
         for s in self._get_operation_list(opts):
             trans_task.add_server(s)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
+        trans_task.clear()
 
         
 

@@ -1186,9 +1186,13 @@ class Transfer(object):
                             self.trans_list[dst_srv.dbid][2]='Not OK'
                             print 'not ok'
                             break
+        
                     
                 
-
+    def clear(self):
+        for key,value in self.trans_list.iteritems():
+            print "%8s%40%5s%s" % (key,value[0],value[1],value[2])
+        
 
 
             
