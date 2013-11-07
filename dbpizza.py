@@ -24,6 +24,7 @@ from node import Monitor
 from node import IPsec
 from node import SysInfo
 from node import Transfer
+from node import Security
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -106,21 +107,21 @@ class PizzaShell(cmd.Cmd):
             s.execute(arg)
         
 
-    @options([make_option('-p','--piece',type='string',help='piece name'),
-              make_option('--desc_path',type='string',help='piece name')])    
-    def do_get(self,arg,opts=None):
-        for path in string.split(arg):
-            if not os.path.exists(path):
-                print self.colorize('Error: Path not exist','red')
-                continue
-            else:
-                for s in self._get_operation_list(opts):
-                    s.download(path,targetpath=opts.desc_path if opts.desc_path else None)
-    def complete_get(self,text,line,begidx,endidx):
-        import readline
-        readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
-        import glob
-        return glob.glob('%s*' % text)
+    #@options([make_option('-p','--piece',type='string',help='piece name'),
+              #make_option('--desc_path',type='string',help='piece name')])    
+    #def do_get(self,arg,opts=None):
+        #for path in string.split(arg):
+            #if not os.path.exists(path):
+                #print self.colorize('Error: Path not exist','red')
+                #continue
+            #else:
+                #for s in self._get_operation_list(opts):
+                    #s.download(path,targetpath=opts.desc_path if opts.desc_path else None)
+    #def complete_get(self,text,line,begidx,endidx):
+        #import readline
+        #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
+        #import glob
+        #return glob.glob('%s*' % text)
 
 
     @options([make_option('-c','--create',action='store_true',help='create piece'),
@@ -278,7 +279,11 @@ class PizzaShell(cmd.Cmd):
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
 
-        
+    @options([make_option('-a','--make_authorized',action='store_true',help='piece name')])  
+    def do_security(self,arg,opts=None):
+        if opts.make_authorized:
+            seu=Security(self.server.current_node)
+            seu.make_authorized()
 
                     
         

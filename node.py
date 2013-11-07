@@ -272,7 +272,7 @@ class Server(NodeNet):
         except Exception,e:
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True):
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code=-99
@@ -291,13 +291,13 @@ class Server(NodeNet):
             env.gateway = gateway_string
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [ x for x in hiding_clause if x ]
-            with settings(hide(*hiding_clause),warn_only=True):
+            with settings(hide(*hiding_clause)):
                 #env.skip_bad_hosts=True
                 env.connection_attempts=2
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
-                env.warn_only=True
+                env.warn_only=hide_warning
                 env.output_prefix=False if hide_output_prefix else False
                 result= run(cmd,shell=False)
                 out.result=str(result)
@@ -1205,7 +1205,35 @@ class Transfer(object):
                 print "%14s%50s%5s%s" % (key,value[0],value[1],value[2])
         
 
+class Security(object):
+    def __init__(self,server):
+        self.server=server
+    def make_authorized(self):
+        pub_key=''
+        for way_server in self.server:
+            if hasattr(way_server,"authorize_key"):
+                pub_key+=getattr(way_server,"authorize_key")
+            else:
+                id_pub=""
+                if way_server.exists("/%s/.ssh/id_dsa.pub" % way_server.s.loginuser):
+                    exe_result=way_server.execute("cat /%s/.ssh/id_dsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+                    if exe_result.succeed:
+                        id_pub+=exe_result.result
+                elif way_server.exists("/%s/.ssh/id_rsa.pub" % way_server.s.loginuser):
+                    exe_result=way_server.execute("cat /%s/.ssh/id_rsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+                    if exe_result.succeed:
+                        id_pub+=exe_result.result
+                id_pub=string.strip(id_pub)
+                if len(id_pub)>10:
+                    setattr(way_server,"authorize_key",id_pub)
+                    pub_key+=id_pub
+        print pub_key
 
+    
+    #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
+    #egrep -v '^$' /root/.ssh/authorized_keys | sort | uniq > /root/.ssh/authorized_keys.tmp && mv -f /root/.ssh/authorized_keys{.tmp,}
+    #chmod 700 /root/.ssh
+    #chmod 600 /root/.ssh/authorized_keys    
             
 class MySQL(object):
     pass
