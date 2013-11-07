@@ -1212,6 +1212,7 @@ class Security(object):
         self.server=server
     def make_authorized(self,password=None):
         import getpass
+        auth_path='''/%s/.ssh''' %  'root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser
         pub_key=''
         for way_server in self.server:
             if hasattr(way_server,"authorize_key"):
@@ -1219,14 +1220,12 @@ class Security(object):
                 pub_key+='\n'
             else:
                 id_pub=""
-                if way_server.exists("/%s/.ssh/id_dsa.pub" % way_server.s.loginuser):
-                    exe_result=way_server.execute("cat /%s/.ssh/id_dsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
-                    if exe_result.succeed:
-                        id_pub+=exe_result.result+'\n'
-                if way_server.exists("/%s/.ssh/id_rsa.pub" % way_server.s.loginuser):
-                    exe_result=way_server.execute("cat /%s/.ssh/id_rsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
-                    if exe_result.succeed:
-                        id_pub+=exe_result.result+'\n'
+                for key in ['dsa','rsa']:
+                    if way_server.exists(os.path.join(auth_path,"id_%s.pub" % key)):
+                        exe_result=way_server.execute("cat %s" % os.path.join(auth_path,"id_%s.pub" % key)
+                                                      ,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+                        if exe_result.succeed:
+                            id_pub+=exe_result.result+'\n'
                 id_pub=string.strip(id_pub)
                 if len(id_pub)>10:
                     setattr(way_server,"authorize_key",id_pub)
@@ -1234,29 +1233,27 @@ class Security(object):
                     pub_key+='\n'
         pub_key=string.strip(pub_key)
         if len(pub_key)>10:
-            authcmd='''echo "%s" >> /%s/.ssh/authorized_keys && \
-            egrep -v '^$' /%s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,} && \
+            auth_file=os.path.join(auth_path,"authorized_keys")
+            authcmd='''echo "%s" >> %s && \
+            egrep -v '^$' %s | sort | uniq > %s.tmp && mv -f %s{.tmp,} && \
             chmod 700 /%s/.ssh && \
             chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
-                                                         self.server.s.loginuser,
-                                                         self.server.s.loginuser,
-                                                         self.server.s.loginuser,
-                                                         self.server.s.loginuser,
-                                                         self.server.s.loginuser,
-                                                         self.server.s.loginuser)
+                                                      auth_file,
+                                                      auth_file,
+                                                      auth_file,
+                                                      auth_file,
+                                                      auth_path,
+                                                      auth_file)
         #    password = getpass.getpass('Enter password: ') 
             exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None)
             if exe_result.succeed:
                 print 'auth succee'
             else:
                 print 'auth fail'
-            
-
-    
-    #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
-    #egrep -v '^$' /root/.ssh/authorized_keys | sort | uniq > /root/.ssh/authorized_keys.tmp && mv -f /root/.ssh/authorized_keys{.tmp,}
-    #chmod 700 /root/.ssh
-    #chmod 600 /root/.ssh/authorized_keys    
+        #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
+        #egrep -v '^$' /root/.ssh/authorized_keys | sort | uniq > /root/.ssh/authorized_keys.tmp && mv -f /root/.ssh/authorized_keys{.tmp,}
+        #chmod 700 /root/.ssh
+        #chmod 600 /root/.ssh/authorized_keys    
             
 class MySQL(object):
     pass
