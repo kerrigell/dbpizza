@@ -1213,20 +1213,22 @@ class Security(object):
         for way_server in self.server:
             if hasattr(way_server,"authorize_key"):
                 pub_key+=getattr(way_server,"authorize_key")
+                pub_key+='\n'
             else:
                 id_pub=""
                 if way_server.exists("/%s/.ssh/id_dsa.pub" % way_server.s.loginuser):
                     exe_result=way_server.execute("cat /%s/.ssh/id_dsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                     if exe_result.succeed:
-                        id_pub+=exe_result.result
+                        id_pub+=exe_result.result+'\n'
                 elif way_server.exists("/%s/.ssh/id_rsa.pub" % way_server.s.loginuser):
                     exe_result=way_server.execute("cat /%s/.ssh/id_rsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                     if exe_result.succeed:
-                        id_pub+=exe_result.result
+                        id_pub+=exe_result.result+'\n'
                 id_pub=string.strip(id_pub)
                 if len(id_pub)>10:
                     setattr(way_server,"authorize_key",id_pub)
                     pub_key+=id_pub
+                    pub_key+='\n'
         print pub_key
 
     
