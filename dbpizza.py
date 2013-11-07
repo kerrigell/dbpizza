@@ -282,6 +282,7 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-a','--make_authorized',action='store_true',help='piece name')])  
     def do_security(self,arg,opts=None):
+        import getpass
         infolist=[]
         for s in self._get_operation_list(opts):
             infolist.append(Security(s))
