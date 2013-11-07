@@ -272,7 +272,7 @@ class Server(NodeNet):
         except Exception,e:
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True,password=None):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True,password=None,abort_on_prompts=True):
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code=-99
@@ -296,7 +296,7 @@ class Server(NodeNet):
                 env.connection_attempts=2
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
-                env.abort_on_prompts=True
+                env.abort_on_prompts=abort_on_prompts
                 env.warn_only=hide_warning
                 if password:
                     env.password=password
@@ -1212,7 +1212,7 @@ class Security(object):
         self.server=server
     def make_authorized(self,password=None):
         import getpass
-        auth_path='''/%s/.ssh''' %  'root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser
+        auth_path='''/%s/.ssh''' %  ('root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser)
         pub_key=''
         for way_server in self.server:
             if hasattr(way_server,"authorize_key"):
@@ -1245,7 +1245,7 @@ class Security(object):
                                                       auth_path,
                                                       auth_file)
         #    password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None)
+            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=False)
             if exe_result.succeed:
                 print 'auth succee'
             else:
