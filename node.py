@@ -272,7 +272,7 @@ class Server(NodeNet):
         except Exception,e:
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True):
+    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True,password=None):
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code=-99
@@ -298,6 +298,8 @@ class Server(NodeNet):
                 env.eagerly_disconnect=True
                 env.abort_on_prompts=True
                 env.warn_only=hide_warning
+                if password:
+                    env.password=password
                 env.output_prefix=False if hide_output_prefix else False
                 result= run(cmd,shell=False)
                 out.result=str(result)
@@ -1209,6 +1211,7 @@ class Security(object):
     def __init__(self,server):
         self.server=server
     def make_authorized(self):
+        import getpass
         pub_key=''
         for way_server in self.server:
             if hasattr(way_server,"authorize_key"):
@@ -1229,7 +1232,25 @@ class Security(object):
                     setattr(way_server,"authorize_key",id_pub)
                     pub_key+=id_pub
                     pub_key+='\n'
-        print pub_key
+        pub_key=string.strip(pub_key)
+        if len(pub_key)>10:
+            authcmd='''cat "%s" >> /%s/.ssh/authorized_keys
+            && egrep -v '^$' %s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,}
+            && chmod 700 /%s/.ssh
+            && chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
+                                                         self.server.s.loginuser,
+                                                         self.server.s.loginuser,
+                                                         self.server.s.loginuser,
+                                                         self.server.s.loginuser,
+                                                         self.server.s.loginuser,
+                                                         self.server.s.loginuser)
+            password = getpass.getpass('Enter password: ') 
+            exe_result=self.server.execute(authcmd,hide_warning=False,password=password)
+            if execute.succeed:
+                print 'auth succee'
+            else:
+                print 'auth fail'
+            
 
     
     #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
