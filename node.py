@@ -1235,7 +1235,7 @@ class Security(object):
         pub_key=string.strip(pub_key)
         if len(pub_key)>10:
             authcmd='''echo "%s" >> /%s/.ssh/authorized_keys && \
-            egrep -v '^$' %s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,} && \
+            egrep -v '^$' /%s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,} && \
             chmod 700 /%s/.ssh && \
             chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
                                                          self.server.s.loginuser,
@@ -1246,7 +1246,7 @@ class Security(object):
                                                          self.server.s.loginuser)
             password = getpass.getpass('Enter password: ') 
             exe_result=self.server.execute(authcmd,hide_warning=False,password=password)
-            if execute.succeed:
+            if exe_result.succeed:
                 print 'auth succee'
             else:
                 print 'auth fail'
