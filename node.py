@@ -292,7 +292,7 @@ class Server(NodeNet):
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [ x for x in hiding_clause if x ]
             with settings(hide(*hiding_clause)):
-                #env.skip_bad_hosts=True
+                env.skip_bad_hosts=True
                 env.connection_attempts=2
                 env.disable_known_hosts=True
                 env.eagerly_disconnect=True
