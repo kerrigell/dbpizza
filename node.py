@@ -1210,7 +1210,7 @@ class Transfer(object):
 class Security(object):
     def __init__(self,server):
         self.server=server
-    def make_authorized(self):
+    def make_authorized(self,password=None):
         import getpass
         pub_key=''
         for way_server in self.server:
@@ -1244,8 +1244,8 @@ class Security(object):
                                                          self.server.s.loginuser,
                                                          self.server.s.loginuser,
                                                          self.server.s.loginuser)
-            password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=False,password=password)
+        #    password = getpass.getpass('Enter password: ') 
+            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None)
             if exe_result.succeed:
                 print 'auth succee'
             else:

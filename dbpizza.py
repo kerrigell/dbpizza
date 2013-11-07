@@ -279,11 +279,18 @@ class PizzaShell(cmd.Cmd):
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
 
-    @options([make_option('-a','--make_authorized',action='store_true',help='piece name')])  
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('-a','--make_authorized',action='store_true',help='piece name')])  
     def do_security(self,arg,opts=None):
-        if opts.make_authorized:
-            seu=Security(self.server.current_node)
-            seu.make_authorized()
+        infolist=[]
+        for s in self._get_operation_list(opts):
+            infolist.append(Security(s))
+        password=None
+        for i in infolist:        
+            if opts.make_authorized:
+                if password is None:
+                    password = getpass.getpass('Enter Login password: ')
+                i.make_authorized(password=password if len(password)> 0 else None)
 
                     
         
