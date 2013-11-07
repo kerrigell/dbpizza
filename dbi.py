@@ -12,7 +12,7 @@ from sqlalchemy.types import SchemaType,TypeDecorator,Enum
 from sqlalchemy.orm import sessionmaker
 
 import time,datetime
-engine = create_engine('mysql://root@dbpizzzahost/dbpizza?charset=utf8')
+engine = create_engine('mysql://root@dbpizzzahost/dbpizza?charset=utf8',pool_recycle=5)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()

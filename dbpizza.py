@@ -101,10 +101,11 @@ class PizzaShell(cmd.Cmd):
             #'''search server list like aaa.*'''
             #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             #return self.root.search_list(text)
-    @options([make_option('-p','--piece',type='string',help='piece name')])
-    def do_cmd(self,arg,opts=None):
-        for s in self._get_operation_list(opts):
-            s.execute(arg)
+    
+    def do_cmd(self,args):
+        self.stdout.write(args.parsed.dump()+'\n')
+        #for s in self._get_operation_list(opts):
+            #s.execute(arg)
         
 
     #@options([make_option('-p','--piece',type='string',help='piece name'),
