@@ -663,7 +663,7 @@ service iptables save
         return ipsec_temp  
     def reload(self):
         self.server.execute(self.make_script())
-class Monitor(object):
+class Nagios(object):
     config=None
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
@@ -1234,10 +1234,10 @@ class Security(object):
                     pub_key+='\n'
         pub_key=string.strip(pub_key)
         if len(pub_key)>10:
-            authcmd='''echo "%s" >> /%s/.ssh/authorized_keys
-            && egrep -v '^$' %s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,}
-            && chmod 700 /%s/.ssh
-            && chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
+            authcmd='''echo "%s" >> /%s/.ssh/authorized_keys && \
+            egrep -v '^$' %s/.ssh/authorized_keys | sort | uniq > /%s/.ssh/authorized_keys.tmp && mv -f /%s/.ssh/authorized_keys{.tmp,} && \
+            chmod 700 /%s/.ssh && \
+            chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
                                                          self.server.s.loginuser,
                                                          self.server.s.loginuser,
                                                          self.server.s.loginuser,

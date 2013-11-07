@@ -20,7 +20,7 @@ import pdb
 
 from node import Server
 from node import Feature
-from node import Monitor
+from node import Nagios
 from node import IPsec
 from node import SysInfo
 from node import Transfer
@@ -169,7 +169,7 @@ class PizzaShell(cmd.Cmd):
     def do_nagios(self,args,opts=None):
         monitorlist=[]
         for s in self._get_operation_list(opts):
-            monitorlist.append(Monitor(s))
+            monitorlist.append(Nagios(s))
         monopers=[
             ['check current status',                                     'check'          ],
             ['upgrade perl from v5.8.5 to v5.8.9',                       'upgrade_perl'   ],
