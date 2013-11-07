@@ -1220,7 +1220,7 @@ class Security(object):
                     exe_result=way_server.execute("cat /%s/.ssh/id_dsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                     if exe_result.succeed:
                         id_pub+=exe_result.result+'\n'
-                elif way_server.exists("/%s/.ssh/id_rsa.pub" % way_server.s.loginuser):
+                if way_server.exists("/%s/.ssh/id_rsa.pub" % way_server.s.loginuser):
                     exe_result=way_server.execute("cat /%s/.ssh/id_rsa.pub" % way_server.s.loginuser,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                     if exe_result.succeed:
                         id_pub+=exe_result.result+'\n'
