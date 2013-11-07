@@ -1245,7 +1245,7 @@ class Security(object):
                                                       auth_path,
                                                       auth_file)
         #    password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=False)
+            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=True)
             if exe_result.succeed:
                 print 'auth succee'
             else:
