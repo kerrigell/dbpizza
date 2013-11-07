@@ -1236,8 +1236,8 @@ class Security(object):
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''echo "%s" >> %s && \
             egrep -v '^$' %s | sort | uniq > %s.tmp && mv -f %s{.tmp,} && \
-            chmod 700 /%s/.ssh && \
-            chmod 600 /%s/.ssh/authorized_keys ''' % (pub_key, 
+            chmod 700 %s && \
+            chmod 600 %s ''' % (pub_key, 
                                                       auth_file,
                                                       auth_file,
                                                       auth_file,
