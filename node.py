@@ -1287,8 +1287,9 @@ class Axis(object):
     def start(self):
         cmd="""chown -R axis:axis /home/axis/AxisAgent;
         chmod 750 /home/axis/AxisAgent/AxisAgent;
-        su - axis -c \'/home/axis/AxisAgent/AxisAgent  &>/dev/null &\' """
-        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        su - axis -c 'cd /home/axis/AxisAgent/;./AxisAgent  &>/dev/null &' ;
+        ps -ef | grep AxisAgent | grep -v grep """
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'start finished'
     def stop(self):
