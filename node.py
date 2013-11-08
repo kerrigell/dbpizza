@@ -1268,16 +1268,18 @@ class Axis(object):
     def __init__(self,server):
         self.server=server
         self.runuser='axis'
-    def install(self):
+    def install(self,satellite_ip):
         sudo_cmd='/usr/bin/ipmitool lan print,/usr/bin/ipmitool fru list'
         cmd='''useradd axis;
         chmod u+s /usr/sbin/dmidecode;
         (grep axis /etc/sudoers &> /dev/null \
         || sed -i '/axis/s/$/,%s/g' /etc/sudoers) \
         || echo \"axis ALL=NOPASSWD: %s\" \
-        >> /etc/sudoers 
-        ''' % (sudo_cmd,sudo_cmd)
-        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        >> /etc/sudoers ;
+        grep gs_axis_idc_server /etc/hosts &> /dev/null \
+        || echo \"%s    gs_axis_idc_server\">> /etc/hosts
+        ''' % (sudo_cmd,sudo_cmd,satellite_ip)
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'init env finished'
             tran=Transfer(self.server.root,'/tmp/zo9Z/AxisAgent')
@@ -1294,13 +1296,13 @@ class Axis(object):
             print 'start finished'
     def stop(self):
         cmd="""ps -ef | grep AxisAgent | grep -v grep  | awk \'{print $2}\' | xargs kill -9 """
-        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'stop finished'    
     def uninstall(self):
         self.stop()
         cmd="""userdel -r axis"""
-        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'uninstall finished'
             
