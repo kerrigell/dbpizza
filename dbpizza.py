@@ -259,7 +259,6 @@ class PizzaShell(cmd.Cmd):
         for i in infolist:
             print i.server
             if opts.check_all:
-                inf=SysInfo(self.server.current_node)
                 inf.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-t','--target',type='string',help='trans target'),
