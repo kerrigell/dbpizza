@@ -1282,7 +1282,7 @@ class Axis(object):
             print 'init env finished'
             tran=Transfer(self.server.root,'/tmp/zo9Z/AxisAgent')
             tran.add_server(self.server)
-            tran.send('/home/axis/AxisAgent')
+            tran.send('/home/axis/')
             tran.clear()
     def start(self):
         cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent  &>/dev/null &' '''
