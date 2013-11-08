@@ -24,7 +24,7 @@ from node import Nagios
 from node import IPsec
 from node import SysInfo
 from node import Transfer
-from node import Security
+
 
 import paramiko
 class PizzaShell(cmd.Cmd):
@@ -280,18 +280,22 @@ class PizzaShell(cmd.Cmd):
         trans_task.clear()
 
     @options([make_option('-p','--piece',type='string',help='piece name'),
-              make_option('-a','--make_authorized',action='store_true',help='piece name')])  
-    def do_security(self,arg,opts=None):
+              make_option('-a','--make_authorized',action='store_true',help='piece name'),
+              make_option('--disable_selinux',action='store_true',help='piece name')])  
+    def do_sysinit(self,arg,opts=None):
+        from node import SysInit
         import getpass
         infolist=[]
         for s in self._get_operation_list(opts):
-            infolist.append(Security(s))
+            infolist.append(SysInit(s))
         password=None
         for i in infolist:        
             if opts.make_authorized:
                 if password is None:
                     password = getpass.getpass('Enter Login password: ')
                 i.make_authorized(password=password if len(password)> 0 else None)
+            if opts.disable_selinux:
+                i.disable_selinux()
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-i','--install',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),

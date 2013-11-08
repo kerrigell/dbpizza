@@ -1209,7 +1209,7 @@ class Transfer(object):
                 print "%14s%50s%5s%s" % (key,value[0],value[1],value[2])
         
 
-class Security(object):
+class SysInit(object):
     def __init__(self,server):
         self.server=server
     def make_authorized(self,password=None):
@@ -1259,7 +1259,13 @@ class Security(object):
         #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
         #egrep -v '^$' /root/.ssh/authorized_keys | sort | uniq > /root/.ssh/authorized_keys.tmp && mv -f /root/.ssh/authorized_keys{.tmp,}
         #chmod 700 /root/.ssh
-        #chmod 600 /root/.ssh/authorized_keys    
+        #chmod 600 /root/.ssh/authorized_keys   
+    def disable_selinux(self):
+        cmd="""setenforce 0;
+        sed -i \'/^SELINUX=/s/^.*$/SELINUX=disabled/g\' /etc/sysconfig/selinux"""
+        exe_result=self.server.execute(cmd)
+        if exe_result.succeed:
+            print 'selinux disable'
             
 class MySQL(object):
     pass
