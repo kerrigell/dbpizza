@@ -1285,7 +1285,8 @@ class Axis(object):
             tran.send('/home/axis/')
             tran.clear()
     def start(self):
-        cmd="""su - axis -c \'/home/axis/AxisAgent/AxisAgent  &>/dev/null &\' """
+        cmd="""chown -R axis:axis /home/axis/AxisAgent;
+        su - axis -c \'/home/axis/AxisAgent/AxisAgent  &>/dev/null &\' """
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
             print 'start finished'
