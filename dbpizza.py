@@ -259,7 +259,7 @@ class PizzaShell(cmd.Cmd):
         for i in infolist:
             print i.server
             if opts.check_all:
-                inf.check_all(do_update= True if opts.update else False)
+                i.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-t','--target',type='string',help='trans target'),
               make_option('-d','--deploy_dir',type='string',help='trans target'),
