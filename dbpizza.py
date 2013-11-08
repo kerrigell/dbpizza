@@ -296,7 +296,8 @@ class PizzaShell(cmd.Cmd):
               make_option('-i','--install',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),
               make_option('-t','--stop',action='store_true',help='piece name'),
-              make_option('-u','--uninstall',action='store_true',help='piece name')])     
+              make_option('-u','--uninstall',action='store_true',help='piece name'),
+              make_option('-a','--address',type='string',help='piece name'),])     
     def do_axis(self,arg,opts=None):
         from node import Axis
         infolist=[]
@@ -304,7 +305,10 @@ class PizzaShell(cmd.Cmd):
             infolist.append(Axis(s))
         for i in infolist:        
             if opts.install:
-                i.install()
+                if opts.address:
+                    i.install(opts.address)
+                else:
+                    print 'please give satellite ip'
             if opts.start:
                 i.start()
             if opts.stop:
