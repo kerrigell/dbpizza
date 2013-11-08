@@ -1267,6 +1267,40 @@ class MySQL(object):
 class Axis(object):
     def __init__(self,server):
         self.server=server
+        self.runuser='axis'
     def deploy(self):
-        pass
+        sudo_cmd='/usr/bin/ipmitool lan print,/usr/bin/ipmitool fru list'
+        cmd='''useradd axis;
+        chmod u+s /usr/sbin/dmidecode;
+        (grep axis /etc/sudoers &> /dev/null \
+        || sed -i '/axis/s/$/,%s/g' /etc/sudoers) \
+        || echo \"axis ALL=NOPASSWD: %s\" \
+        >> /etc/sudoers 
+        ''' % (sudo_cmd,sudo_cmd)
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        if exe_result.succeed:
+            print 'init env finished'
+            tran=Transfer(self.server.root,'/tmp/zo9Z/')
+            tran.add_server(self.server)
+            tran.send('/home/axis/')
+    def start(self):
+        cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent 2&1>/dev/null' '''
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        if exe_result.succeed:
+            print 'start finished'
+    def stop(self):
+        cmd='''ps -ef | grep AxisAgent | grep -v grep  | awk '{print $2}' | xargs kill -9' '''
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        if exe_result.succeed:
+            print 'stop finished'        
+            
+
+        
+        
+        
+        grep -q nagios /etc/sudoers && \
+        (grep %s /etc/sudoers &> /dev/null \
+        || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
+        || echo \"nagios ALL=NOPASSWD: %s\" \
+        >> /etc/sudoers        
         
