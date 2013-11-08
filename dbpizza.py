@@ -281,7 +281,11 @@ class PizzaShell(cmd.Cmd):
 
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-a','--make_authorized',action='store_true',help='piece name'),
-              make_option('--disable_selinux',action='store_true',help='piece name')])  
+              make_option('--disable_selinux',action='store_true',help='piece name'),
+              make_option('--amazon_change_access_key',action='store_true',help='piece name'),
+              make_option('--access_key',type='string',help='piece name'),
+              make_option('--secret_key',type='string',help='piece name')
+              ])  
     def do_sysinit(self,arg,opts=None):
         from node import SysInit
         import getpass
@@ -296,6 +300,8 @@ class PizzaShell(cmd.Cmd):
                 i.make_authorized(password=password if len(password)> 0 else None)
             if opts.disable_selinux:
                 i.disable_selinux()
+            if opts.amazon_change_access_key and opts.access_key and opts.secret_key:
+                i.amazon_change_access_key(opts.access_key,opts.secret_key)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-i','--install',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),

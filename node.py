@@ -1266,6 +1266,19 @@ class SysInit(object):
         exe_result=self.server.execute(cmd)
         if exe_result.succeed:
             print 'selinux disable'
+    def amazon_change_access_key(self,access_key,secret_key):
+        cmd="""echo \"Before Change:\";
+        cat /root/aws-scripts-mon/awscreds.conf;
+        sed -i \'/^AWSAccessKeyId=/s/^.*$/AWSAccessKeyId=%s/g\' /root/aws-scripts-mon/awscreds.conf;
+        sed -i \'/^AWSSecretKey=/s/^.*$/AWSSecretKey=%s/g\' /root/aws-scripts-mon/awscreds.conf;
+        echo \"End Change:\";
+        cat /root/aws-scripts-mon/awscreds.conf
+        """ % (access_key,secret_key)
+        exe_result==self.server.execute(cmd)
+        if exe_result.succeed:
+            print "change succeed"
+        
+        #mount  -o noatime -o nodiratime  -t xfs -L home /home
             
 class MySQL(object):
     pass
