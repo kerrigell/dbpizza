@@ -1284,7 +1284,7 @@ class Axis(object):
             tran.add_server(self.server)
             tran.send('/home/axis/')
     def start(self):
-        cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent 2&1>/dev/null' '''
+        cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent  &>/dev/null &' '''
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
             print 'start finished'
@@ -1298,9 +1298,9 @@ class Axis(object):
         
         
         
-        grep -q nagios /etc/sudoers && \
-        (grep %s /etc/sudoers &> /dev/null \
-        || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
-        || echo \"nagios ALL=NOPASSWD: %s\" \
-        >> /etc/sudoers        
+        #grep -q nagios /etc/sudoers && \
+        #(grep %s /etc/sudoers &> /dev/null \
+        #|| sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
+        #|| echo \"nagios ALL=NOPASSWD: %s\" \
+        #>> /etc/sudoers        
         
