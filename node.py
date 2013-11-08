@@ -1274,7 +1274,7 @@ class SysInit(object):
         echo \"End Change:\";
         cat /root/aws-scripts-mon/awscreds.conf
         """ % (access_key,secret_key)
-        exe_result==self.server.execute(cmd)
+        exe_result=self.server.execute(cmd)
         if exe_result.succeed:
             print "change succeed"
         
