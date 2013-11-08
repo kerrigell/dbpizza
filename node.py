@@ -1267,8 +1267,8 @@ class SysInit(object):
         if exe_result.succeed:
             print 'selinux disable'
     def amazon_change_access_key(self,access_key,secret_key):
-        access_key=string.replace('/','\/')
-        secret_key=string.replace('/','\/')
+        access_key=string.replace(access_key,'/','\/')
+        secret_key=string.replace(secret_key'/','\/')
         cmd="""echo \"Before Change:\";
         cat /root/aws-scripts-mon/awscreds.conf;
         sed -i \'/^AWSAccessKeyId=/s/^.*$/AWSAccessKeyId=%s/g\' /root/aws-scripts-mon/awscreds.conf;
