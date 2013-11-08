@@ -1268,7 +1268,7 @@ class Axis(object):
     def __init__(self,server):
         self.server=server
         self.runuser='axis'
-    def deploy(self):
+    def install(self):
         sudo_cmd='/usr/bin/ipmitool lan print,/usr/bin/ipmitool fru list'
         cmd='''useradd axis;
         chmod u+s /usr/sbin/dmidecode;
@@ -1296,7 +1296,13 @@ class Axis(object):
         cmd="""ps -ef | grep AxisAgent | grep -v grep  | awk \'{print $2}\' | xargs kill -9 """
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
-            print 'stop finished'        
+            print 'stop finished'    
+    def uninstall(self):
+        self.stop()
+        cmd="""userdel -r axis"""
+        exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+        if exe_result.succeed:
+            print 'uninstall finished'
             
 
         
