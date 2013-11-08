@@ -119,6 +119,8 @@ class NodeNet(object):
         elif dbid == '..':
             if cls.current_node.parent is not None:
                 cnode=cls.current_node.parent
+        elif dbid == '~':
+            cnode=cls.current_node.root
         else:
             cdbid=int(dbid)
             if cdbid is None or cdbid ==0:
@@ -1234,16 +1236,20 @@ class Security(object):
         pub_key=string.strip(pub_key)
         if len(pub_key)>10:
             auth_file=os.path.join(auth_path,"authorized_keys")
-            authcmd='''echo "%s" >> %s && \
+            authcmd='''test -d %s || mkdir -p %s ;
+            test -n %s || touch %s;
+            echo "%s" >> %s && \
             egrep -v '^$' %s | sort | uniq > %s.tmp && mv -f %s{.tmp,} && \
             chmod 700 %s && \
-            chmod 600 %s ''' % (pub_key, 
-                                                      auth_file,
-                                                      auth_file,
-                                                      auth_file,
-                                                      auth_file,
-                                                      auth_path,
-                                                      auth_file)
+            chmod 600 %s ''' % (auth_path,auth_path,
+                                auth_file,auth_file,
+                                 pub_key, 
+                                auth_file,
+                                auth_file,
+                                auth_file,
+                                auth_file,
+                                auth_path,
+                                auth_file)
         #    password = getpass.getpass('Enter password: ') 
             exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=True)
             if exe_result.succeed:
@@ -1258,3 +1264,8 @@ class Security(object):
 class MySQL(object):
     pass
 
+class Axis(object):
+    def __init__(self,server):
+        self.server=server
+    def deploy(self):
+        
