@@ -1285,12 +1285,12 @@ class Axis(object):
             tran.send('/home/axis/')
             tran.clear()
     def start(self):
-        cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent  &>/dev/null &' '''
+        cmd="""su - axis -c \'/home/axis/AxisAgent/AxisAgent  &>/dev/null &\' """
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
             print 'start finished'
     def stop(self):
-        cmd='''ps -ef | grep AxisAgent | grep -v grep  | awk '{print $2}' | xargs kill -9' '''
+        cmd="""ps -ef | grep AxisAgent | grep -v grep  | awk \'{print $2}\' | xargs kill -9 """
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
             print 'stop finished'        
