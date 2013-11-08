@@ -1280,9 +1280,10 @@ class Axis(object):
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
         if exe_result.succeed:
             print 'init env finished'
-            tran=Transfer(self.server.root,'/tmp/zo9Z/')
+            tran=Transfer(self.server.root,'/tmp/zo9Z/AxisAgent')
             tran.add_server(self.server)
-            tran.send('/home/axis/')
+            tran.send('/home/axis/AxisAgent')
+            tran.clear()
     def start(self):
         cmd='''su - axis -c '/home/axis/AxisAgent/AxisAgent  &>/dev/null &' '''
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
