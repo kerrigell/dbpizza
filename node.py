@@ -1310,7 +1310,9 @@ class Axis(object):
         self.runuser='axis'
     def install(self,satellite_ip):
         sudo_cmd='/usr/bin/ipmitool lan print,/usr/bin/ipmitool fru list'
-        cmd='''useradd axis;
+        cmd='''chattr -i /etc/shadow;
+        useradd axis;
+        chattr +i /etc/shadow;
         chmod u+s /usr/sbin/dmidecode;
         (grep axis /etc/sudoers &> /dev/null \
         || sed -i '/axis/s/$/,%s/g' /etc/sudoers) \
