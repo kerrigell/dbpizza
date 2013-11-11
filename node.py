@@ -400,7 +400,7 @@ class Server(NodeNet):
             env.disable_known_hosts=True
             env.eagerly_disconnect=True
             env.abort_on_prompts=True
-            env.warn_only=True            
+            env.warn_only=False            
             result=fexists(path)
         except NetworkError,e:
             result=False
@@ -1232,7 +1232,7 @@ class SysInit(object):
                 for key in ['dsa','rsa']:
                     if way_server.exists(os.path.join(auth_path,"id_%s.pub" % key)):
                         exe_result=way_server.execute("cat %s" % os.path.join(auth_path,"id_%s.pub" % key)
-                                                      ,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
+                                                      ,hide_stdout=True,hide_output_prefix=True,hide_puts=True,abort_on_prompts=False)
                         if exe_result.succeed:
                             id_pub+=exe_result.result+'\n'
                 id_pub=string.strip(id_pub)
@@ -1258,7 +1258,7 @@ class SysInit(object):
                                 auth_path,
                                 auth_file)
         #    password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=True)
+            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=False)
             if exe_result.succeed:
                 print 'auth succee'
             else:
