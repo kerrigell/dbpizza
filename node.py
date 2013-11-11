@@ -395,12 +395,19 @@ class Server(NodeNet):
         env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         result=False
         try:
+            env.skip_bad_hosts=True
+            env.connection_attempts=2
+            env.disable_known_hosts=True
+            env.eagerly_disconnect=True
+            env.abort_on_prompts=True
+            env.warn_only=True            
             result=fexists(path)
         except NetworkError,e:
             result=False
         except Exception,e:
             result=False
-            
+        finally:
+            return result
         return result
 
     def download(self,path,uuid=None,targetpath='/tmp'):
