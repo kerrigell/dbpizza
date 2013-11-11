@@ -1241,6 +1241,7 @@ class SysInit(object):
                     pub_key+=id_pub
                     pub_key+='\n'
         pub_key=string.strip(pub_key)
+        print 'start auth'
         if len(pub_key)>10:
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''test -d %s || mkdir -p %s ;
@@ -1258,7 +1259,7 @@ class SysInit(object):
                                 auth_path,
                                 auth_file)
         #    password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=True,password=password if password else None,abort_on_prompts=False)
+            exe_result=self.server.execute(authcmd,hide_warning=False,password=password if password else None,abort_on_prompts=False)
             if exe_result.succeed:
                 print 'auth succee'
             else:

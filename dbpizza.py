@@ -153,13 +153,28 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-    def _get_operation_list(self,opts):
+    def _get_operation_list(self,opts,inchilds=False):
         serverlist=[]
         if opts is not None and hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
             for value in self.piecis[opts.piece]['servers']:
                 serverlist.append(value)
         else:
             serverlist.append(self.server.current_node)  
+        if inchilds:
+            if self.server.current_node.childs is None:
+                self.server.current_node.breed()
+            for i in self.server.current_node.childs:
+                serverlist.append(i)
+        return serverlist
+    
+    def _get_childs_list(self):
+        serverlist=[]
+        if serverlist is None:
+            serverlist=[]
+        if self.server.current_node.childs is None:
+            self.server.current_node.breed()
+        for i in self.server.current_node.childs:
+            serverlist.append(i) 
         return serverlist
 
 
@@ -261,6 +276,7 @@ class PizzaShell(cmd.Cmd):
             if opts.check_all:
                 i.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('-c','--childs',action='store_true',help='piece name'),
               make_option('-t','--target',type='string',help='trans target'),
               make_option('-d','--deploy_dir',type='string',help='trans target'),
               make_option('-w','--who',type='string',help='trans target')])  
@@ -275,6 +291,9 @@ class PizzaShell(cmd.Cmd):
                 trans_task.add_server(self.server.current_node.get_node(int(dbid)))
         if opts.piece:
             for s in self._get_operation_list(opts):
+                trans_task.add_server(s)
+        if opts.childs:
+            for s in self._get_childs_list():
                 trans_task.add_server(s)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
