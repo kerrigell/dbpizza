@@ -111,6 +111,8 @@ class PizzaShell(cmd.Cmd):
         if opts.childs:
             for i in self._get_childs_list():
                 serverlist.append(i) 
+        if len(serverlist)==0:
+            serverlist.append(self.server.current_node)
         for i in serverlist:
             i.execute(args)
    #     self.stdout.write(args.parsed.dump()+'\n')
