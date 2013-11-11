@@ -1220,7 +1220,6 @@ class SysInit(object):
     def __init__(self,server):
         self.server=server
     def make_authorized(self,password=None):
-        import getpass
         auth_path='''/%s/.ssh''' %  ('root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser)
         pub_key=''
         for way_server in self.server:
@@ -1229,9 +1228,11 @@ class SysInit(object):
                 pub_key+='\n'
             else:
                 id_pub=""
+                way_auth_path='''/%s/.ssh''' %  ('root' if way_server.s.loginuser == 'root' else 'home/%s' % way_server.s.loginuser)
                 for key in ['dsa','rsa']:
-                    if way_server.exists(os.path.join(auth_path,"id_%s.pub" % key)):
-                        exe_result=way_server.execute("cat %s" % os.path.join(auth_path,"id_%s.pub" % key)
+                    
+                    if way_server.exists(os.path.join(way_auth_path,"id_%s.pub" % key)):
+                        exe_result=way_server.execute("cat %s" % os.path.join(way_auth_path,"id_%s.pub" % key)
                                                       ,hide_stdout=True,hide_output_prefix=True,hide_puts=True,abort_on_prompts=False)
                         if exe_result.succeed:
                             id_pub+=exe_result.result+'\n'
