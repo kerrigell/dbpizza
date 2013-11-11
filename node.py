@@ -1345,7 +1345,9 @@ class Axis(object):
             print 'stop finished'    
     def uninstall(self):
         self.stop()
-        cmd="""userdel -r axis"""
+        cmd="""chattr -i /etc/shadow;
+        userdel -r axis;
+        chattr +i /etc/shadow;"""
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'uninstall finished'
