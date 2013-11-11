@@ -1348,7 +1348,7 @@ class Axis(object):
         if exe_result.succeed:
             print 'uninstall finished'
     def check(self):
-        cmd="""ps -ef | grep Axisagent | grep -v grep"""
+        cmd="""ps -ef | grep AxisAgent | grep -v grep """
         exe_result=self.server.execute(cmd)
        
             
