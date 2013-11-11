@@ -1242,6 +1242,7 @@ class SysInit(object):
                     pub_key+='\n'
         pub_key=string.strip(pub_key)
         print 'start auth'
+        print pub_key
         if len(pub_key)>10:
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''test -d %s || mkdir -p %s ;
