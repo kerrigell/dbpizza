@@ -326,6 +326,7 @@ class PizzaShell(cmd.Cmd):
                 i.amazon_change_access_key(opts.access_key,opts.secret_key)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-i','--install',action='store_true',help='piece name'),
+              make_option('-c','--check',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),
               make_option('-t','--stop',action='store_true',help='piece name'),
               make_option('-u','--uninstall',action='store_true',help='piece name'),
@@ -347,6 +348,8 @@ class PizzaShell(cmd.Cmd):
                 i.stop()
             if opts.uninstall:
                 i.uninstall()
+            if opts.check:
+                i.check()
 
                     
         
