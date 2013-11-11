@@ -1336,6 +1336,8 @@ class Axis(object):
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
         if exe_result.succeed:
             print 'start finished'
+        else:
+            print exe_result.result
     def stop(self):
         cmd="""ps -ef | grep AxisAgent | grep -v grep  | awk \'{print $2}\' | xargs kill -9 """
         exe_result=self.server.execute(cmd,hide_stdout=True,hide_output_prefix=True)
