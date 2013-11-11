@@ -101,9 +101,19 @@ class PizzaShell(cmd.Cmd):
             #'''search server list like aaa.*'''
             #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             #return self.root.search_list(text)
-
-    def do_cmd(self,args):
-        self.stdout.write(args.parsed.dump()+'\n')
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('-c','--childs',action='store_true',help='piece name')])
+    def do_cmd(self,args,opts=None):
+        serverlist=[]
+        if opts.piece:
+            for i in self._get_operation_list(opts):
+                serverlist.append(i)
+        if opts.childs:
+            for i in self._get_childs_list():
+                serverlist.append(i) 
+        for i in serverlist:
+            i.execute(args)
+   #     self.stdout.write(args.parsed.dump()+'\n')
         #for s in self._get_operation_list(opts):
             #s.execute(arg)
         
@@ -153,18 +163,13 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-    def _get_operation_list(self,opts,inchilds=False):
+    def _get_operation_list(self,opts):
         serverlist=[]
         if opts is not None and hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
             for value in self.piecis[opts.piece]['servers']:
                 serverlist.append(value)
         else:
             serverlist.append(self.server.current_node)  
-        if inchilds:
-            if self.server.current_node.childs is None:
-                self.server.current_node.breed()
-            for i in self.server.current_node.childs:
-                serverlist.append(i)
         return serverlist
     
     def _get_childs_list(self):
