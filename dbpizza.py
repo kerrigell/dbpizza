@@ -174,11 +174,9 @@ class PizzaShell(cmd.Cmd):
     
     def _get_childs_list(self):
         serverlist=[]
-        if serverlist is None:
-            serverlist=[]
         if self.server.current_node.childs is None:
             self.server.current_node.breed()
-        for i in self.server.current_node.childs:
+        for i in self.server.current_node.childs.values():
             serverlist.append(i) 
         return serverlist
 
