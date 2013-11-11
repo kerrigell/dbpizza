@@ -274,7 +274,14 @@ class Server(NodeNet):
         except Exception,e:
             puts(red("Error: %s \n #%s" % (host_string,e)))
             return 0
-    def execute(self,cmd,hide_running=True,hide_stdout=True,hide_stderr=False,hide_output_prefix=False,hide_puts=False,showprefix=None,hide_warning=True,password=None,abort_on_prompts=True):
+    def execute(self,cmd,
+                hide_running=True,hide_stdout=True,hide_stderr=False,
+                hide_output_prefix=False,hide_puts=False,showprefix=None,
+                hide_warning=True,password=None,abort_on_prompts=True):
+        class FabricAbortException(Exception):
+            def __init__(self):
+                self.message="Fabric Abort Exception"
+            
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code=-99
@@ -294,10 +301,13 @@ class Server(NodeNet):
             hiding_clause = ( 'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [ x for x in hiding_clause if x ]
             with settings(hide(*hiding_clause)):
-                env.skip_bad_hosts=True
-                env.connection_attempts=2
+                env.skip_bad_hosts=False
+                env.abort_exception=FabricAbortException()
+             #   env.connection_attempts=2
                 env.disable_known_hosts=True
-                env.eagerly_disconnect=True
+             #   env.eagerly_disconnect=True
+                env.colorize_errors=True
+                env.keepalive=10
                 env.abort_on_prompts=abort_on_prompts
                 env.warn_only=hide_warning
                 if password:
