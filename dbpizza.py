@@ -304,6 +304,7 @@ class PizzaShell(cmd.Cmd):
         trans_task.clear()
 
     @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('-c','--childs',action='store_true',help='piece name'),
               make_option('-a','--make_authorized',action='store_true',help='piece name'),
               make_option('--disable_selinux',action='store_true',help='piece name'),
               make_option('--amazon_change_access_key',action='store_true',help='piece name'),
@@ -314,8 +315,12 @@ class PizzaShell(cmd.Cmd):
         from node import SysInit
         import getpass
         infolist=[]
-        for s in self._get_operation_list(opts):
-            infolist.append(SysInit(s))
+        if opts.piece:
+            for s in self._get_operation_list(opts):
+                infolist.append(SysInit(s))
+        if opts.childs:
+            for s in self._get_childs_list():
+                infolist.append(SysInit(s))
         password=None
         for i in infolist:        
             if opts.make_authorized:

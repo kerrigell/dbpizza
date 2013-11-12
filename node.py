@@ -640,6 +640,9 @@ class IPsec(object):
         ripsec=self.list()
         filterlist=''
         if self.server.parent is not None :
+            if self.server.parent.s.ip_public is None or self.server.parent.s.ip_private is None:
+                print 'Please fill in the public and private address. And repeat'
+                return None
             parent_iplist=[]
             parent_iplist.append(self.server.parent.s.ip_public)
             parent_iplist.append(self.server.parent.s.ip_private)
@@ -648,10 +651,10 @@ class IPsec(object):
             parent_iplist=list(set(parent_iplist))
 
             for item in parent_iplist:
-                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT #cc:%s\n''' % (item,self.server.parent)
+                filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT; #cc:%s\n''' % (item,self.server.parent)
 
         for i in ripsec:
-            filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT #%s\n''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
+            filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT; #%s\n''' % (i.chain,i.source_addr,i.protocal,i.dport,i.description)
 
             
         ipsec_temp='''
@@ -681,7 +684,9 @@ service iptables save
     ''' % filterlist
         return ipsec_temp  
     def reload(self):
-        self.server.execute(self.make_script())
+        script=self.make_script()
+        if script:
+            self.server.execute(self.make_script())
 class Nagios(object):
     config=None
     def __init__(self,srv):
@@ -1300,6 +1305,7 @@ class SysInit(object):
             print "change succeed"
         
         #mount  -o noatime -o nodiratime  -t xfs -L home /home
+        #yum install xfsprogs kmod-xfs
             
 class MySQL(object):
     pass
@@ -1365,4 +1371,6 @@ class Axis(object):
         #|| sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
         #|| echo \"nagios ALL=NOPASSWD: %s\" \
         #>> /etc/sudoers        
-        
+class Piece(object):
+    def __init__(self):
+        pass
