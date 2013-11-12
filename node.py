@@ -1261,7 +1261,7 @@ class SysInit(object):
         if len(pub_key)>10:
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''test -d %s || mkdir -p %s ;
-            test -n %s || touch %s;
+            test -e %s || touch %s;
             cat %s >> %s.tmp;
             echo "%s" >> %s.tmp && \
             egrep -v '^$' %s.tmp | sort | uniq > %s.tmp1 && mv -f %s{.tmp1,.tmp} && \
