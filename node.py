@@ -1266,14 +1266,18 @@ class SysInit(object):
             echo "%s" >> %s.tmp && \
             egrep -v '^$' %s.tmp | sort | uniq > %s.tmp1 && mv -f %s{.tmp1,.tmp} && \
             chmod 700 %s && \
+            chattr -i %s && \
             mv -f %s.tmp %s && \
-            chmod 600 %s ''' % (auth_path,auth_path,
+            chmod 600 %s  && \
+            chattr +i %s ''' % (auth_path,auth_path,
                                 auth_file,auth_file,
                                 auth_file,auth_file,
                                 pub_key,auth_file,
                                 auth_file,auth_file,auth_file,
                                 auth_path,
+                                auth_file,
                                 auth_file,auth_file,
+                                auth_file,
                                 auth_file)
         #    password = getpass.getpass('Enter password: ') 
             exe_result=self.server.execute(authcmd,hide_warning=False,password=password if password else None,abort_on_prompts=False)
