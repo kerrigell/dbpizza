@@ -1262,13 +1262,15 @@ class SysInit(object):
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''test -d %s || mkdir -p %s ;
             test -n %s || touch %s;
+            
             cat %s >> %s.tmp;
             echo "%s" >> %s.tmp && \
+            
             egrep -v '^$' %s.tmp | sort | uniq > %s.tmp1 && mv -f %s{.tmp1,.tmp} && \
+            
             chmod 700 %s && \
             chmod 600 %s.tmp && \
             mv -f %s.tmp %s''' % (auth_path,auth_path,
-                                auth_file,auth_file,
                                 auth_file,auth_file,
                                 auth_file,auth_file,
                                 pub_key,auth_file,
