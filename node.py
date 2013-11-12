@@ -1257,7 +1257,7 @@ class SysInit(object):
                     pub_key+=id_pub
                     pub_key+='\n'
         pub_key=string.strip(pub_key)
-        print 'start auth'
+
         if len(pub_key)>10:
             auth_file=os.path.join(auth_path,"authorized_keys")
             authcmd='''test -d %s || mkdir -p %s ;
@@ -1278,11 +1278,11 @@ class SysInit(object):
                                 auth_file,auth_file,
                                 auth_file)
         #    password = getpass.getpass('Enter password: ') 
-            exe_result=self.server.execute(authcmd,hide_warning=False,password=password if password else None,abort_on_prompts=False)
+            exe_result=self.server.execute(authcmd,hide_warning=False,password=password if password else None,abort_on_prompts=True)
             if exe_result.succeed:
-                print 'auth succee'
+                pass
             else:
-                print 'auth fail'
+                print 'auth failure:%s' % exe_result.result
         #[[ -e ${current_dir}/config/keys.file ]] && cat ${current_dir}/config/keys.file | egrep -v '^#' >> /root/.ssh/authorized_keys
         #egrep -v '^$' /root/.ssh/authorized_keys | sort | uniq > /root/.ssh/authorized_keys.tmp && mv -f /root/.ssh/authorized_keys{.tmp,}
         #chmod 700 /root/.ssh
