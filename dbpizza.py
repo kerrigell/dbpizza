@@ -321,6 +321,8 @@ class PizzaShell(cmd.Cmd):
         if opts.childs:
             for s in self._get_childs_list():
                 infolist.append(SysInit(s))
+        if len(infolist)==0:
+            infolist.append(SysInit(self.server.current_node))
         password=None
         for i in infolist:        
             if opts.make_authorized:
