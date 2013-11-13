@@ -398,7 +398,15 @@ class Server(NodeNet):
             #i.execute(cmd)
             #if extent:
                 #i.infect_execute(cmd,extent)
-
+    def get_childs(self,recursion=False):
+        serverlist=[]
+        if self.childs is None:
+            self.breed()
+        for i in self.childs.values():
+            serverlist.append(i) 
+            if recursion:
+                serverlist+=i.get_childs(recursion)
+        return serverlist        
 
     def exists(self,path):
         env.host_string='%s@%s' % (self.s.loginuser,'127.0.0.1' if self.root ==self else self.s.ip_oper)
@@ -1119,9 +1127,11 @@ class Transfer(object):
         if len(self.dest_servers)==0:
             return
         self.trans_list={}
-
+        dest_list=self.dest_servers if len(self.dest_servers)<2 else sorted(self.dest_servers,key= lambda x:x.level,reverse=True)
+        for i in dest_list:
+            print i
         #对目标服务器按level进行排序，先传输level数值大的，可以增加
-        for value in self.dest_servers if len(self.dest_servers)<2 else sorted(self.dest_servers,key= lambda x:x.level,reverse=True):
+        for value in dest_list:
             #记录uuid使用次数，初始是-1.正常结束时0，每传递加1，有问题为-2【记录机器为传输目标机器】
             #记录传输过程的执行结果，文本记录
             walkpath=self.server.walk(self.server,value)

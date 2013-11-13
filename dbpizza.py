@@ -174,7 +174,7 @@ class PizzaShell(cmd.Cmd):
             serverlist.append(self.server.current_node)  
         return serverlist
     
-    def _get_childs_list(self):
+    def _get_childs_list(self,recursion=False):
         serverlist=[]
         if self.server.current_node.childs is None:
             self.server.current_node.breed()
@@ -282,6 +282,7 @@ class PizzaShell(cmd.Cmd):
                 i.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('-c','--childs',action='store_true',help='piece name'),
+              make_option('--recursion',action='store_ture',help='recursion'),
               make_option('-t','--target',type='string',help='trans target'),
               make_option('-d','--deploy_dir',type='string',help='trans target'),
               make_option('-w','--who',type='string',help='trans target')])  
@@ -298,8 +299,9 @@ class PizzaShell(cmd.Cmd):
             for s in self._get_operation_list(opts):
                 trans_task.add_server(s)
         if opts.childs:
-            for s in self._get_childs_list():
+            for s in self.server.current_node.get_childs( True if opts.recursion else False):
                 trans_task.add_server(s)
+        print "Servers Count:%s" % len(trans_task.dest_servers)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
 
