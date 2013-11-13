@@ -1170,7 +1170,7 @@ class Transfer(object):
                                 self.trans_list[src_srv.dbid][1]=0
                                 print 'move finished'
                             else:
-                                print 'move failed:%' % exe_result.result
+                                print 'move failed:%s' % exe_result.result
                         else:
                             print 'No target:%s' % os.path.join(self.tmppath,self.uuid)
                     elif self.trans_list[src_srv.dbid][1]>1:
@@ -1184,7 +1184,7 @@ class Transfer(object):
                               #  self.trans_list[src_srv.dbid][1]=0
                                 print 'copy finished'
                             else:
-                                print 'copy failed:%' % exe_result.result
+                                print 'copy failed:%s' % exe_result.result
                         else:
                             print 'No target:%s' % os.path.join(self.tmppath,self.uuid)                        
                     continue
