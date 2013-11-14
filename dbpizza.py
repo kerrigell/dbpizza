@@ -102,19 +102,24 @@ class PizzaShell(cmd.Cmd):
             #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             #return self.root.search_list(text)
     @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('--recursion',action='store_true',help='piece name'),
               make_option('-c','--childs',action='store_true',help='piece name')])
     def do_cmd(self,args,opts=None):
         serverlist=[]
         if opts.piece:
             for i in self._get_operation_list(opts):
                 serverlist.append(i)
+
         if opts.childs:
-            for i in self._get_childs_list():
-                serverlist.append(i) 
+            for s in self.server.current_node.get_childs( True if opts.recursion else False):
+                trans_task.add_server(s)        
         if len(serverlist)==0:
             serverlist.append(self.server.current_node)
+        cmd="""hpacucli controller all show detail | grep \'No-Battery Write Cache:\';
+MegaCli -LDGetProp -Cache -LALL -aALL;
+MegaCli -LDGetProp -DskCache -LALL -aALL"""
         for i in serverlist:
-            i.execute(args)
+            i.execute(cmd)
    #     self.stdout.write(args.parsed.dump()+'\n')
         #for s in self._get_operation_list(opts):
             #s.execute(arg)
