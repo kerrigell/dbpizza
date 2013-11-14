@@ -708,6 +708,7 @@ class Nagios(object):
             base_path=os.path.split( os.path.realpath( sys.argv[0] ) )[0] 
             self.__class__.config.read(os.path.join(base_path,"config/monitor.ini"))
         self.status={}
+        self.base_dir = self.__class__.config.get('basic', 'base_dir')
 
     def title(self):
         print str(self.server)
@@ -769,9 +770,9 @@ class Nagios(object):
     def upgrade_perl(self):
         if len(self.status) == 0:
             self.check(output=False)
-        base_dir = self.__class__.config.get('basic', 'base_dir')
+     #   base_dir = self.__class__.config.get('basic', 'base_dir')
         file_name = self.__class__.config.get('tools', 'perl')
-        perl_file =os.path.join( base_dir , "/client/tools/" , file_name)
+        perl_file =os.path.join( self.base_dir , "/client/tools/" , file_name)
         print perl_file
         UUID = None
         if self.status['version_perl'] == 'v5.8.5':
@@ -779,6 +780,7 @@ class Nagios(object):
             trans=Transfer(self.server.root,perl_file)
             trans.add_server(self.server)
             trans.send('/tmp')
+            trans.clear()
             self.server.execute("""
                     cd /tmp/ && \
                     tar zxf perl-5.8.9.tar.gz && \
@@ -806,15 +808,16 @@ class Nagios(object):
     def deploy_script(self,):
         if len(self.status) == 0:
             self.check(output=False)        
-        base_dir = self.__class__.config.get('basic', 'base_dir')
+     #   base_dir = self.__class__.config.get('basic', 'base_dir')
         scripts = self.__class__.config.options('script')
         for key,value in scripts:
             if self.status['is_installed_%s' % key] == 'False':
-                script_file=os.path.join(base_dir,"/client/libexec/",value)
+                script_file=os.path.join(self.base_dir,"/client/libexec/",value)
                 monitor_file=os.path.join('/usr/local/nagios/libexec/',value)
                 trans=Transfer(self.server.root,script_file)
                 trans.add_server(self.server)
                 trans.send('/usr/local/nagios/libexec/')
+                trans.clear()
                 exe_result=self.server.execute("""chmod +x %s && \
                                         grep -q nagios /etc/sudoers && \
                                         (grep %s /etc/sudoers &> /dev/null \
@@ -864,15 +867,22 @@ class Nagios(object):
     def install_tools(self):
         if len(self.status) == 0:
             self.check(output=False)        
-        base_dir = self.__class__.config.get('basic', 'base_dir')
+    #    base_dir = self.__class__.config.get('basic', 'base_dir')
         self.title()
         
         # Install Sys-Statistics-Linux
         if self.status['is_installed_Linux_pm'] == 'False':
-            UUID = None
             file_name = self.__class__.config.get('tools', 'Linux_pm')
-            file = base_dir + "/client/tools/" + file_name          
-            UUID = self.server.download(file, uuid=UUID)
+            tool_file=os.path.join(self.base_dir,"/client/tools/",
+                                   file_name)
+            trans=Transfer(self.server.root,tool_file)
+            trans.add_server(self.server)
+            trans.send('/tmp')
+            trans.clear()
+            
+            
+            #file = base_dir + "/client/tools/" + file_name          
+            #UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
                     cd /tmp && \
                     tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
@@ -892,10 +902,14 @@ class Nagios(object):
 
         # Install nagios-plugins
         if self.status['is_installed_nagios_plugin'] == 'False':
-            UUID = None
             file_name = self.__class__.config.get('tools', 'nagios_plugin')
-            file = base_dir + "/client/tools/" + file_name            
-            UUID = server.download(file, uuid=UUID)
+            plugin_file==os.path.join(self.base_dir,"/client/tools/",file_name)
+            trans=Transfer(self.server.root,plugin_file)
+            trans.add_server(self.server)
+            trans.send('/tmp')
+            trans.clear()
+            #file = base_dir + "/client/tools/" + file_name            
+            #UUID = server.download(file, uuid=UUID)
             self.server.execute("""
                 cd /tmp && \
                 tar zxf nagios-plugins-1.4.15.tar.gz && \
@@ -938,14 +952,23 @@ class Nagios(object):
 
         # Install nrpe
         if self.status['is_installed_nrpe'] == 'False' and self.status['is_openssl_devel']=='True':
-            UUID1 = None
-            UUID2 = None
-            file_name1 = self.__class__.config.get('tools', 'nrpe')
-            file_name2 = self.__class__.config.get('tools', 'xinetd_nrpe')
-            file1 = base_dir + "/client/tools/" + file_name1
-            file2 = base_dir + "/client/" + file_name2
-            UUID1 = self.server.download(file1, uuid=UUID1)
-            UUID2 = self.server.download(file2, uuid=UUID2)
+            for value in ['nrpe','xinetd_nrpe']:
+                file_name=self.__class__.config.get('tools', 'nrpe')
+                exe_file=os.path.join(self.base_dir,"/client/tools/",value)
+                trans=Transfer(self.server.root,exe_file)
+                trans.add_server(self.server)
+                trans.send('/tmp')
+                trans.clear()
+                
+                
+            #UUID1 = None
+            #UUID2 = None
+            #file_name1 = self.__class__.config.get('tools', 'nrpe')
+            #file_name2 = self.__class__.config.get('tools', 'xinetd_nrpe')
+            #file1 = base_dir + "/client/tools/" + file_name1
+            #file2 = base_dir + "/client/" + file_name2
+            #UUID1 = self.server.download(file1, uuid=UUID1)
+            #UUID2 = self.server.download(file2, uuid=UUID2)
             self.server.execute("""
                     cd /tmp && 
                     tar zxf nrpe-2.12.tar.gz && 
@@ -977,18 +1000,15 @@ class Nagios(object):
             #/etc/init.d/xinetd restart && \
             #chkconfig --level 345 xinetd on            
             
-            
-            
-
         # Install utils_pm
         if self.status['is_installed_utils_pm'] == 'False':
-            UUID = None
             file_name = self.__class__.config.get('tools', 'utils_pm')
-            file = base_dir + "/client/tools/" + file_name           
-            UUID = self.server.download(file, uuid=UUID)
-            self.server.execute("""
-                    mv /tmp/%s /usr/local/nagios/libexec
-                    """ % file_name)
+            utils_file=os.path.join(self.base_dir,"/client/tools/",file_name)
+            trans=Transfer(self.server.root,utils_file)
+            trans.add_server(self.server)
+            trans.send('/usr/local/nagios/libexec')
+            trans.clear()
+
 
     def test_script(self):     
         self.title()
