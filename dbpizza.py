@@ -119,7 +119,7 @@ class PizzaShell(cmd.Cmd):
 MegaCli -LDGetProp -Cache -LALL -aALL;
 MegaCli -LDGetProp -DskCache -LALL -aALL"""
         for i in serverlist:
-            i.execute(cmd)
+            i.execute(args)
    #     self.stdout.write(args.parsed.dump()+'\n')
         #for s in self._get_operation_list(opts):
             #s.execute(arg)
