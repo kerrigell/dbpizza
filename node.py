@@ -705,7 +705,8 @@ class Nagios(object):
         self.ip_monitor=self.server.s.ip_monitor
         if self.__class__.config is None:
             self.__class__.config=ConfigParser.SafeConfigParser()
-            self.__class__.config.read("config/monitor.ini")
+            base_path=os.path.split( os.path.realpath( sys.argv[0] ) )[0] 
+            self.__class__.config.read(os.path.join(base_path,"config/monitor.ini"))
         self.status={}
 
     def title(self):
@@ -966,8 +967,8 @@ class Nagios(object):
         self.server.execute(command_lines)
     def show_nrpe(self):
         self.title()
-        print os.path.split( os.path.realpath( sys.argv[0] ) )[0] 
-        print sys.argv[0][0:sys.argv[0].rfind('\\')+1]        
+        
+      
         self.__class__.config.sections()
         nrpes = self.__class__.config.items('nrpe')
         for name,value in nrpes:
