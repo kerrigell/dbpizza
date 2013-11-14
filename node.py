@@ -972,6 +972,8 @@ class Nagios(object):
             print "%40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
+        print os.path.split( os.path.realpath( sys.argv[0] ) )[0] 
+        print sys.argv[0][0:sys.argv[0].rfind('\\')+1]
         nrpes = self.__class__.config.items('nrpe')
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
