@@ -703,15 +703,15 @@ class Nagios(object):
             raise "param type is not Server"
         self.server=srv
         self.ip_monitor=self.server.s.ip_monitor
-        if self.config is None:
-            self.config=ConfigParser.SafeConfigParser()
-            self.config.read("config/monitor.ini")
+        if self.__class__.config is None:
+            self.__class__.config=ConfigParser.SafeConfigParser()
+            self.__class__.config.read("config/monitor.ini")
         self.status={}
 
     def title(self):
         print str(self.server)
     def check(self,output=True):
-        scripts = self.config.options('script')
+        scripts = self.__class__.config.options('script')
         script_shell = ""
         for script in scripts:
             script_shell += """
@@ -768,8 +768,8 @@ class Nagios(object):
     def upgrade_perl(self):
         if len(self.status) == 0:
             self.check(output=False)
-        base_dir = self.config.get('basic', 'base_dir')
-        file_name = self.config.get('tools', 'perl')
+        base_dir = self.__class__.config.get('basic', 'base_dir')
+        file_name = self.__class__.config.get('tools', 'perl')
         file = base_dir + "/client/tools/" + file_name
         print file
         UUID = None
@@ -802,11 +802,11 @@ class Nagios(object):
     def deploy_script(self):
         if len(self.status) == 0:
             self.check(output=False)        
-        base_dir = self.config.get('basic', 'base_dir')
-        scripts = self.config.options('script')
+        base_dir = self.__class__.config.get('basic', 'base_dir')
+        scripts = self.__class__.config.options('script')
         for script in scripts:
             UUID = None
-            file_name = self.config.get('script', script)
+            file_name = self.__class__.config.get('script', script)
             file = base_dir + "/client/libexec/" + file_name
             AP = "\/usr\/local\/nagios\/libexec\/%s" % file_name
             OP = "/usr/local/nagios/libexec/%s" % file_name
@@ -831,13 +831,13 @@ class Nagios(object):
     def install_tools(self):
         if len(self.status) == 0:
             self.check(output=False)        
-        base_dir = self.config.get('basic', 'base_dir')
+        base_dir = self.__class__.config.get('basic', 'base_dir')
         self.title()
         
         # Install Sys-Statistics-Linux
         if self.status['is_installed_Linux_pm'] == 'False':
             UUID = None
-            file_name = self.config.get('tools', 'Linux_pm')
+            file_name = self.__class__.config.get('tools', 'Linux_pm')
             file = base_dir + "/client/tools/" + file_name          
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
@@ -860,7 +860,7 @@ class Nagios(object):
         # Install nagios-plugins
         if self.status['is_installed_nagios_plugin'] == 'False':
             UUID = None
-            file_name = self.config.get('tools', 'nagios_plugin')
+            file_name = self.__class__.config.get('tools', 'nagios_plugin')
             file = base_dir + "/client/tools/" + file_name            
             UUID = server.download(file, uuid=UUID)
             self.server.execute("""
@@ -886,7 +886,7 @@ class Nagios(object):
                 krb5-devel-1.10.3-10.el6_4.6.x86_64                                                                                                                           5/6 
                 openssl-devel-1.0.0-27.el6_4.2.x86_64  '''
             #UUID = None
-            #file_name = self.config.get('tools', 'openssl_devel')
+            #file_name = self.__class__.config.get('tools', 'openssl_devel')
             #file = base_dir + "/client/tools/" + file_name
             #UUID = server.download(file, uuid=UUID)
             #self.server.execute("""
@@ -907,8 +907,8 @@ class Nagios(object):
         if self.status['is_installed_nrpe'] == 'False' and self.status['is_openssl_devel']=='True':
             UUID1 = None
             UUID2 = None
-            file_name1 = self.config.get('tools', 'nrpe')
-            file_name2 = self.config.get('tools', 'xinetd_nrpe')
+            file_name1 = self.__class__.config.get('tools', 'nrpe')
+            file_name2 = self.__class__.config.get('tools', 'xinetd_nrpe')
             file1 = base_dir + "/client/tools/" + file_name1
             file2 = base_dir + "/client/" + file_name2
             UUID1 = self.server.download(file1, uuid=UUID1)
@@ -950,7 +950,7 @@ class Nagios(object):
         # Install utils_pm
         if self.status['is_installed_utils_pm'] == 'False':
             UUID = None
-            file_name = self.config.get('tools', 'utils_pm')
+            file_name = self.__class__.config.get('tools', 'utils_pm')
             file = base_dir + "/client/tools/" + file_name           
             UUID = self.server.download(file, uuid=UUID)
             self.server.execute("""
@@ -959,20 +959,20 @@ class Nagios(object):
 
     def test_script(self):     
         self.title()
-        commands = self.config.items('test_commands')
+        commands = self.__class__.config.items('test_commands')
         command_lines = ""
         for (command, command_line) in commands:
             command_lines += (command_line + ';')
         self.server.execute(command_lines)
     def show_nrpe(self):
         self.title()
-        self.config.sections()
-        nrpes = self.config.items('nrpe')
+        self.__class__.config.sections()
+        nrpes = self.__class__.config.items('nrpe')
         for name,value in nrpes:
             print "%40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
-        nrpes = self.config.items('nrpe')
+        nrpes = self.__class__.config.items('nrpe')
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
         for name, value in nrpes:
@@ -1021,7 +1021,7 @@ class Nagios(object):
         print "install tools"
         self.install_tools()
         print "config iptables"
-        self.config_iptables()
+        self.__class__.config_iptables()
         print "deploy monitor script"
         self.deploy_script()
         print "update nrpe"
