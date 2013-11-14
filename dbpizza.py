@@ -112,7 +112,7 @@ class PizzaShell(cmd.Cmd):
 
         if opts.childs:
             for s in self.server.current_node.get_childs( True if opts.recursion else False):
-                trans_task.add_server(s)        
+                serverlist.append(i)        
         if len(serverlist)==0:
             serverlist.append(self.server.current_node)
         cmd="""hpacucli controller all show detail | grep \'No-Battery Write Cache:\';
