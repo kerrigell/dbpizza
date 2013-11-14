@@ -771,11 +771,14 @@ class Nagios(object):
             self.check(output=False)
         base_dir = self.__class__.config.get('basic', 'base_dir')
         file_name = self.__class__.config.get('tools', 'perl')
-        file = base_dir + "/client/tools/" + file_name
-        print file
+        perl_file =os.path.join( base_dir , "/client/tools/" , file_name)
+        print perl_file
         UUID = None
         if self.status['version_perl'] == 'v5.8.5':
-            UUID = self.server.download(file, uuid=UUID)
+          #  UUID = self.server.download(file, uuid=UUID)
+            trans=Transfer(self.server.root,perl_file)
+            trans.add_server(self.server)
+            trans.send('/tmp')
             self.server.execute("""
                     cd /tmp/ && \
                     tar zxf perl-5.8.9.tar.gz && \
@@ -800,34 +803,63 @@ class Nagios(object):
                     /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
                     """ % self.ip_monitor,hide_puts=True)
 
-    def deploy_script(self):
+    def deploy_script(self,):
         if len(self.status) == 0:
             self.check(output=False)        
         base_dir = self.__class__.config.get('basic', 'base_dir')
         scripts = self.__class__.config.options('script')
-        for script in scripts:
-            UUID = None
-            file_name = self.__class__.config.get('script', script)
-            file = base_dir + "/client/libexec/" + file_name
-            AP = "\/usr\/local\/nagios\/libexec\/%s" % file_name
-            OP = "/usr/local/nagios/libexec/%s" % file_name
-            if self.status['is_installed_%s' % script] == 'False':
-                UUID = self.server.download(file, uuid=UUID)
-                self.server.execute("""
-                        mv /tmp/%s /usr/local/nagios/libexec/ &&
-                        chmod +x /usr/local/nagios/libexec/%s;
-                        grep -q nagios /etc/sudoers && \
-                        (grep %s /etc/sudoers &> /dev/null \
-                        || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
-                        || echo \"nagios ALL=NOPASSWD: %s\" \
-                        >> /etc/sudoers
-                        """ % (file_name, file_name, AP, AP, OP) ,hide_puts=True)
+        for key,value in scripts:
+            if self.status['is_installed_%s' % key] == 'False':
+                script_file=os.path.join(base_dir,"/client/libexec/",value)
+                monitor_file=os.path.join('/usr/local/nagios/libexec/',value)
+                trans=Transfer(self.server.root,script_file)
+                trans.add_server(self.server)
+                trans.send('/usr/local/nagios/libexec/')
+                exe_result=self.server.execute("""chmod +x %s && \
+                                        grep -q nagios /etc/sudoers && \
+                                        (grep %s /etc/sudoers &> /dev/null \
+                                        || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
+                                        || echo \"nagios ALL=NOPASSWD: %s\" \
+                                        >> /etc/sudoers""" % (monitor_file,
+                                                              value,
+                                                              monitor_file,
+                                                              monitor_file),hide_puts=True)
         self.title()
         self.server.execute("""
                 sed -i \
                 's/^Defaults    requiretty/#Defaults    requiretty/g'\
                 /etc/sudoers
-                """,hide_puts=True)
+                """,hide_puts=True)        
+        
+            
+        
+        
+        
+        #for script in scripts:
+            #trans=Transfer(self.server.root)
+            
+            #UUID = None
+            #file_name = self.__class__.config.get('script', script)
+            #file = base_dir + "/client/libexec/" + file_name
+            #AP = "\/usr\/local\/nagios\/libexec\/%s" % file_name
+            #OP = "/usr/local/nagios/libexec/%s" % file_name
+            #if self.status['is_installed_%s' % script] == 'False':
+                #UUID = self.server.download(file, uuid=UUID)
+                #self.server.execute("""
+                        #mv /tmp/%s /usr/local/nagios/libexec/ &&
+                        #chmod +x /usr/local/nagios/libexec/%s;
+                        #grep -q nagios /etc/sudoers && \
+                        #(grep %s /etc/sudoers &> /dev/null \
+                        #|| sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
+                        #|| echo \"nagios ALL=NOPASSWD: %s\" \
+                        #>> /etc/sudoers
+                        #""" % (file_name, file_name, AP, AP, OP) ,hide_puts=True)
+        #self.title()
+        #self.server.execute("""
+                #sed -i \
+                #'s/^Defaults    requiretty/#Defaults    requiretty/g'\
+                #/etc/sudoers
+                #""",hide_puts=True)
 
     def install_tools(self):
         if len(self.status) == 0:
@@ -1025,7 +1057,7 @@ class Nagios(object):
         print "install tools"
         self.install_tools()
         print "config iptables"
-        self.__class__.config_iptables()
+        self.config_iptables()
         print "deploy monitor script"
         self.deploy_script()
         print "update nrpe"
@@ -1147,11 +1179,9 @@ class Transfer(object):
             #print "source is not exists"
             #return
         if len(self.dest_servers)==0:
-            return
+            return 
         self.trans_list={}
         dest_list=self.dest_servers if len(self.dest_servers)<2 else sorted(self.dest_servers,key= lambda x:x.level,reverse=True)
-        for i in dest_list:
-            print i
         #对目标服务器按level进行排序，先传输level数值大的，可以增加
         for value in dest_list:
             #记录uuid使用次数，初始是-1.正常结束时0，每传递加1，有问题为-2【记录机器为传输目标机器】
