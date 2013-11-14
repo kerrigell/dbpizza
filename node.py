@@ -809,7 +809,7 @@ class Nagios(object):
         if len(self.status) == 0:
             self.check(output=False)        
      #   base_dir = self.__class__.config.get('basic', 'base_dir')
-        scripts = self.__class__.config.itmes('script')
+        scripts = self.__class__.config.items('script')
         for key,value in scripts:
             if self.status['is_installed_%s' % key] == 'False':
                 script_file=os.path.join(self.base_dir,"/client/libexec/",value)
