@@ -805,7 +805,7 @@ class Nagios(object):
                     /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
                     """ % self.ip_monitor,hide_puts=True)
 
-    def deploy_script(self,):
+    def deploy_script(self):
         if len(self.status) == 0:
             self.check(output=False)        
      #   base_dir = self.__class__.config.get('basic', 'base_dir')
