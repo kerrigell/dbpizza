@@ -1067,7 +1067,9 @@ class Nagios(object):
             self.server.execute("""
                     sed -i 's/NTP_SERVER_IP/%s/g' \
                     /usr/local/nagios/etc/nrpe.cfg
-                    """ % ntp)    
+                    """ % ntp)
+        else:
+            print 'please fill the ntpserver in DB info web'
 
     def deploy(self):
         print "check monitor status"
@@ -1192,7 +1194,8 @@ class Transfer(object):
     def add_server(self,*srvlist):
         for srv in srvlist:
             if type(srv)==Server:
-                self.dest_servers.append(srv)
+                if srv.s.role not in ['rds']:
+                    self.dest_servers.append(srv)
                 
     def send(self,dest_path):
         #if not self.server.exists(self.source_path):
