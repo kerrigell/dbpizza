@@ -34,15 +34,12 @@ class PizzaShell(cmd.Cmd):
         #using
         self.server=Server()
         self.server.breed()
-        self.feature=Feature(foreignclass=Server)
-        self.feature.breed(True)
+     #   self.feature=Feature(foreignclass=Server)
+      #  self.feature.breed(True)
         self.piecis={}
         self.mode=Server
         self.prompt="Pizza [%s]>" % self.mode.current_node
 
-    def do_pwd(self,line):
-        slis=[]
-        print self.mode.current_node
 
     def do_cd(self,line):
         line=string.strip(line)
@@ -102,24 +99,17 @@ class PizzaShell(cmd.Cmd):
             #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
             #return self.root.search_list(text)
     @options([make_option('-p','--piece',type='string',help='piece name'),
-              make_option('--recursion',action='store_true',help='piece name'),
-              make_option('-c','--childs',action='store_true',help='piece name')])
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs ')])
     def do_cmd(self,args,opts=None):
-        serverlist=[]
-        if opts.piece:
-            for i in self._get_operation_list(opts):
-                serverlist.append(i)
-
-        if opts.childs:
-            for s in self.server.current_node.get_childs( True if opts.recursion else False):
-                serverlist.append(i)        
-        if len(serverlist)==0:
-            serverlist.append(self.server.current_node)
-        cmd="""hpacucli controller all show detail | grep \'No-Battery Write Cache:\';
-MegaCli -LDGetProp -Cache -LALL -aALL;
-MegaCli -LDGetProp -DskCache -LALL -aALL"""
-        for i in serverlist:
-            i.execute(args)
+        oper_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=None)
+        for oper in oper_list:
+            oper.execute(args)
    #     self.stdout.write(args.parsed.dump()+'\n')
         #for s in self._get_operation_list(opts):
             #s.execute(arg)
@@ -170,33 +160,53 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
                         print ' '.ljust(4,' '),j
         elif opts.run:
             pass
-    def _get_operation_list(self,opts):
-        serverlist=[]
-        if opts is not None and hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
-            for value in self.piecis[opts.piece]['servers']:
-                serverlist.append(value)
-        else:
-            serverlist.append(self.server.current_node)  
-        return serverlist
+    def _get_operation_list(self,node,inPiece=None,inCurrent=False,inChilds=False,useRecursion=False,objClass=None):
+        server_list=[]
+        if inPiece and self.piecis.has_key(inPiece):
+            for s in self.piecis[inPiece]['servers']:
+                server_list.append(s)
+        if inChilds:
+            server_list+=node.get_childs(useRecursion)
+        if inCurrent:
+            server_list+=node
+        object_list=[]
+        if objClass:
+            object_list=[ objClass(i) for i in server_list]
+        return object_list if objClass else server_list
+            
+            
+            
+        #if opts is not None and hasattr(opts,'piece') and self.piecis.has_key(opts.piece):
+            #for value in self.piecis[opts.piece]['servers']:
+                #serverlist.append(value)
+        #else:
+            #serverlist.append(self.server.current_node)  
+        #return serverlist
     
-    def _get_childs_list(self,recursion=False):
-        serverlist=[]
-        if self.server.current_node.childs is None:
-            self.server.current_node.breed()
-        for i in self.server.current_node.childs.values():
-            serverlist.append(i) 
-        return serverlist
+    #def _get_childs_list(self,recursion=False):
+        #serverlist=[]
+        #if self.server.current_node.childs is None:
+            #self.server.current_node.breed()
+        #for i in self.server.current_node.childs.values():
+            #serverlist.append(i) 
+        #return serverlist
 
 
-    @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs '),
+              
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
-              make_option('--show_nrpe',action='store_true',help='deploy monitor step by step'),
-              make_option('-p','--piece',type='string',help='the name of a filter list')])
+              make_option('--show_nrpe',action='store_true',help='deploy monitor step by step')])
     def do_nagios(self,args,opts=None):
-        monitorlist=[]
-        for s in self._get_operation_list(opts):
-            monitorlist.append(Nagios(s))
+        monitor_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=Nagios)
+
         monopers=[
             ['check current status',                                     'check'          ],
             ['upgrade perl from v5.8.5 to v5.8.9',                       'upgrade_perl'   ],
@@ -225,7 +235,7 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
             oper='deploy'
         elif opts.show_nrpe:
             oper='show_nrpe'
-        for item in monitorlist:
+        for item in monitor_list:
             if oper:
                 operfun=getattr(item,oper)
                 if oper_param:
@@ -285,24 +295,37 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
         if opts.status:
             self.server.current_node.execute("iptables -nvL")
             return
-    @options([make_option('--check_all',action='store_true',help='check all'),
-              make_option('--update',action='store_true',help='update database'),
-              make_option('-p','--piece',type='string',help='piece name')])        
-    def do_info(self,arg,opts=None):
-        infolist=[]
-        for s in self._get_operation_list(opts):
-            infolist.append(SysInfo(s))
-        for i in infolist:
-            print i.server
-            if opts.check_all:
-                i.check_all(do_update= True if opts.update else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
-              make_option('-c','--childs',action='store_true',help='piece name'),
-              make_option('--recursion',action='store_true',help='recursion'),
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs '),
+              make_option('--check_all',action='store_true',help='check all'),
+              make_option('--update',action='store_true',help='update database')])        
+    def do_info(self,arg,opts=None):
+        info_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=SysInfo)
+        for item in info_list:
+            print item.server
+            if opts.check_all:
+                item.check_all(do_update= True if opts.update else False)
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs '),
+              
               make_option('-t','--target',type='string',help='trans target'),
               make_option('-d','--deploy_dir',type='string',help='trans target'),
               make_option('-w','--who',type='string',help='trans target')])  
     def do_trans(self,arg,opts=None):
+        server_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=False,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=None)
+
         trans_task=Transfer(self.server.current_node,opts.target)
         if opts.who:
             line=string.strip(opts.who)
@@ -310,19 +333,16 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
             if string.find(line,'[') !=-1:
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')   
-                trans_task.add_server(self.server.current_node.get_node(int(dbid)))
-        if opts.piece:
-            for s in self._get_operation_list(opts):
-                trans_task.add_server(s)
-        if opts.childs:
-            for s in self.server.current_node.get_childs( True if opts.recursion else False):
-                trans_task.add_server(s)
+                server_list+=self.server.current_node.get_node(int(dbid))
+        trans_task.add_server(server_list)
         print "Servers Count:%s" % len(trans_task.dest_servers)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
 
     @options([make_option('-p','--piece',type='string',help='piece name'),
-              make_option('-c','--childs',action='store_true',help='piece name'),
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs '),
+              
               make_option('-a','--make_authorized',action='store_true',help='piece name'),
               make_option('--disable_selinux',action='store_true',help='piece name'),
               make_option('--amazon_change_access_key',action='store_true',help='piece name'),
@@ -332,26 +352,27 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
     def do_sysinit(self,arg,opts=None):
         from node import SysInit
         import getpass
-        infolist=[]
-        if opts.piece:
-            for s in self._get_operation_list(opts):
-                infolist.append(SysInit(s))
-        if opts.childs:
-            for s in self._get_childs_list():
-                infolist.append(SysInit(s))
-        if len(infolist)==0:
-            infolist.append(SysInit(self.server.current_node))
+        
+        init_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=SysInit)
         password=None
-        for i in infolist:        
+        for item in init_list:        
             if opts.make_authorized:
                 if password is None:
                     password = getpass.getpass('Enter Login password: ')
-                i.make_authorized(password=password if len(password)> 0 else None)
+                item.make_authorized(password=password if len(password)> 0 else None)
             if opts.disable_selinux:
-                i.disable_selinux()
+                item.disable_selinux()
             if opts.amazon_change_access_key and opts.access_key and opts.secret_key:
-                i.amazon_change_access_key(opts.access_key,opts.secret_key)
+                item.amazon_change_access_key(opts.access_key,opts.secret_key)
     @options([make_option('-p','--piece',type='string',help='piece name'),
+              make_option('--recursion',action='store_true',help='get childs  with recursion'),
+              make_option('-c','--childs',action='store_true',help='get childs '),
+              
               make_option('-i','--install',action='store_true',help='piece name'),
               make_option('-c','--check',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),
@@ -360,30 +381,27 @@ MegaCli -LDGetProp -DskCache -LALL -aALL"""
               make_option('-a','--address',type='string',help='piece name'),])     
     def do_axis(self,arg,opts=None):
         from node import Axis
-        infolist=[]
-        for s in self._get_operation_list(opts):
-            infolist.append(Axis(s))
-        for i in infolist:        
+        axis_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursionn else False,
+                                            objClass=Axis)
+        for item in axis_list:        
             if opts.install:
                 if opts.address:
-                    i.install(opts.address)
+                    item.install(opts.address)
                 else:
                     print 'please give satellite ip'
             if opts.start:
-                i.start()
+                item.start()
             if opts.stop:
-                i.stop()
+                item.stop()
             if opts.uninstall:
-                i.uninstall()
+                item.uninstall()
             if opts.check:
-                i.check()
+                item.check()
 
-                    
-        
-            
-
- 
- 
  
 class Logger(object):
     def __init__(self, filename="Default.log"):

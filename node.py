@@ -1197,10 +1197,7 @@ class Transfer(object):
                 if srv.s.role not in ['rds']:
                     self.dest_servers.append(srv)
                 
-    def send(self,dest_path):
-        #if not self.server.exists(self.source_path):
-            #print "source is not exists"
-            #return
+    def send(self,dest_path,mode=None):
         if len(self.dest_servers)==0:
             return 
         self.trans_list={}
@@ -1215,23 +1212,6 @@ class Transfer(object):
                     self.trans_list[src_srv.dbid]=[src_srv,0,None]
                 if dst_srv is not None and not self.trans_list.has_key(dst_srv.dbid):
                     self.trans_list[dst_srv.dbid]=[dst_srv,0,None]                    
-                    
-             #   print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
-                #if src_srv == self.server:
-                    #if dst_srv.exists(os.path.join(tmppath,self.uuid)):
-                        #self.trans_list[dst_srv.dbid][1]+=1     
-                    #else:
-                        #exe_result=src_srv.execute("scp -r %s %s:%s" % (self.source_path 
-                                                                        #,"%s@%s" %(dst_srv.s.loginuser,dst_srv.s.ip_oper)
-                                                                        #,os.path.join(tmppath,self.uuid)
-                                                                        #))
-                        #if exe_result.succeed:
-                            #self.trans_list[dst_srv.dbid][1]+=1
-                            #self.trans_list[dst_srv.dbid][2]='OK'
-                        #else:
-                            #self.trans_list[dst_srv.dbid][2]='Not OK' 
-                    #continue
-
                 if dst_srv == None and self.trans_list.has_key(src_srv.dbid):
                     print "%s+-->%s"%(string.ljust(' ',src_srv.level*4,)+str(src_srv),str(dst_srv)),
                     if self.trans_list[src_srv.dbid][1]==1:
@@ -1305,7 +1285,7 @@ class Transfer(object):
         print "Start to clear temp files"
         for key,value in self.trans_list.iteritems():
             if value[1]>1:
-                print "%14s%80s%5s%30s" % (key,value[0],value[1],value[2]),
+                print "%5s%100s%5s%40s" % (key,value[0],value[1],value[2]),
                 exe_result=value[0].execute("cd %s; rm -rf %s" %( self.tmppath,self.uuid),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                 if exe_result.succeed:
                     value[1]=0
