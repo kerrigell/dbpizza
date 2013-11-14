@@ -964,19 +964,36 @@ class Nagios(object):
         for (command, command_line) in commands:
             command_lines += (command_line + ';')
         self.server.execute(command_lines)
-
-    def update_nrpe(self):
+    def show_nrpe(self):
+        self.title()
+        nrpes = self.config.items('nrpe')
+        for name, value in nrpes:
+            print "%40s=%90s" % (name,value)
+    def update_nrpe(self,nrpe_name=None):
         self.title()
         nrpes = self.config.items('nrpe')
         shell = ""
+      #  if nrpe_name and nrpe_name in nrpes
         for name, value in nrpes:
             nrpe_line = "command[" + name + "]=" + value
-            shell += """
-                    sed -i '/command\[%s/d' \
-                    /usr/local/nagios/etc/nrpe.cfg;
-                    echo "%s" >> \
-                    /usr/local/nagios/etc/nrpe.cfg;
-                    """ % (name, nrpe_line)
+            if nrpe_name:
+                if nrpe_name == name:
+                    shell += """
+                            sed -i '/command\[%s/d' \
+                            /usr/local/nagios/etc/nrpe.cfg;
+                            echo "%s" >> \
+                            /usr/local/nagios/etc/nrpe.cfg;
+                            """ % (name, nrpe_line)
+                    break
+            else:
+                shell += """
+                        sed -i '/command\[%s/d' \
+                        /usr/local/nagios/etc/nrpe.cfg;
+                        echo "%s" >> \
+                        /usr/local/nagios/etc/nrpe.cfg;
+                        """ % (name, nrpe_line)                    
+            
+
         self.server.execute(shell)
             
     def review_nrpe(self):
@@ -1163,7 +1180,8 @@ class Transfer(object):
                         if src_srv.exists(os.path.join(self.tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
-                            exe_result=src_srv.execute("mv %s %s" % (os.path.join(self.tmppath,self.uuid)
+                            exe_result=src_srv.execute("mv %s %s && chmod -R 755 %s" % (os.path.join(self.tmppath,self.uuid)
+                                                             ,os.path.join(dest_path,self._lfile)
                                                              ,os.path.join(dest_path,self._lfile)
                                                              ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
@@ -1202,8 +1220,8 @@ class Transfer(object):
                             self.trans_list[dst_srv.dbid][2]='OK'
                             print 'ok'
                         else:
-                            self.trans_list[dst_srv.dbid][2]='Not OK'
-                            print 'not ok'
+                            self.trans_list[dst_srv.dbid][2]='Error:%s' % exe_result.result
+                            print 'Error:%s' % exe_result.result
                             break
                 elif src_srv.level < dst_srv.level and self.trans_list.has_key(src_srv.dbid) and self.trans_list.has_key(dst_srv.dbid):
                     if self.trans_list[dst_srv.dbid][1]>0 or dst_srv.exists(os.path.join(self.tmppath,self.uuid)):
@@ -1219,17 +1237,17 @@ class Transfer(object):
                             self.trans_list[dst_srv.dbid][2]='OK'
                             print 'ok'
                         else:
-                            self.trans_list[dst_srv.dbid][2]='Not OK'
-                            print 'not ok'
+                            self.trans_list[dst_srv.dbid][2]='Error:%s' % exe_result.result
+                            print 'Error:%s' % exe_result.result
                             break
         
                     
                 
     def clear(self):
+        print "Start to clear temp files"
         for key,value in self.trans_list.iteritems():
-            
             if value[1]>1:
-                print "%14s%50s%5s%s" % (key,value[0],value[1],value[2]),
+                print "%14s%80s%5s%30s" % (key,value[0],value[1],value[2]),
                 exe_result=value[0].execute("cd %s; rm -rf %s" %( self.tmppath,self.uuid),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                 if exe_result.succeed:
                     value[1]=0
@@ -1319,6 +1337,7 @@ class SysInit(object):
         
         #mount  -o noatime -o nodiratime  -t xfs -L home /home
         #yum install xfsprogs kmod-xfs
+        #virt-what
             
 class MySQL(object):
     pass
@@ -1387,3 +1406,12 @@ class Axis(object):
 class Piece(object):
     def __init__(self):
         pass
+import threading
+
+class Parallel(threading.Thread):
+    def __init__(self,name):
+        threading.Thread.__init__(self)
+        self.t_name=name
+    def run(self):
+        pass
+    

@@ -186,7 +186,8 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('-c','--check',action='store_true',help='check monitor deploy status'),
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
-        make_option('-p','--piece',type='string',help='the name of a filter list')])
+              make_option('--show_nrpe',action='store_true',help='deploy monitor step by step'),
+              make_option('-p','--piece',type='string',help='the name of a filter list')])
     def do_nagios(self,args,opts=None):
         monitorlist=[]
         for s in self._get_operation_list(opts):
@@ -203,19 +204,29 @@ class PizzaShell(cmd.Cmd):
             ['test monitor script',                                      'test_script'    ]
             ]
         oper=None
+        oper_param=None
         if opts.step:
             sauce = self.select([x[0] for x in monopers],'Please choice what you want?')
             dopers=dict(monopers)
             if dopers.has_key(sauce):
                 oper=dopers[sauce]
+                if oper=='update_nrpe':
+                    nrpt_item=raw_input('Please give the name of nrpe:')
+                    if nrpt_item:
+                        oper_param=nrpt_item
         elif opts.check:
             oper='check'
         elif opts.deploy:
             oper='deploy'
+        elif opts.show_nrpe:
+            oper='show_nrpe'
         for item in monitorlist:
             if oper:
                 operfun=getattr(item,oper)
-                operfun()
+                if oper_param:
+                    operfun(oper_param)
+                else:
+                    operfun()
     @options([make_option('-a','--add',action='store_true',help='add ipsec filter'),
               make_option('--chain',type='choice',choices=['INPUT','OUTPUT','FORWARD'],help='protocal'),
               make_option('--source',type='string',help='source address'),
