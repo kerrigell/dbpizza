@@ -966,8 +966,9 @@ class Nagios(object):
         self.server.execute(command_lines)
     def show_nrpe(self):
         self.title()
+        self.config.sections()
         nrpes = self.config.items('nrpe')
-        for name, value in nrpes:
+        for name,value in nrpes:
             print "%40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
