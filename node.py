@@ -703,17 +703,17 @@ class Nagios(object):
             raise "param type is not Server"
         self.server=srv
         self.ip_monitor=self.server.s.ip_monitor
-        if self.__class__.config is None:
-            self.__class__.config=ConfigParser.SafeConfigParser()
+        if self.config is None:
+            self.config=ConfigParser.SafeConfigParser()
             base_path=os.path.split( os.path.realpath( sys.argv[0] ) )[0] 
-            self.__class__.config.read(os.path.join(base_path,"config/monitor.ini"))
+            self.config.read(os.path.join(base_path,"config/monitor.ini"))
         self.status={}
-        self.base_dir = self.__class__.config.get('basic', 'base_dir')
+        self.base_dir = self.config.get('basic', 'base_dir')
 
     def title(self):
         print str(self.server)
     def check(self,output=True):
-        scripts = self.__class__.config.options('script')
+        scripts = self.config.options('script')
         script_shell = ""
         for script in scripts:
             script_shell += """
@@ -770,8 +770,8 @@ class Nagios(object):
     def upgrade_perl(self):
         if len(self.status) == 0:
             self.check(output=False)
-     #   base_dir = self.__class__.config.get('basic', 'base_dir')
-        file_name = self.__class__.config.get('tools', 'perl')
+     #   base_dir = self.config.get('basic', 'base_dir')
+        file_name = self.config.get('tools', 'perl')
         perl_file =os.path.join( self.base_dir , "/client/tools/" , file_name)
         print perl_file
         UUID = None
@@ -808,8 +808,8 @@ class Nagios(object):
     def deploy_script(self):
         if len(self.status) == 0:
             self.check(output=False)        
-     #   base_dir = self.__class__.config.get('basic', 'base_dir')
-        scripts = self.__class__.config.items('script')
+     #   base_dir = self.config.get('basic', 'base_dir')
+        scripts = self.config.items('script')
         for key,value in scripts:
             if self.status['is_installed_%s' % key] == 'False':
                 script_file=os.path.join(self.base_dir,"/client/libexec/",value)
@@ -833,85 +833,37 @@ class Nagios(object):
                 's/^Defaults    requiretty/#Defaults    requiretty/g'\
                 /etc/sudoers
                 """,hide_puts=True)        
-        
-            
-        
-        
-        
-        #for script in scripts:
-            #trans=Transfer(self.server.root)
-            
-            #UUID = None
-            #file_name = self.__class__.config.get('script', script)
-            #file = base_dir + "/client/libexec/" + file_name
-            #AP = "\/usr\/local\/nagios\/libexec\/%s" % file_name
-            #OP = "/usr/local/nagios/libexec/%s" % file_name
-            #if self.status['is_installed_%s' % script] == 'False':
-                #UUID = self.server.download(file, uuid=UUID)
-                #self.server.execute("""
-                        #mv /tmp/%s /usr/local/nagios/libexec/ &&
-                        #chmod +x /usr/local/nagios/libexec/%s;
-                        #grep -q nagios /etc/sudoers && \
-                        #(grep %s /etc/sudoers &> /dev/null \
-                        #|| sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
-                        #|| echo \"nagios ALL=NOPASSWD: %s\" \
-                        #>> /etc/sudoers
-                        #""" % (file_name, file_name, AP, AP, OP) ,hide_puts=True)
-        #self.title()
-        #self.server.execute("""
-                #sed -i \
-                #'s/^Defaults    requiretty/#Defaults    requiretty/g'\
-                #/etc/sudoers
-                #""",hide_puts=True)
-
-    def install_tools(self):
-        if len(self.status) == 0:
-            self.check(output=False)        
-    #    base_dir = self.__class__.config.get('basic', 'base_dir')
-        self.title()
-        
-        # Install Sys-Statistics-Linux
-        if self.status['is_installed_Linux_pm'] == 'False':
-            file_name = self.__class__.config.get('tools', 'Linux_pm')
-            tool_file=os.path.join(self.base_dir,"/client/tools/",
-                                   file_name)
-            trans=Transfer(self.server.root,tool_file)
-            trans.add_server(self.server)
-            trans.send('/tmp')
-            trans.clear()
-            
-            
-            #file = base_dir + "/client/tools/" + file_name          
-            #UUID = self.server.download(file, uuid=UUID)
-            self.server.execute("""
-                    cd /tmp && \
-                    tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
-                    cd Sys-Statistics-Linux-0.66 && \
-                    perl Makefile.PL &> /dev/null; \
-                    make &> /dev/null && \
-                    make test &> /dev/null && make install &> /dev/null
-                    """)
-
-        # create user: nagios
-        self.server.execute("""
-                chattr -i /etc/shadow /etc/passwd; \
-                groupadd nagios; \
-                useradd -M -s /sbin/nologin nagios -g nagios; \
+    def create_user(self):
+        print 'create user: nagios',
+        exe_result=self.server.execute("""grep nagios /etc/passwd &> /dev/null \
+                || (hattr -i /etc/shadow /etc/passwd && \
+                groupadd nagios &&  \
+                useradd -M -s /sbin/nologin nagios -g nagios;\
                 mkdir -p /usr/local/nagios/libexec/;
                 """)
-
-        # Install nagios-plugins
-        if self.status['is_installed_nagios_plugin'] == 'False':
-            file_name = self.__class__.config.get('tools', 'nagios_plugin')
-            plugin_file==os.path.join(self.base_dir,"/client/tools/",file_name)
-            trans=Transfer(self.server.root,plugin_file)
-            trans.add_server(self.server)
-            trans.send('/tmp')
-            trans.clear()
-            #file = base_dir + "/client/tools/" + file_name            
-            #UUID = server.download(file, uuid=UUID)
-            self.server.execute("""
-                cd /tmp && \
+        if exe_result.succeed:
+            print '%-30s' % 'OK'
+            return True
+        else:
+            print '%-30s' % 'Error:'+exe_result.result
+            return False
+    def change_statliate_ip(self,sateliate_ip):
+        exe_result=self.server.execute("""sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&""")
+    def restart_service(self):
+        self.server.execute("""killall nrpe ;/etc/init.d/xinetd restart""")
+    def install_tools(self,force=False):
+        if len(self.status) == 0:
+            self.check(output=False)        
+        self.title()
+        install_config={'is_installed_Linux_pm':['tools','Linux_pm','/client/tools/','/tmp/',
+                                                 """cd /tmp && \
+                tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
+                cd Sys-Statistics-Linux-0.66 && \
+                perl Makefile.PL &> /dev/null; \
+                make &> /dev/null && \
+                make test &> /dev/null && make install &> /dev/null"""],
+                        'is_installed_nagios_plugin':['tools','nagios_plugin','/client/tools/','/tmp/',
+                                                      """cd /tmp && \
                 tar zxf nagios-plugins-1.4.15.tar.gz && \
                 cd nagios-plugins-1.4.15 && \
                 ./configure --with-nagios-user=nagios \
@@ -921,21 +873,83 @@ class Nagios(object):
                 --enable-redhat-pthread-workaround \
                 &>/dev/null && \
                 make &>/dev/null && \
-                make install &>/dev/null
-                """)
-        # Install openssl-devel
-        if self.status['is_openssl_devel'] == 'False':
-            print '''Please install those pacages:
-                libcom_err-devel-1.41.12-14.el6_4.2.x86_64                                                                                                                    1/6 
-                keyutils-libs-devel-1.4-4.el6.x86_64                                                                                                                          2/6 
-                libsepol-devel-2.0.41-4.el6.x86_64                                                                                                                            3/6 
-                libselinux-devel-2.0.94-5.3.el6_4.1.x86_64                                                                                                                    4/6 
-                krb5-devel-1.10.3-10.el6_4.6.x86_64                                                                                                                           5/6 
-                openssl-devel-1.0.0-27.el6_4.2.x86_64  '''
-            #UUID = None
-            #file_name = self.__class__.config.get('tools', 'openssl_devel')
-            #file = base_dir + "/client/tools/" + file_name
-            #UUID = server.download(file, uuid=UUID)
+                make install &>/dev/null"""],
+                        'is_openssl_devel':[None,None,None,None,None],
+                        'is_installed_nrpe':['tools','nrpe','/client/tools/','/tmp/',
+                                             """cd /tmp && 
+                tar zxf nrpe-2.12.tar.gz && 
+                cd nrpe-2.12 && 
+                ./configure  && 
+                make all  && 
+                make install-plugin  && 
+                make install-daemon   && 
+                make install-daemon-config  && 
+                make install-xinetd  &&
+                echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
+                chkconfig --level 345 xinetd on"""],
+                        'is_installed_xinetd_nrpe':['tools','nrpe','/client/tools/','/etc/xinetd.d/',None],
+                        'is_installed_utils_pm':['tools','utils_pm','/client/tools/','/usr/local/nagios/libexec',None]
+                        }
+        for key,value in install_config.iteritems():
+            check_name=key
+            config_section=value[0]
+            config_key=value[1]
+            middle_path=value[2]
+            trans_path=value[3]
+            exe_cmd=value[4]
+            if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
+                print "Install %s:" % check_name,
+                file_name=self.config.get(config_section,config_key)
+                trans_file=os.path.join(self.base_dir,middle_path,file_name)
+                trans=Transfer(self.server.root,trans_file)
+                trans.add_server(self.server)
+                trans.send(trans_path)
+                trans.clear()
+                if exe_cmd:
+                    exe_result=self.server.execute(exe_cmd,hide_stderr=True)
+                    if exe_result.succeed:
+                        print "%-30s" % 'OK'
+                    else:
+                        print "%-30%" % 'Error:'+exe_result.result
+           
+
+           
+            
+            
+        ## Install Sys-Statistics-Linux
+        #if self.status['is_installed_Linux_pm'] == 'False':
+            #file_name = self.config.get('tools', 'Linux_pm')
+            #tool_file=os.path.join(self.base_dir,"/client/tools/",
+                                   #file_name)
+            #trans=Transfer(self.server.root,tool_file)
+            #trans.add_server(self.server)
+            #trans.send('/tmp')
+            #trans.clear()
+            
+            
+            ##file = base_dir + "/client/tools/" + file_name          
+            ##UUID = self.server.download(file, uuid=UUID)
+            #self.server.execute("""
+                    #cd /tmp && \
+                    #tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
+                    #cd Sys-Statistics-Linux-0.66 && \
+                    #perl Makefile.PL &> /dev/null; \
+                    #make &> /dev/null && \
+                    #make test &> /dev/null && make install &> /dev/null
+                    #""")
+
+
+
+        ## Install nagios-plugins
+        #if self.status['is_installed_nagios_plugin'] == 'False':
+            #file_name = self.config.get('tools', 'nagios_plugin')
+            #plugin_file==os.path.join(self.base_dir,"/client/tools/",file_name)
+            #trans=Transfer(self.server.root,plugin_file)
+            #trans.add_server(self.server)
+            #trans.send('/tmp')
+            #trans.clear()
+            ##file = base_dir + "/client/tools/" + file_name            
+            ##UUID = server.download(file, uuid=UUID)
             #self.server.execute("""
                 #cd /tmp && \
                 #tar zxf nagios-plugins-1.4.15.tar.gz && \
@@ -948,71 +962,97 @@ class Nagios(object):
                 #&>/dev/null && \
                 #make &>/dev/null && \
                 #make install &>/dev/null
-                #""")        
+                #""")
+        ## Install openssl-devel
+        #if self.status['is_openssl_devel'] == 'False':
+            #print '''Please install those pacages:
+                #libcom_err-devel-1.41.12-14.el6_4.2.x86_64                                                                                                                    1/6 
+                #keyutils-libs-devel-1.4-4.el6.x86_64                                                                                                                          2/6 
+                #libsepol-devel-2.0.41-4.el6.x86_64                                                                                                                            3/6 
+                #libselinux-devel-2.0.94-5.3.el6_4.1.x86_64                                                                                                                    4/6 
+                #krb5-devel-1.10.3-10.el6_4.6.x86_64                                                                                                                           5/6 
+                #openssl-devel-1.0.0-27.el6_4.2.x86_64  '''
+            ##UUID = None
+            ##file_name = self.config.get('tools', 'openssl_devel')
+            ##file = base_dir + "/client/tools/" + file_name
+            ##UUID = server.download(file, uuid=UUID)
+            ##self.server.execute("""
+                ##cd /tmp && \
+                ##tar zxf nagios-plugins-1.4.15.tar.gz && \
+                ##cd nagios-plugins-1.4.15 && \
+                ##./configure --with-nagios-user=nagios \
+                ##--with-nagios-group=nagios \
+                ##--with-openssl=/usr/bin/openssl \
+                ##--enable-perl-modules \
+                ##--enable-redhat-pthread-workaround \
+                ##&>/dev/null && \
+                ##make &>/dev/null && \
+                ##make install &>/dev/null
+                ##""")        
 
-        # Install nrpe
-        if self.status['is_installed_nrpe'] == 'False' and self.status['is_openssl_devel']=='True':
-            for value in ['nrpe','xinetd_nrpe']:
-                file_name=self.__class__.config.get('tools', 'nrpe')
-                exe_file=os.path.join(self.base_dir,"/client/tools/",value)
-                trans=Transfer(self.server.root,exe_file)
-                trans.add_server(self.server)
-                trans.send('/tmp')
-                trans.clear()
+        ## Install nrpe
+        #if self.status['is_installed_nrpe'] == 'False' and self.status['is_openssl_devel']=='True':
+            #for value in ['nrpe','xinetd_nrpe']:
+                #file_name=self.config.get('tools', 'nrpe')
+                #exe_file=os.path.join(self.base_dir,"/client/tools/",value)
+                #trans=Transfer(self.server.root,exe_file)
+                #trans.add_server(self.server)
+                #trans.send('/tmp')
+                #trans.clear()
                 
                 
-            #UUID1 = None
-            #UUID2 = None
-            #file_name1 = self.__class__.config.get('tools', 'nrpe')
-            #file_name2 = self.__class__.config.get('tools', 'xinetd_nrpe')
-            #file1 = base_dir + "/client/tools/" + file_name1
-            #file2 = base_dir + "/client/" + file_name2
-            #UUID1 = self.server.download(file1, uuid=UUID1)
-            #UUID2 = self.server.download(file2, uuid=UUID2)
-            self.server.execute("""
-                    cd /tmp && 
-                    tar zxf nrpe-2.12.tar.gz && 
-                    cd nrpe-2.12 && 
-                    ./configure  && 
-                    make all  && 
-                    make install-plugin  && 
-                    make install-daemon   && 
-                    make install-daemon-config  && 
-                    make install-xinetd  &&
-                    echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
-                    sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&
-                    killall nrpe &&
-                    /etc/init.d/xinetd restart && 
-                    chkconfig --level 345 xinetd on
-                    """ % self.ip_monitor)
+            ##UUID1 = None
+            ##UUID2 = None
+            ##file_name1 = self.config.get('tools', 'nrpe')
+            ##file_name2 = self.config.get('tools', 'xinetd_nrpe')
+            ##file1 = base_dir + "/client/tools/" + file_name1
+            ##file2 = base_dir + "/client/" + file_name2
+            ##UUID1 = self.server.download(file1, uuid=UUID1)
+            ##UUID2 = self.server.download(file2, uuid=UUID2)
+            #self.server.execute("""
+                    #cd /tmp && 
+                    #tar zxf nrpe-2.12.tar.gz && 
+                    #cd nrpe-2.12 && 
+                    #./configure  && 
+                    #make all  && 
+                    #make install-plugin  && 
+                    #make install-daemon   && 
+                    #make install-daemon-config  && 
+                    #make install-xinetd  &&
+                    #echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
+                    #sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&
+                    #killall nrpe &&
+                    #/etc/init.d/xinetd restart && 
+                    #chkconfig --level 345 xinetd on
+                    #""" % self.ip_monitor)
             
-            #cd /tmp && \
-            #tar zxf nrpe-2.12.tar.gz && \
-            #cd nrpe-2.12 && \
-            #./configure  > /dev/null 2>&1 ; \
-            #make all > /dev/null 2>&1 && \
-            #make install-plugin &>/dev/null && \
-            #make install-daemon  &>/dev/null && \
-            #make install-daemon-config &>/dev/null && \
-            #make install-xinetd  &>/dev/null;
-            #sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe;
-            #killall nrpe ;
-            #/etc/init.d/xinetd restart && \
-            #chkconfig --level 345 xinetd on            
+            ##cd /tmp && \
+            ##tar zxf nrpe-2.12.tar.gz && \
+            ##cd nrpe-2.12 && \
+            ##./configure  > /dev/null 2>&1 ; \
+            ##make all > /dev/null 2>&1 && \
+            ##make install-plugin &>/dev/null && \
+            ##make install-daemon  &>/dev/null && \
+            ##make install-daemon-config &>/dev/null && \
+            ##make install-xinetd  &>/dev/null;
+            ##sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe;
+            ##killall nrpe ;
+            ##/etc/init.d/xinetd restart && \
+            ##chkconfig --level 345 xinetd on            
             
-        # Install utils_pm
-        if self.status['is_installed_utils_pm'] == 'False':
-            file_name = self.__class__.config.get('tools', 'utils_pm')
-            utils_file=os.path.join(self.base_dir,"/client/tools/",file_name)
-            trans=Transfer(self.server.root,utils_file)
-            trans.add_server(self.server)
-            trans.send('/usr/local/nagios/libexec')
-            trans.clear()
+        ## Install utils_pm
+        #if self.status['is_installed_utils_pm'] == 'False':
+            #file_name = self.config.get('tools', 'utils_pm')
+            #utils_file=os.path.join(self.base_dir,"/client/tools/",file_name)
+            #trans=Transfer(self.server.root,utils_file)
+            #trans.add_server(self.server)
+            #trans.send('/usr/local/nagios/libexec')
+            #trans.clear()
 
 
     def test_script(self):     
         self.title()
-        commands = self.__class__.config.items('test_commands')
+        commands = self.config.items('test_commands')
         command_lines = ""
         for (command, command_line) in commands:
             command_lines += (command_line + ';')
@@ -1021,14 +1061,14 @@ class Nagios(object):
         self.title()
         
       
-        self.__class__.config.sections()
-        nrpes = self.__class__.config.items('nrpe')
+        self.config.sections()
+        nrpes = self.config.items('nrpe')
         for name,value in nrpes:
-            print "%40s=%90s" % (name,value)
+            print "%-40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
 
-        nrpes = self.__class__.config.items('nrpe')
+        nrpes = self.config.items('nrpe')
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
         for name, value in nrpes:

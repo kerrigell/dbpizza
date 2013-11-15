@@ -198,6 +198,7 @@ class PizzaShell(cmd.Cmd):
               
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
+              make_option('--force',action='store_true',help='install tools force'),
               make_option('--show_nrpe',action='store_true',help='deploy monitor step by step')])
     def do_nagios(self,args,opts=None):
         monitor_list=self._get_operation_list(self.server.current_node,
@@ -215,6 +216,8 @@ class PizzaShell(cmd.Cmd):
             ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
             ['update your nrpe commands',                                'update_nrpe'    ],
             ['update ntp server address in your nrpe.cfg',               'update_nrpe_ntp'],
+            ['change statliate nagios ip',                               'change_statliate_ip'],
+            ['restart service',                                          'restart_service'],
             ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
             ['test monitor script',                                      'test_script'    ]
             ]
@@ -229,6 +232,10 @@ class PizzaShell(cmd.Cmd):
                     nrpt_item=raw_input('Please give the name of nrpe:')
                     if nrpt_item:
                         oper_param=nrpt_item
+                if oper=='install_tools':
+                    force_install=raw_input('Force install tools?(yes|no)')
+                    if force_install=='yes':
+                        oper_param=True
         elif opts.check:
             oper='check'
         elif opts.deploy:
