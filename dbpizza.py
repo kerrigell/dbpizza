@@ -340,7 +340,7 @@ class PizzaShell(cmd.Cmd):
             if string.find(line,'[') !=-1:
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')   
-                server_list+=self.server.current_node.get_node(int(dbid))
+                server_list.append(self.server.current_node.get_node(int(dbid)))
         trans_task.add_server(server_list)
         print "Servers Count:%s" % len(trans_task.dest_servers)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
