@@ -168,7 +168,7 @@ class PizzaShell(cmd.Cmd):
         if inChilds:
             server_list+=node.get_childs(useRecursion)
         if inCurrent:
-            server_list+=node
+            server_list.append(node)
         object_list=[]
         if objClass:
             object_list=[ objClass(i) for i in server_list]
@@ -341,7 +341,7 @@ class PizzaShell(cmd.Cmd):
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')   
                 server_list.append(self.server.current_node.get_node(int(dbid)))
-        trans_task.add_server(server_list)
+        trans_task.add_server(*server_list)
         print "Servers Count:%s" % len(trans_task.dest_servers)
         trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
         trans_task.clear()
