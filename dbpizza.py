@@ -381,7 +381,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-c','--childs',action='store_true',help='get childs '),
               
               make_option('-i','--install',action='store_true',help='piece name'),
-              make_option('-c','--check',action='store_true',help='piece name'),
+              make_option('-k','--check',action='store_true',help='piece name'),
               make_option('-s','--start',action='store_true',help='piece name'),
               make_option('-t','--stop',action='store_true',help='piece name'),
               make_option('-u','--uninstall',action='store_true',help='piece name'),
