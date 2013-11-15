@@ -106,7 +106,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=None)
         for oper in oper_list:
             oper.execute(args)
@@ -205,7 +205,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=Nagios)
 
         monopers=[
@@ -312,7 +312,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=SysInfo)
         for item in info_list:
             print item.server
@@ -330,7 +330,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=False,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=None)
 
         trans_task=Transfer(self.server.current_node,opts.target)
@@ -364,7 +364,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=SysInit)
         password=None
         for item in init_list:        
@@ -392,7 +392,7 @@ class PizzaShell(cmd.Cmd):
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
-                                            useRecursion=True if opts.recursionn else False,
+                                            useRecursion=True if opts.recursion else False,
                                             objClass=Axis)
         for item in axis_list:        
             if opts.install:
