@@ -232,7 +232,7 @@ class PizzaShell(cmd.Cmd):
                     nrpt_item=raw_input('Please give the name of nrpe:')
                     if nrpt_item:
                         oper_param=nrpt_item
-                if oper=='upgrade_perl' or oper=='install_tools':
+                if oper=='deploy_script' or oper=='upgrade_perl' or oper=='install_tools':
                     force_install=raw_input('Force install tools?(yes|no)')
                     if force_install=='yes':
                         oper_param=True

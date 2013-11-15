@@ -796,11 +796,11 @@ class Nagios(object):
                 print 'Error:'+ exe_result.result
     
 
-    def config_iptables(self):
+    def config_iptables(self,force):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
-        if self.status['is_ping_opened'] == 'False':
+        if (True if force else self.status['is_ping_opened'] == 'False'):
             self.server.execute("""
                     /sbin/iptables -I INPUT -s %s -p icmp -j ACCEPT
                     """ % self.ip_monitor,hide_puts=True)
@@ -809,13 +809,13 @@ class Nagios(object):
                     /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
                     """ % self.ip_monitor,hide_puts=True)
 
-    def deploy_script(self):
+    def deploy_script(self,force):
         if len(self.status) == 0:
             self.check(output=False)        
      #   base_dir = self.config.get('basic', 'base_dir')
         scripts = self.config.items('script')
         for key,value in scripts:
-            if self.status['is_installed_%s' % key] == 'False':
+            if (True if force else self.status['is_installed_%s' % key] == 'False'):
                 script_file=os.path.join(self.base_dir,"client/libexec/",value)
                 monitor_file=os.path.join('/usr/local/nagios/libexec',value)
                 trans=Transfer(self.server.root,script_file)
@@ -1112,17 +1112,17 @@ class Nagios(object):
         else:
             print 'please fill the ntpserver in DB info web'
 
-    def deploy(self):
+    def deploy(self,force=False):
         print "check monitor status"
         self.check()
         print "update perl"
-        self.upgrade_perl()
+        self.upgrade_perl(force=force)
         print "install tools"
-        self.install_tools()
+        self.install_tools(force=force)
         print "config iptables"
         self.config_iptables()
         print "deploy monitor script"
-        self.deploy_script()
+        self.deploy_script(force=force)
         print "update nrpe"
         self.update_nrpe()
         print "update ntp server in nrpe.cfg"
