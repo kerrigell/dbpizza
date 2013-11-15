@@ -1325,7 +1325,7 @@ class Transfer(object):
         print "Start to clear temp files"
         for key,value in self.trans_list.iteritems():
             if value[1]>1:
-                print "%5s%100s%5s%40s" % (key,value[0],value[1],value[2]),
+                print "%5s%100s%5s  %40s" % (key,value[0],value[1],value[2]),
                 exe_result=value[0].execute("cd %s; rm -rf %s" %( self.tmppath,self.uuid),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                 if exe_result.succeed:
                     value[1]=0
