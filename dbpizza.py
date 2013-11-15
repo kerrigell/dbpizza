@@ -199,6 +199,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
               make_option('--force',action='store_true',help='install tools force'),
+              make_option('--restart',action='store_true',help='restart service'),
               make_option('--show_nrpe',action='store_true',help='deploy monitor step by step')])
     def do_nagios(self,args,opts=None):
         monitor_list=self._get_operation_list(self.server.current_node,
@@ -240,8 +241,12 @@ class PizzaShell(cmd.Cmd):
             oper='check'
         elif opts.deploy:
             oper='deploy'
+            if opts.force:
+                oper_param=True
         elif opts.show_nrpe:
             oper='show_nrpe'
+        elif opts.restart:
+            oper='restart_service'
         for item in monitor_list:
             if oper:
                 operfun=getattr(item,oper)

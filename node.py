@@ -788,7 +788,8 @@ class Nagios(object):
                     ./Configure -de &> /dev/null && \
                     make &> /dev/null && \
                     make test &> /dev/null && \
-                    make install &> /dev/null
+                    make install &> /dev/null && \
+                    rm -f /usr/bin/perl && ln -s /usr/local/bin/perl /usr/bin/perl                    
                     """,hide_puts=True)
             if exe_result.succeed:
                 print 'OK'
@@ -851,10 +852,32 @@ class Nagios(object):
         else:
             print '%-30s' % 'Error:'+exe_result.result
             return False
-    def change_statliate_ip(self,sateliate_ip):
-        exe_result=self.server.execute("""sed s/NAGIOSIP/%s/g /tmp/nrpe > /etc/xinetd.d/nrpe &&""")
+    def change_statliate_ip(self):
+        print 
+        statliate_ip=self.server.s.ip_monitor
+        if statliate_ip:
+            tmp_ip=raw_input('You can complete the info on the DBA info web,or you can type nagios satliate ip:')
+            if len(tmp_ip)>7:
+                statliate_ip=tmp_ip
+            else:
+                return
+        exe_result=self.server.execute("""grep only_from /etc/xinetd.d/nrpe && \
+                                          sed -i 's/only_from.*/only_from       =127.0.0.1 %s/g' nrpe""" % statliate_ip)
+        if exe_result.succeed:
+            print "%-30s" % 'OK'
+        else:
+            print "%-30%" % 'Error:'+exe_result.result        
+        
+        
+        
+        
     def restart_service(self):
-        self.server.execute("""killall nrpe ;/etc/init.d/xinetd restart""")
+        print 'restart nagios service',
+        exe_result=self.server.execute("""killall nrpe ;/etc/init.d/xinetd restart""")
+        if exe_result.succeed:
+            print "%-30s" % 'OK'
+        else:
+            print "%-30%" % 'Error:'+exe_result.result        
     def install_tools(self,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
@@ -1068,7 +1091,6 @@ class Nagios(object):
             print "%-40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
-
         nrpes = self.config.items('nrpe')
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
@@ -1103,12 +1125,16 @@ class Nagios(object):
                 """)
     def update_nrpe_ntp(self):
         self.title()
+        print 'update ntp server',
         ntp=string.strip(self.server.s.ip_ntp_server)
         if len(ntp) > 0:
-            self.server.execute("""
-                    sed -i 's/NTP_SERVER_IP/%s/g' \
-                    /usr/local/nagios/etc/nrpe.cfg
-                    """ % ntp)
+            exe_result=self.server.execute("""grep check_ntp /usr/local/nagios/etc/nrpe.cfg || \
+            sed -i 's/check_ntp_time -H.*-w/check_ntp_time -H %s -w/g' /usr/local/nagios/etc/nrpe.cfg
+            """ % ntp)
+            if exe_result.succeed:
+                print 'OK'
+            else:
+                print 'Error:'+exe_result.result
         else:
             print 'please fill the ntpserver in DB info web'
 
