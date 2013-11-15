@@ -767,7 +767,7 @@ class Nagios(object):
                 names.sort()
                 for name in names:
                     print '%-40s    %s' % (name, self.status[name])  
-    def upgrade_perl(self):
+    def upgrade_perl(self,force):
         if len(self.status) == 0:
             self.check(output=False)
      #   base_dir = self.config.get('basic', 'base_dir')
@@ -775,13 +775,13 @@ class Nagios(object):
         perl_file =os.path.join( self.base_dir , "/client/tools/" , file_name)
         print perl_file
         UUID = None
-        if self.status['version_perl'] == 'v5.8.5':
+        if True if force else self.status['version_perl'] == 'v5.8.5':
           #  UUID = self.server.download(file, uuid=UUID)
             trans=Transfer(self.server.root,perl_file)
             trans.add_server(self.server)
             trans.send('/tmp')
             trans.clear()
-            self.server.execute("""
+            exe_result=self.server.execute("""
                     cd /tmp/ && \
                     tar zxf perl-5.8.9.tar.gz && \
                     cd perl-5.8.9 && \
@@ -790,6 +790,10 @@ class Nagios(object):
                     make test &> /dev/null && \
                     make install &> /dev/null
                     """,hide_puts=True)
+            if exe_result.succeed:
+                print 'OK'
+            else:
+                print 'Error:'+ exe_result.result
     
 
     def config_iptables(self):
