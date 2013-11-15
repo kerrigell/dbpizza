@@ -772,7 +772,7 @@ class Nagios(object):
             self.check(output=False)
      #   base_dir = self.config.get('basic', 'base_dir')
         file_name = self.config.get('tools', 'perl')
-        perl_file =os.path.join( self.base_dir , "/client/tools/" , file_name)
+        perl_file =os.path.join( self.base_dir , "client/tools/" , file_name)
         print perl_file
         UUID = None
         if True if force else self.status['version_perl'] == 'v5.8.5':
@@ -816,8 +816,8 @@ class Nagios(object):
         scripts = self.config.items('script')
         for key,value in scripts:
             if self.status['is_installed_%s' % key] == 'False':
-                script_file=os.path.join(self.base_dir,"/client/libexec/",value)
-                monitor_file=os.path.join('/usr/local/nagios/libexec/',value)
+                script_file=os.path.join(self.base_dir,"client/libexec/",value)
+                monitor_file=os.path.join('/usr/local/nagios/libexec',value)
                 trans=Transfer(self.server.root,script_file)
                 trans.add_server(self.server)
                 trans.send('/usr/local/nagios/libexec/')
@@ -859,14 +859,14 @@ class Nagios(object):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
-        install_config={'is_installed_Linux_pm':['tools','Linux_pm','/client/tools/','/tmp/',
+        install_config={'is_installed_Linux_pm':['tools','Linux_pm','client/tools/','/tmp/',
                                                  """cd /tmp && \
                 tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
                 cd Sys-Statistics-Linux-0.66 && \
                 perl Makefile.PL &> /dev/null; \
                 make &> /dev/null && \
                 make test &> /dev/null && make install &> /dev/null"""],
-                        'is_installed_nagios_plugin':['tools','nagios_plugin','/client/tools/','/tmp/',
+                        'is_installed_nagios_plugin':['tools','nagios_plugin','client/tools/','/tmp/',
                                                       """cd /tmp && \
                 tar zxf nagios-plugins-1.4.15.tar.gz && \
                 cd nagios-plugins-1.4.15 && \
@@ -879,7 +879,7 @@ class Nagios(object):
                 make &>/dev/null && \
                 make install &>/dev/null"""],
                         'is_openssl_devel':[None,None,None,None,None],
-                        'is_installed_nrpe':['tools','nrpe','/client/tools/','/tmp/',
+                        'is_installed_nrpe':['tools','nrpe','client/tools/','/tmp/',
                                              """cd /tmp && 
                 tar zxf nrpe-2.12.tar.gz && 
                 cd nrpe-2.12 && 
@@ -891,8 +891,8 @@ class Nagios(object):
                 make install-xinetd  &&
                 echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
                 chkconfig --level 345 xinetd on"""],
-                        'is_installed_xinetd_nrpe':['tools','nrpe','/client/tools/','/etc/xinetd.d/',None],
-                        'is_installed_utils_pm':['tools','utils_pm','/client/tools/','/usr/local/nagios/libexec',None]
+                        'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None],
+                        'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None]
                         }
         for key,value in install_config.iteritems():
             check_name=key
@@ -1063,9 +1063,6 @@ class Nagios(object):
         self.server.execute(command_lines)
     def show_nrpe(self):
         self.title()
-        
-      
-        self.config.sections()
         nrpes = self.config.items('nrpe')
         for name,value in nrpes:
             print "%-40s=%90s" % (name,value)
