@@ -841,9 +841,9 @@ class Nagios(object):
     def create_user(self):
         print 'create user: nagios',
         exe_result=self.server.execute("""grep nagios /etc/passwd &> /dev/null \
-                || (hattr -i /etc/shadow /etc/passwd && \
+                || (chattr -i /etc/shadow /etc/passwd && \
                 groupadd nagios &&  \
-                useradd -M -s /sbin/nologin nagios -g nagios;\
+                useradd -M -s /sbin/nologin nagios -g nagios);\
                 mkdir -p /usr/local/nagios/libexec/;
                 """)
         if exe_result.succeed:
