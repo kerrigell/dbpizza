@@ -195,7 +195,7 @@ class PizzaShell(cmd.Cmd):
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('--recursion',action='store_true',help='get childs  with recursion'),
               make_option('-c','--childs',action='store_true',help='get childs '),
-              
+              make_option('--check',action='store_true',help='check'),
               make_option('-d','--deploy',action='store_true',help='deploy everything automatically'),
               make_option('-s','--step',action='store_true',help='deploy monitor step by step'),
               make_option('--force',action='store_true',help='install tools force'),
