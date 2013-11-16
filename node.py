@@ -1147,12 +1147,17 @@ class Nagios(object):
         self.install_tools(force=force)
         print "config iptables"
         self.config_iptables()
+        print "create negios user"
+        self.create_user()
         print "deploy monitor script"
         self.deploy_script(force=force)
         print "update nrpe"
         self.update_nrpe()
+        print "change staliate ip"
+        self.change_statliate_ip()
         print "update ntp server in nrpe.cfg"
         self.update_nrpe_ntp()
+        print "deploy nagios monitor completly,Next to restart service"
     def config_centreon(self):
         pass
         
@@ -1365,6 +1370,11 @@ class Transfer(object):
         
 
 class SysInit(object):
+    init_list={'root_passwd':["""chattr -i /etc/shadow &&\
+    sed -i -e 's/\(root:\).*\(:.*\)\(:0:.*\)$/\1\$1\$CXGBMKMu\$mhiWu0L6ae1IfV6XgreIR0:15679\3/g' /etc/shadow &&\
+    chattr +i /etc/shadow"""],
+               'grub_passwd':["""
+        }
     def __init__(self,server):
         self.server=server
     def make_authorized(self,password=None):
@@ -1443,7 +1453,7 @@ class SysInit(object):
         #mount  -o noatime -o nodiratime  -t xfs -L home /home
         #yum install xfsprogs kmod-xfs
         #virt-what
-            
+  
 class MySQL(object):
     pass
 
