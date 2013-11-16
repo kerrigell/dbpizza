@@ -1141,14 +1141,15 @@ class Nagios(object):
     def deploy(self,force=False):
         print "check monitor status"
         self.check()
+        print "create negios user"
+        self.create_user()        
         print "update perl"
         self.upgrade_perl(force=force)
         print "install tools"
         self.install_tools(force=force)
         print "config iptables"
         self.config_iptables()
-        print "create negios user"
-        self.create_user()
+
         print "deploy monitor script"
         self.deploy_script(force=force)
         print "update nrpe"
