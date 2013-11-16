@@ -1373,7 +1373,7 @@ class SysInit(object):
     init_list={'root_passwd':["""chattr -i /etc/shadow &&\
     sed -i -e 's/\(root:\).*\(:.*\)\(:0:.*\)$/\1\$1\$CXGBMKMu\$mhiWu0L6ae1IfV6XgreIR0:15679\3/g' /etc/shadow &&\
     chattr +i /etc/shadow"""],
-               'grub_passwd':["""
+               'grub_passwd':[""""""]
         }
     def __init__(self,server):
         self.server=server
