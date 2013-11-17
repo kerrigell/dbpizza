@@ -948,7 +948,7 @@ class Nagios(object):
         key=tool_name
         value=self.install_config[tool_name]
         up_condition=value[5]
-        if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
+        if up_condition is not None and  self.status.has_key(up_condition) and  self.status[up_condition]=='False':
             print "Please do this operation first:%s" % up_condition
             return False
         check_name=key
@@ -1204,7 +1204,9 @@ class Nagios(object):
                    'is_installed_xinetd_nrpe',
                    'is_installed_utils_pm']
         for tool in tool_list:
-            self.install_tools(tool,force)
+            if not self.install_tools(tool,force):
+                print  'the process of intalling tools is broken'
+                return 
         print "config iptables"
         self.config_iptables()
 
