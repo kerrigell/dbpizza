@@ -947,7 +947,7 @@ class Nagios(object):
                     print "%-30s" % 'OK'
                     self.status[tool_name]='True'
                 else:
-                    print "%-30%s" % 'Error:'+exe_result.result
+                    print "%-30s" % 'Error:'+exe_result.result
        
 
            
