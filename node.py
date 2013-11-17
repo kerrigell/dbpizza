@@ -697,6 +697,41 @@ service iptables save
             self.server.execute(self.make_script())
 class Nagios(object):
     config=None
+    install_config={'is_installed_Linux_pm':['tools','Linux_pm','client/tools/','/tmp/',
+                                             """cd /tmp && \
+            tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
+            cd Sys-Statistics-Linux-0.66 && \
+            perl Makefile.PL &> /dev/null; \
+            make &> /dev/null && \
+            make test &> /dev/null && make install &> /dev/null"""],
+                    'is_installed_nagios_plugin':['tools','nagios_plugin','client/tools/','/tmp/',
+                                                  """cd /tmp && \
+            tar zxf nagios-plugins-1.4.15.tar.gz && \
+            cd nagios-plugins-1.4.15 && \
+            ./configure --with-nagios-user=nagios \
+            --with-nagios-group=nagios \
+            --with-openssl=/usr/bin/openssl \
+            --enable-perl-modules \
+            --enable-redhat-pthread-workaround \
+            &>/dev/null && \
+            make &>/dev/null && \
+            make install &>/dev/null"""],
+                    'is_openssl_devel':[None,None,None,None,None],
+                    'is_install_xinetd':['tools','xinetd','client/tools/','/tmp/',
+                                         """rpm -ivh /tmp/xinetd-2.3.14-38.el6.x86_64.rpm"""],
+                    'is_installed_nrpe':['tools','nrpe','client/tools/','/tmp/',
+                                         """cd /tmp && 
+            tar zxf nrpe-2.12.tar.gz && 
+            cd nrpe-2.12 && 
+            ./configure  && 
+            make all  && 
+            make install-plugin  && 
+            make install-daemon   && 
+            make install-daemon-config  && 
+            make install-xinetd  """],
+                    'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None],
+                    'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None]
+                    }    
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
         if type(srv) != Server: 
@@ -756,7 +791,11 @@ class Nagios(object):
             
             echo -n "is_openssl_devel:";
             rpm  -qa | grep openssl-devel &>/dev/null \
-            && echo True || echo False            
+            && echo True || echo False    
+            
+            echo -n "is_install_xinetd:";
+            rpm  -qa | grep xinetd &>/dev/null \
+            && echo True || echo False              
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
         if raw_status.succeed:
@@ -878,67 +917,38 @@ class Nagios(object):
             print "%-30s" % 'OK'
         else:
             print "%-30%" % 'Error:'+exe_result.result        
-    def install_tools(self,force=False):
+    def install_tools(self,tool_name,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
-        install_config={'is_installed_Linux_pm':['tools','Linux_pm','client/tools/','/tmp/',
-                                                 """cd /tmp && \
-                tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
-                cd Sys-Statistics-Linux-0.66 && \
-                perl Makefile.PL &> /dev/null; \
-                make &> /dev/null && \
-                make test &> /dev/null && make install &> /dev/null"""],
-                        'is_installed_nagios_plugin':['tools','nagios_plugin','client/tools/','/tmp/',
-                                                      """cd /tmp && \
-                tar zxf nagios-plugins-1.4.15.tar.gz && \
-                cd nagios-plugins-1.4.15 && \
-                ./configure --with-nagios-user=nagios \
-                --with-nagios-group=nagios \
-                --with-openssl=/usr/bin/openssl \
-                --enable-perl-modules \
-                --enable-redhat-pthread-workaround \
-                &>/dev/null && \
-                make &>/dev/null && \
-                make install &>/dev/null"""],
-                        'is_openssl_devel':[None,None,None,None,None],
-                        'is_installed_nrpe':['tools','nrpe','client/tools/','/tmp/',
-                                             """cd /tmp && 
-                tar zxf nrpe-2.12.tar.gz && 
-                cd nrpe-2.12 && 
-                ./configure  && 
-                make all  && 
-                make install-plugin  && 
-                make install-daemon   && 
-                make install-daemon-config  && 
-                make install-xinetd  &&
-                echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services && 
-                chkconfig --level 345 xinetd on"""],
-                        'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None],
-                        'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None]
-                        }
-        for key,value in install_config.iteritems():
-            check_name=key
-            config_section=value[0]
-            config_key=value[1]
-            middle_path=value[2]
-            trans_path=value[3]
-            exe_cmd=value[4]
-            if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
-                print "Install %s:" % check_name,
-                file_name=self.config.get(config_section,config_key)
-                trans_file=os.path.join(self.base_dir,middle_path,file_name)
-                trans=Transfer(self.server.root,trans_file)
-                trans.add_server(self.server)
-                trans.send(trans_path)
-                trans.clear()
-                if exe_cmd:
-                    exe_result=self.server.execute(exe_cmd,hide_stderr=True)
-                    if exe_result.succeed:
-                        print "%-30s" % 'OK'
-                    else:
-                        print "%-30%" % 'Error:'+exe_result.result
-           
+        if not self.install_config.has_key(tool_name):
+            print 'There is no configuration for [%s]' % tool_name
+            return False
+        
+        key=tool_name
+        value=self.install_config[tool_name]
+        check_name=key
+        config_section=value[0]
+        config_key=value[1]
+        middle_path=value[2]
+        trans_path=value[3]
+        exe_cmd=value[4]
+        if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
+            print "Install %s:" % check_name,
+            file_name=self.config.get(config_section,config_key)
+            trans_file=os.path.join(self.base_dir,middle_path,file_name)
+            trans=Transfer(self.server.root,trans_file)
+            trans.add_server(self.server)
+            trans.send(trans_path)
+            trans.clear()
+            if exe_cmd:
+                exe_result=self.server.execute(exe_cmd,hide_stderr=True)
+                if exe_result.succeed:
+                    print "%-30s" % 'OK'
+                    self.status[tool_name]='True'
+                else:
+                    print "%-30%s" % 'Error:'+exe_result.result
+       
 
            
             
@@ -1115,6 +1125,19 @@ class Nagios(object):
             
 
         self.server.execute(shell)
+    def config_xinetd(self):
+        if self.status['is_install_xinetd']=='False':
+            print 'Please install xinetd service first'
+            return
+        print 'Start to config xinetd service',
+        exe_restult=self.server.execute("""(grep nrpe /etc/service || echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services) && \
+                                        chkconfig --level 345 xinetd on """)
+        if exe_result.succeed:
+            print 'OK'
+        else:
+            print 'Error:'+exe_result.result        
+              
+        
             
     def review_nrpe(self):
         self.title()
@@ -1158,6 +1181,8 @@ class Nagios(object):
         self.change_statliate_ip()
         print "update ntp server in nrpe.cfg"
         self.update_nrpe_ntp()
+        print 'config xinetd service'
+        self.config_xinetd()
         print "deploy nagios monitor completly,Next to restart service"
     def config_centreon(self):
         pass
