@@ -767,7 +767,7 @@ class Nagios(object):
                 names.sort()
                 for name in names:
                     print '%-40s    %s' % (name, self.status[name])  
-    def upgrade_perl(self,force):
+    def upgrade_perl(self,force=False):
         if len(self.status) == 0:
             self.check(output=False)
      #   base_dir = self.config.get('basic', 'base_dir')
@@ -797,7 +797,7 @@ class Nagios(object):
                 print 'Error:'+ exe_result.result
     
 
-    def config_iptables(self,force):
+    def config_iptables(self,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
@@ -810,7 +810,7 @@ class Nagios(object):
                     /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
                     """ % self.ip_monitor,hide_puts=True)
 
-    def deploy_script(self,force):
+    def deploy_script(self,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
      #   base_dir = self.config.get('basic', 'base_dir')
