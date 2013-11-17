@@ -697,6 +697,22 @@ service iptables save
             self.server.execute(self.make_script())
 class Nagios(object):
     config=None
+    operation_step=[
+                ['check current status',                                     'check'          ],
+                ['upgrade perl from v5.8.5 to v5.8.9',                       'upgrade_perl'   ],
+                ['create nagios user',                                       'create_user'],
+                ['instal nrpe and nagios plug-in',                           'install_tools'  ],
+                ['deploy all monitor scripts',                               'deploy_script'  ],
+                ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
+                ['update your nrpe commands',                                'update_nrpe'    ],
+                ['update ntp server address in your nrpe.cfg',               'update_nrpe_ntp'],
+                ['change statliate nagios ip',                               'change_statliate_ip'],
+                ['config xinetd service',                                    'config_xinetd'],
+                ['restart service',                                          'restart_service'],
+                ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
+                ['test monitor script',                                      'test_script'    ],
+                ['show nrpe.cfg',                                            'show_nrpe'],
+                ]    
     install_config={'is_installed_Linux_pm':['tools','Linux_pm','client/tools/','/tmp/',
                                              """cd /tmp && \
             tar zxf Sys-Statistics-Linux-0.66.tar.gz && \
@@ -921,42 +937,44 @@ class Nagios(object):
             print "%-30s" % 'OK'
         else:
             print "%-30s" % 'Error:'+exe_result.result        
-    def install_tools(self,tool_name,force=False):
+    def install_tools(self,tool_name=None,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
-        if not self.install_config.has_key(tool_name):
-            print 'There is no configuration for [%s]' % tool_name
-            return False
-        key=tool_name
-        value=self.install_config[tool_name]
-        up_condition=value[5]
-        if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
-            print "Please do this operation first:%s" % up_condition
-            return False
-        check_name=key
-        config_section=value[0]
-        config_key=value[1]
-        middle_path=value[2]
-        trans_path=value[3]
-        exe_cmd=value[4]
-        if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
-            print "Install %s:" % check_name,
-            file_name=self.config.get(config_section,config_key)
-            trans_file=os.path.join(self.base_dir,middle_path,file_name)
-            trans=Transfer(self.server.root,trans_file)
-            trans.add_server(self.server)
-            trans.send(trans_path)
-            trans.clear()
-            if exe_cmd:
-                exe_result=self.server.execute(exe_cmd,hide_stderr=True)
-                if exe_result.succeed:
-                    print "%-30s" % 'OK'
-                    self.status[tool_name]='True'
-                    return True
-                else:
-                    print "%-30s" % 'Error:'+exe_result.result
-                    return False
+        tool_list=self.install_config.keys if tool_name else [tool_name]
+        for tool_item in tool_list:
+            if not self.install_config.has_key(tool_name):
+                print 'There is no configuration for [%s]' % tool_name
+                return False
+            key=tool_name
+            value=self.install_config[tool_name]
+            up_condition=value[5]
+            if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
+                print "Please do this operation first:%s" % up_condition
+                return False
+            check_name=key
+            config_section=value[0]
+            config_key=value[1]
+            middle_path=value[2]
+            trans_path=value[3]
+            exe_cmd=value[4]
+            if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
+                print "Install %s:" % check_name,
+                file_name=self.config.get(config_section,config_key)
+                trans_file=os.path.join(self.base_dir,middle_path,file_name)
+                trans=Transfer(self.server.root,trans_file)
+                trans.add_server(self.server)
+                trans.send(trans_path)
+                trans.clear()
+                if exe_cmd:
+                    exe_result=self.server.execute(exe_cmd,hide_stderr=True)
+                    if exe_result.succeed:
+                        print "%-30s" % 'OK'
+                        self.status[tool_name]='True'
+                        return True
+                    else:
+                        print "%-30s" % 'Error:'+exe_result.result
+                        return False
        
 
            
