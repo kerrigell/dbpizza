@@ -1144,7 +1144,7 @@ class Nagios(object):
         print "create negios user"
         self.create_user()        
         print "update perl"
-        self.upgrade_perl(force=force)
+        self.upgrade_perl()
         print "install tools"
         self.install_tools(force=force)
         print "config iptables"
