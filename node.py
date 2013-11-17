@@ -912,7 +912,6 @@ class Nagios(object):
             print '%-30s' % 'Error:'+exe_result.result
             return False
     def change_statliate_ip(self):
-        print 
         statliate_ip=self.server.s.ip_monitor
         if not statliate_ip:
             tmp_ip=raw_input('You can complete the info on the DBA info web,or you can type nagios satliate ip:')
