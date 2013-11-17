@@ -703,7 +703,7 @@ class Nagios(object):
             cd Sys-Statistics-Linux-0.66 && \
             perl Makefile.PL &> /dev/null; \
             make &> /dev/null && \
-            make test &> /dev/null && make install &> /dev/null"""],
+            make test &> /dev/null && make install &> /dev/null""",'is_install_perl-devel'],
                     'is_installed_nagios_plugin':['tools','nagios_plugin','client/tools/','/tmp/',
                                                   """cd /tmp && \
             tar zxf nagios-plugins-1.4.15.tar.gz && \
@@ -715,10 +715,10 @@ class Nagios(object):
             --enable-redhat-pthread-workaround \
             &>/dev/null && \
             make &>/dev/null && \
-            make install &>/dev/null"""],
-                    'is_openssl_devel':[None,None,None,None,None],
+            make install &>/dev/null""",None],
+                    'is_openssl_devel':[None,None,None,None,None,None],
                     'is_install_xinetd':['tools','xinetd','client/tools/','/tmp/',
-                                         """rpm -ivh /tmp/xinetd-2.3.14-38.el6.x86_64.rpm"""],
+                                         """rpm -ivh /tmp/xinetd-2.3.14-38.el6.x86_64.rpm""",None],
                     'is_installed_nrpe':['tools','nrpe','client/tools/','/tmp/',
                                          """cd /tmp && 
             tar zxf nrpe-2.12.tar.gz && 
@@ -728,9 +728,9 @@ class Nagios(object):
             make install-plugin  && 
             make install-daemon   && 
             make install-daemon-config  && 
-            make install-xinetd  """],
-                    'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None],
-                    'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None]
+            make install-xinetd  """,None],
+                    'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None,None],
+                    'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None,None]
                     }    
     def __init__(self,srv):
         if srv is None:raise "Server Is Null"
@@ -795,6 +795,10 @@ class Nagios(object):
             
             echo -n "is_install_xinetd:";
             rpm  -qa | grep xinetd &>/dev/null \
+            && echo True || echo False   
+            
+            echo -n "is_install_perl-devel:";
+            rpm  -qa | grep perl-devel &>/dev/null \
             && echo True || echo False              
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
@@ -905,7 +909,7 @@ class Nagios(object):
         if exe_result.succeed:
             print "%-30s" % 'OK'
         else:
-            print "%-30%" % 'Error:'+exe_result.result        
+            print "%-30s" % 'Error:'+exe_result.result        
         
         
         
@@ -916,7 +920,7 @@ class Nagios(object):
         if exe_result.succeed:
             print "%-30s" % 'OK'
         else:
-            print "%-30%" % 'Error:'+exe_result.result        
+            print "%-30s" % 'Error:'+exe_result.result        
     def install_tools(self,tool_name,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
@@ -924,9 +928,12 @@ class Nagios(object):
         if not self.install_config.has_key(tool_name):
             print 'There is no configuration for [%s]' % tool_name
             return False
-        
         key=tool_name
         value=self.install_config[tool_name]
+        up_condition=value[5]
+        if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
+            print "Please do this operation first:%s" % up_condition
+            return False
         check_name=key
         config_section=value[0]
         config_key=value[1]
@@ -946,8 +953,10 @@ class Nagios(object):
                 if exe_result.succeed:
                     print "%-30s" % 'OK'
                     self.status[tool_name]='True'
+                    return True
                 else:
                     print "%-30s" % 'Error:'+exe_result.result
+                    return False
        
 
            
@@ -1105,6 +1114,7 @@ class Nagios(object):
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
         for name, value in nrpes:
+            print 'update nrpe script in nrpe.cfg:%s' % nrpe_name
             nrpe_line = "command[" + name + "]=" + value
             if nrpe_name:
                 if nrpe_name == name:
@@ -1170,7 +1180,9 @@ class Nagios(object):
         self.upgrade_perl()
         print "install tools"
         for tool_name in self.install_config.keys():
-            self.install_tools(tool_name=tool_name,force=force)
+            if not self.install_tools(tool_name=tool_name,force=force):
+                print 'the process of installing is broken'
+                return
         print "config iptables"
         self.config_iptables()
 
