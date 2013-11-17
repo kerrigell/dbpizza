@@ -1169,7 +1169,8 @@ class Nagios(object):
         print "update perl"
         self.upgrade_perl()
         print "install tools"
-        self.install_tools(force=force)
+        for tool_name in self.install_config.keys():
+            self.install_tools(tool_name=tool_name,force=force)
         print "config iptables"
         self.config_iptables()
 
