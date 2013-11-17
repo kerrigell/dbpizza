@@ -209,24 +209,11 @@ class PizzaShell(cmd.Cmd):
                                             useRecursion=True if opts.recursion else False,
                                             objClass=Nagios)
 
-        monopers=[
-            ['check current status',                                     'check'          ],
-            ['upgrade perl from v5.8.5 to v5.8.9',                       'upgrade_perl'   ],
-            ['instal nrpe and nagios plug-in',                           'install_tools'  ],
-            ['deploy all monitor scripts',                               'deploy_script'  ],
-            ['open ping and 5666 for nagios monitor servers',            'config_iptables'],
-            ['update your nrpe commands',                                'update_nrpe'    ],
-            ['update ntp server address in your nrpe.cfg',               'update_nrpe_ntp'],
-            ['change statliate nagios ip',                               'change_statliate_ip'],
-            ['restart service',                                          'restart_service'],
-            ['review all your commands currently defined in nrpe.cfg',   'review_nrpe'    ],
-            ['test monitor script',                                      'test_script'    ]
-            ]
         oper=None
         oper_param=None
         if opts.step:
-            sauce = self.select([x[0] for x in monopers],'Please choice what you want?')
-            dopers=dict(monopers)
+            sauce = self.select([x[0] for x in Nagios.operation_step],'Please choice what you want?')
+            dopers=dict(Nagios.operation_step)
             if dopers.has_key(sauce):
                 oper=dopers[sauce]
                 if oper=='update_nrpe':
