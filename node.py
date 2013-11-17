@@ -937,45 +937,43 @@ class Nagios(object):
             print "%-30s" % 'OK'
         else:
             print "%-30s" % 'Error:'+exe_result.result        
-    def install_tools(self,tool=None,force=False):
+    def install_tools(self,tool_name,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
-        
-        tool_list=self.install_config.keys() if tool else [tool]
-        for tool_name in tool_list:
-            if not self.install_config.has_key(tool_name):
-                print 'There is no configuration for [%s]' % tool_name
-                return False
-            print 'Start to install: %s' % tool_name
-            key=tool_name
-            value=self.install_config[tool_name]
-            up_condition=value[5]
-            if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
-                print "Please do this operation first:%s" % up_condition
-                return False
-            check_name=key
-            config_section=value[0]
-            config_key=value[1]
-            middle_path=value[2]
-            trans_path=value[3]
-            exe_cmd=value[4]
-            if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
-                print "Install %s:" % check_name,
-                file_name=self.config.get(config_section,config_key)
-                trans_file=os.path.join(self.base_dir,middle_path,file_name)
-                trans=Transfer(self.server.root,trans_file)
-                trans.add_server(self.server)
-                trans.send(trans_path)
-                trans.clear()
-                if exe_cmd:
-                    exe_result=self.server.execute(exe_cmd,hide_stderr=True)
-                    if exe_result.succeed:
-                        print "%-30s" % 'OK'
-                        self.status[tool_name]='True'
-                        return True
-                    else:
-                        print "%-30s" % 'Error:'+exe_result.result
-                        return False
+
+        if not self.install_config.has_key(tool_name):
+            print 'There is no configuration for [%s]' % tool_name
+            return False
+        print 'Start to install: %s' % tool_name
+        key=tool_name
+        value=self.install_config[tool_name]
+        up_condition=value[5]
+        if up_condition is not None or self.status.has_key(up_condition) or self.status[up_condition]=='False':
+            print "Please do this operation first:%s" % up_condition
+            return False
+        check_name=key
+        config_section=value[0]
+        config_key=value[1]
+        middle_path=value[2]
+        trans_path=value[3]
+        exe_cmd=value[4]
+        if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
+            print "Install %s:" % check_name,
+            file_name=self.config.get(config_section,config_key)
+            trans_file=os.path.join(self.base_dir,middle_path,file_name)
+            trans=Transfer(self.server.root,trans_file)
+            trans.add_server(self.server)
+            trans.send(trans_path)
+            trans.clear()
+            if exe_cmd:
+                exe_result=self.server.execute(exe_cmd,hide_stderr=True)
+                if exe_result.succeed:
+                    print "%-30s" % 'OK'
+                    self.status[tool_name]='True'
+                    return True
+                else:
+                    print "%-30s" % 'Error:'+exe_result.result
+                    return False
        
 
            
@@ -1198,10 +1196,15 @@ class Nagios(object):
         print "update perl"
         self.upgrade_perl()
         print "install tools"
-        for tool_name in self.install_config.keys():
-            if not self.install_tools(tool=tool_name,force=force):
-                print 'the process of installing is broken'
-                return
+        tool_list=['is_installed_Linux_pm',
+                   'is_installed_nagios_plugin',
+                   'is_openssl_devel',
+                   'is_install_xinetd',
+                   'is_installed_nrpe',
+                   'is_installed_xinetd_nrpe',
+                   'is_installed_utils_pm']
+        for tool in tool_list:
+            self.install_tools(tool,force)
         print "config iptables"
         self.config_iptables()
 
