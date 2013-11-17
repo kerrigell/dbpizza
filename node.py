@@ -937,28 +937,22 @@ class Nagios(object):
             print "%-30s" % 'OK'
         else:
             print "%-30s" % 'Error:'+exe_result.result        
-    def install_tools(self,tool_name,force=False):
+    def install_tools(self,check_name,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
-
-        if not self.install_config.has_key(tool_name):
-            print 'There is no configuration for [%s]' % tool_name
-            return False
-        print 'Start to install: %s' % tool_name
-        key=tool_name
-        value=self.install_config[tool_name]
-        up_condition=value[5]
-        if up_condition is not None and  self.status.has_key(up_condition) and  self.status[up_condition]=='False':
-            print "Please do this operation first:%s" % up_condition
-            return False
-        check_name=key
-        config_section=value[0]
-        config_key=value[1]
-        middle_path=value[2]
-        trans_path=value[3]
-        exe_cmd=value[4]
-        if True if force else ((check_name and self.status[check_name]=='False')if self.status.has_key(check_name) else True):
-            print "Install %s:" % check_name,
+        if True if force and self.status.has_key(check_name) else (True if check_name and self.status[check_name]=='False' else  False):
+            value=self.install_config[check_name]
+            up_condition=value[5]
+            if up_condition is not None and  self.status.has_key(up_condition) and  self.status[up_condition]=='False':
+                print "Please do this operation first:%s" % up_condition
+                return False
+            
+            config_section=value[0]
+            config_key=value[1]
+            middle_path=value[2]
+            trans_path=value[3]
+            exe_cmd=value[4]            
+            print 'Start to install: %s' % check_name,
             file_name=self.config.get(config_section,config_key)
             trans_file=os.path.join(self.base_dir,middle_path,file_name)
             trans=Transfer(self.server.root,trans_file)
@@ -974,7 +968,9 @@ class Nagios(object):
                 else:
                     print "%-30s" % 'Error:'+exe_result.result
                     return False
-       
+        else:
+            return False
+
 
            
             
