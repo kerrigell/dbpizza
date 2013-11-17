@@ -1200,9 +1200,8 @@ class Nagios(object):
                    'is_installed_xinetd_nrpe',
                    'is_installed_utils_pm']
         for tool in tool_list:
-            if not self.install_tools(tool,force):
-                print  'the process of intalling tools is broken'
-                return 
+            self.install_tools(tool,force)
+
         print "config iptables"
         self.config_iptables()
 
