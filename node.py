@@ -905,7 +905,7 @@ class Nagios(object):
             else:
                 return
         exe_result=self.server.execute("""grep only_from /etc/xinetd.d/nrpe && \
-                                          sed -i 's/only_from.*/only_from       =127.0.0.1 %s/g' nrpe""" % statliate_ip)
+                                          sed -i 's/only_from.*/only_from       =127.0.0.1 %s/g' /etc/xinetd.d/nrpe""" % statliate_ip)
         if exe_result.succeed:
             print "%-30s" % 'OK'
         else:
