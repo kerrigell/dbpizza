@@ -1199,7 +1199,7 @@ class Nagios(object):
         self.upgrade_perl()
         print "install tools"
         for tool_name in self.install_config.keys():
-            if not self.install_tools(tool_name=tool_name,force=force):
+            if not self.install_tools(tool=tool_name,force=force):
                 print 'the process of installing is broken'
                 return
         print "config iptables"
