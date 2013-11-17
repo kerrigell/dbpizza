@@ -914,7 +914,7 @@ class Nagios(object):
     def change_statliate_ip(self):
         print 
         statliate_ip=self.server.s.ip_monitor
-        if statliate_ip:
+        if not statliate_ip:
             tmp_ip=raw_input('You can complete the info on the DBA info web,or you can type nagios satliate ip:')
             if len(tmp_ip)>7:
                 statliate_ip=tmp_ip
@@ -1149,6 +1149,8 @@ class Nagios(object):
 
         self.server.execute(shell)
     def config_xinetd(self):
+        if len(self.status) == 0:
+            self.check(output=False)  
         if self.status['is_install_xinetd']=='False':
             print 'Please install xinetd service first'
             return
