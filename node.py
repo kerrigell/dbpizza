@@ -937,15 +937,16 @@ class Nagios(object):
             print "%-30s" % 'OK'
         else:
             print "%-30s" % 'Error:'+exe_result.result        
-    def install_tools(self,tool_name=None,force=False):
+    def install_tools(self,tool=None,force=False):
         if len(self.status) == 0:
             self.check(output=False)        
-        self.title()
-        tool_list=self.install_config.keys() if tool_name else [tool_name]
-        for tool_item in tool_list:
+        
+        tool_list=self.install_config.keys() if tool else [tool]
+        for tool_name in tool_list:
             if not self.install_config.has_key(tool_name):
                 print 'There is no configuration for [%s]' % tool_name
                 return False
+            print 'Start to install: %s' % tool_name
             key=tool_name
             value=self.install_config[tool_name]
             up_condition=value[5]
