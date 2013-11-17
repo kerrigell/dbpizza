@@ -941,7 +941,7 @@ class Nagios(object):
         if len(self.status) == 0:
             self.check(output=False)        
         self.title()
-        tool_list=self.install_config.keys if tool_name else [tool_name]
+        tool_list=self.install_config.keys() if tool_name else [tool_name]
         for tool_item in tool_list:
             if not self.install_config.has_key(tool_name):
                 print 'There is no configuration for [%s]' % tool_name
