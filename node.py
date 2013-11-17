@@ -1154,7 +1154,7 @@ class Nagios(object):
             print 'Please install xinetd service first'
             return
         print 'Start to config xinetd service',
-        exe_restult=self.server.execute("""(grep nrpe /etc/service || echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services) && \
+        exe_result=self.server.execute("""(grep nrpe /etc/services || echo "nrpe     5666/tcp    #nagios nrpe " >> /etc/services) && \
                                         chkconfig --level 345 xinetd on """)
         if exe_result.succeed:
             print 'OK'
