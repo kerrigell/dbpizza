@@ -407,7 +407,7 @@ class PizzaShell(cmd.Cmd):
                   make_option('--list',action='store_true',help='get crontab '),
                   make_option('--delete',action='store_true',help='get crontab '),
                   make_option('--cronid',type='string',help='get crontab '),
-                  make_option('--onlydb',action='store_true',help='get crontab ')])
+                  make_option('--realupdate',action='store_true',help='get crontab ')])
     def do_crontab(self,arg,opts=None):
         from node import Crontab
         crontab_list=self._get_operation_list(self.server.current_node,
@@ -423,7 +423,7 @@ class PizzaShell(cmd.Cmd):
                 if opts.list:
                     item.list()
                 if opts.delete:
-                    item.delete(dbid=opts.cronid,only_db=True if opts.onlydb else False)
+                    item.delete(dbid=opts.cronid,realupdate=True if opts.realupdate else False)
         
 
  

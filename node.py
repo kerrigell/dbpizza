@@ -1680,14 +1680,14 @@ class Crontab(object):
         for i in ripsec:
             print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)  
             
-    def delete(self,dbid=None,only_db=True):
+    def delete(self,dbid=None,realupdate=False):
         import time
         '''cat /var/spool/cron/root'''
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
         for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
             dbsession.delete(instance)
-            if not only_db:
+            if realupdate:
                 changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
                 sed_reg=".*"
                 sed_reg+=string.replace(instance.pminute,'*','\*').replace('/','\/')+'.*'
