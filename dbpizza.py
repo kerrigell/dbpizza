@@ -400,6 +400,25 @@ class PizzaShell(cmd.Cmd):
                 item.uninstall()
             if opts.check:
                 item.check()
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+                  make_option('--recursion',action='store_true',help='get childs  with recursion'),
+                  make_option('-c','--childs',action='store_true',help='get childs '),   
+                  make_option('--collect',action='store_true',help='get crontab '),
+                  make_option('--list',action='store_true',help='get crontab ')])
+    def do_crontab(self,arg,opts=None):
+        from node import Crontab
+        crontab_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursion else False,
+                                            objClass=Crontab)
+        for item in crontab_list:
+            if opts.collect:
+                item.collect()
+            if opts.list:
+                item.list()
+        
 
  
 class Logger(object):

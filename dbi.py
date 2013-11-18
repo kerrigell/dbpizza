@@ -6,7 +6,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime,DATETIME
+from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime,DATETIME,SMALLINT
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.types import SchemaType,TypeDecorator,Enum
 from sqlalchemy.orm import sessionmaker
@@ -149,6 +149,20 @@ class t_sysinfo(Base):
     result_reg = Column(VARCHAR(50))
     record_table = Column(VARCHAR(50))
     record_field = Column(VARCHAR(50))
+    
+class t_crontab(Base):
+    __tablename__='t_crontab'
+    id = Column(Integer, primary_key=True)
+    server_id=Column(Integer)
+    pminute=Column(VARCHAR(20))
+    phour=Column(VARCHAR(20))
+    pday=Column(VARCHAR(20))
+    pmonth=Column(VARCHAR(20))
+    pweek=Column(VARCHAR(20))
+    process=Column(VARCHAR(400))
+    status=Column(SMALLINT)
+    user=Column(VARCHAR(30))
+    description=Column(VARCHAR(100))
 
     
     

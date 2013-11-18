@@ -1635,7 +1635,36 @@ class Crontab(object):
     def __init__(self,server):
         self.server=server
     def collect(self):
-        exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""")
+        exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""",hide_puts=True)
         if exe_result.succeed:
-            pass
+            dbsession=self.__class__.__dbsession__
+            dbclass=self.__class__.__dbclass__  
+            count=0
+            for line in string.split(exe_result.result,'\n'):
+                line=string.strip(line)
+                if len(len):
+                    pmin,phour,pday,pmon,pweek=line.split()[0:5]
+                    process=' '.join(line.split()[5:]).replace("\'","\"")
+                    status=1
+                    user=self.server.s.loginuser
+
+                    dbsession.add(dbclass(server_id=self.server.dbid,
+                                          pminute=pmin,
+                                          phour=phour,
+                                          pday=pday,
+                                          pmonth=pmon,
+                                          pweek=pweek,
+                                          process=process,
+                                          status=status,
+                                          user=self.server.s.loginuser,
+                                          description=''))
+                    dbsession.commit()
+                    count+=1
+            print 'Collected the number of crontab:%s' % count
+    def list(self):
+        ripsec=self._get_dbinfo(self.server.dbid)
+        print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % ("dbid","minute",'hour','day','month','week','process','user','status','description')
+        for i in ripsec:
+            print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.dport,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)        
+        
     
