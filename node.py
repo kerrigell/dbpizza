@@ -1634,6 +1634,8 @@ class Crontab(object):
         return result    
     def __init__(self,server):
         self.server=server
+        if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
+            self._get_dbclass()        
     def collect(self):
         exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""",hide_puts=True)
         if exe_result.succeed:
