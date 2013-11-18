@@ -964,7 +964,7 @@ class Nagios(object):
                 exe_result=self.server.execute(exe_cmd,hide_stderr=True)
                 if exe_result.succeed:
                     print "%-30s" % 'OK'
-                    self.status[tool_name]='True'
+                    self.status[check_name]='True'
                     return True
                 else:
                     print "%-30s" % 'Error:'+exe_result.result
