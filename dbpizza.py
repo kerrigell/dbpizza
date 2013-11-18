@@ -414,6 +414,8 @@ class PizzaShell(cmd.Cmd):
                                             useRecursion=True if opts.recursion else False,
                                             objClass=Crontab)
         for item in crontab_list:
+            if item.server.s.os_type=='Windows':
+                continue
             if opts.collect:
                 item.collect()
             if opts.list:
