@@ -1689,7 +1689,7 @@ class Crontab(object):
             dbsession.delete(instance)
             if not only_db:
                 changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
-                sed_reg="/.*"
+                sed_reg=".*"
                 sed_reg+=string.replace(instance.pminute,'*','\*').replace('/','\/')+'.*'
                 sed_reg+=string.replace(instance.phour,'*','\*').replace('/','\/')+'.*'
                 sed_reg+=string.replace(instance.pday,'*','\*').replace('/','\/')+'.*'
