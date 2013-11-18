@@ -1637,6 +1637,7 @@ class Crontab(object):
         if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
             self._get_dbclass()        
     def collect(self):
+        print self.server,
         exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""",hide_puts=True,showprefix=True)
         if exe_result.succeed:
             dbsession=self.__class__.__dbsession__
@@ -1662,7 +1663,7 @@ class Crontab(object):
                                           description=''))
                     dbsession.commit()
                     count+=1
-            print 'Collected the number of crontab:%s' % count
+            print '  Collected the number of crontab:%s' % count
     def list(self):
         ripsec=self._get_dbinfo(self.server.dbid)
         print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % ("dbid","minute",'hour','day','month','week','process','user','status','description')
