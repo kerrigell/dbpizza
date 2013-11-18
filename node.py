@@ -1642,7 +1642,7 @@ class Crontab(object):
             count=0
             for line in string.split(exe_result.result,'\n'):
                 line=string.strip(line)
-                if len(len):
+                if len(line):
                     pmin,phour,pday,pmon,pweek=line.split()[0:5]
                     process=' '.join(line.split()[5:]).replace("\'","\"")
                     status=1
