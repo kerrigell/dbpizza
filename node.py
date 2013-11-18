@@ -747,7 +747,7 @@ class Nagios(object):
             make install-daemon   && 
             make install-daemon-config  && 
             make install-xinetd  """,None],
-                    'is_installed_xinetd_nrpe':['tools','nrpe','client/tools/','/etc/xinetd.d/',None,None],
+                    'is_installed_xinetd_nrpe':['tools','xinetd_nrpe','client/tools/','/etc/xinetd.d/',None,None],
                     'is_installed_utils_pm':['tools','utils_pm','client/tools/','/usr/local/nagios/libexec',None,None]
                     }    
     def __init__(self,srv):
@@ -953,6 +953,8 @@ class Nagios(object):
             middle_path=value[2]
             trans_path=value[3]
             exe_cmd=value[4]            
+            if config_section is None and config_key is None:
+                return False
             print 'Start to install: %s' % check_name,
             file_name=self.config.get(config_section,config_key)
             trans_file=os.path.join(self.base_dir,middle_path,file_name)
