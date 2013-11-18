@@ -817,7 +817,12 @@ class Nagios(object):
             
             echo -n "is_install_perl-devel:";
             rpm  -qa | grep perl-devel &>/dev/null \
-            && echo True || echo False              
+            && echo True || echo False  
+            
+            echo -n "is_installed_xinetd_nrpe:";
+            test -e /etc/xinetd.d/nrpe \
+            && echo True || echo False;            
+            
             """ % (script_shell, self.ip_monitor, self.ip_monitor, self.ip_monitor)
         raw_status=self.server.execute(shell,hide_puts=True)
         if raw_status.succeed:
