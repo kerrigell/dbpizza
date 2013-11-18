@@ -404,7 +404,10 @@ class PizzaShell(cmd.Cmd):
                   make_option('--recursion',action='store_true',help='get childs  with recursion'),
                   make_option('-c','--childs',action='store_true',help='get childs '),   
                   make_option('--collect',action='store_true',help='get crontab '),
-                  make_option('--list',action='store_true',help='get crontab ')])
+                  make_option('--list',action='store_true',help='get crontab '),
+                  make_option('--delete',action='store_true',help='get crontab '),
+                  make_option('--cronid',type='string',help='get crontab '),
+                  make_option('--onlydb',action='store_true',help='get crontab ')])
     def do_crontab(self,arg,opts=None):
         from node import Crontab
         crontab_list=self._get_operation_list(self.server.current_node,
@@ -419,6 +422,8 @@ class PizzaShell(cmd.Cmd):
                     item.collect()
                 if opts.list:
                     item.list()
+                if opts.delete:
+                    item.delete(dbid=opts.cronid,only_db=True if opts.onlydb else False)
         
 
  

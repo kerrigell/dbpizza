@@ -1131,7 +1131,10 @@ class Nagios(object):
             print "%-40s=%90s" % (name,value)
     def update_nrpe(self,nrpe_name=None):
         self.title()
-        nrpes = self.config.items('nrpe')
+        if nrpe_name:
+            nrpes = self.config.items('nrpe')
+        else:
+            nrpes=[nrpe_name]
         shell = ""
       #  if nrpe_name and nrpe_name in nrpes
         for name, value in nrpes:
@@ -1624,13 +1627,15 @@ class Crontab(object):
             else:
                 return False
     @classmethod
-    def _get_dbinfo(cls,dbid=None):
+    def _get_dbinfo(cls,server_id,dbid=None):
         if not cls._get_dbclass():
             return None
-        result=None
+        result=[]
         
-        if dbid is not None:
-            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==dbid).all()
+        if dbid is  None:
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).all()
+        else:
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).filter(cls.__dbclass__.id==dbid)
         return result    
     def __init__(self,server):
         self.server=server
@@ -1670,13 +1675,35 @@ class Crontab(object):
                     count+=1
             print '  %50s' % ('Collected the number of crontab:%s' % count)
     def list(self):
-        ripsec=self._get_dbinfo(self.server.dbid)
+        ripsec=self._get_dbinfo(server_id=self.server.dbid)
         print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % ("id","min",'hou','day','mon','wee','process','user','status','description')
         for i in ripsec:
             print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)  
             
-    def delete(self,dbid=None):
+    def delete(self,dbid=None,only_db=True):
+        import time
         '''cat /var/spool/cron/root'''
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+            dbsession.delete(instance)
+            if not only_db:
+                changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+                sed_reg="/.*"
+                for value in instance[1:6]:
+                    fvalue=value
+                    for i in string(value,' '):
+                        i=string.replace('*','\*')
+                        i=string.replace('/','\/')
+                        sed_reg+=i
+                        sed_reg+='.*'
+                cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
+                    sed -i '/%s/d' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                                                            sed_reg,self.server.s.loginuser)
+                exe_result=self.server.execute(cmd)
+                if exe_result.succeed:
+                    print 'delete succeed of ID:%s' % instance.id
+        dbsession.commit()         
         pass
     def disable(self,dbid=None):
         pass
