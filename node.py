@@ -1690,13 +1690,13 @@ class Crontab(object):
             if not only_db:
                 changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
                 sed_reg="/.*"
-                for value in instance[1:6]:
-                    fvalue=value
-                    for i in string(value,' '):
-                        i=string.replace('*','\*')
-                        i=string.replace('/','\/')
-                        sed_reg+=i
-                        sed_reg+='.*'
+                sed_reg+=string.replace(instance.pminute,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(instance.phour,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(instance.pday,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(instance.pmonth,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(instance.pweek,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(instance.process,'*','\*').replace('/','\/')+'.*'
+                                    
                 cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
                     sed -i '/%s/d' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
                                                             sed_reg,self.server.s.loginuser)
