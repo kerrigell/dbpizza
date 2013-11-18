@@ -1635,9 +1635,14 @@ class Crontab(object):
     def __init__(self,server):
         self.server=server
         if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
-            self._get_dbclass()        
+            self._get_dbclass()  
+    def judge_availability (self):
+        if self.server.s.role=='rds' or self.server.s.os_type=='Windows':
+            return False
+        else:
+            return True
     def collect(self):
-        print self.server,
+        print "%50s" % self.server,
         exe_result=self.server.execute("""crontab -u %s -l 2>/dev/null | grep -v \# | grep -v \= | sed /^$/d""" % self.server.s.loginuser,hide_puts=True,showprefix=True)
         if exe_result.succeed:
             dbsession=self.__class__.__dbsession__
@@ -1663,11 +1668,11 @@ class Crontab(object):
                                           description=''))
                     dbsession.commit()
                     count+=1
-            print '  Collected the number of crontab:%s' % count
+            print '  %50s' % ('Collected the number of crontab:%s' % count)
     def list(self):
         ripsec=self._get_dbinfo(self.server.dbid)
-        print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % ("dbid","minute",'hour','day','month','week','process','user','status','description')
+        print "%5s%5s%20s%5s%5s%5s %100s%10s%5s  %s" % ("id","min",'hou','day','mon','wee','process','user','status','description')
         for i in ripsec:
-            print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)        
+            print "%5s%5s%20s%5s%5s%5s %100s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)        
         
     
