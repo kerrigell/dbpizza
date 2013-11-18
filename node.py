@@ -1667,6 +1667,6 @@ class Crontab(object):
         ripsec=self._get_dbinfo(self.server.dbid)
         print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % ("dbid","minute",'hour','day','month','week','process','user','status','description')
         for i in ripsec:
-            print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.dport,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)        
+            print "%5s%5s%5s%5s%5s%5s %40s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)        
         
     
