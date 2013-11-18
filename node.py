@@ -1597,4 +1597,45 @@ class Parallel(threading.Thread):
         self.t_name=name
     def run(self):
         pass
+class Crontab(object):
+    # db table class
+    __dbclass__=None
+    # db session
+    __dbsession__=None    
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname=cls.__name__
+        dbclassname="t_%s" % string.lower(selfclassname)
+        dbclass=None
+        dbsession=None        
+        import importlib
+        mo=importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo,dbclassname):
+                dbclass= getattr(mo,dbclassname)
+            if hasattr(mo,'session'):
+                dbsession=getattr(mo,'session')
+            if dbclass and dbsession:
+                cls.__dbsession__=dbsession
+                cls.__dbclass__=dbclass
+                return True
+            else:
+                return False
+    @classmethod
+    def _get_dbinfo(cls,dbid=None):
+        if not cls._get_dbclass():
+            return None
+        result=None
+        
+        if dbid is not None:
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==dbid).all()
+        return result    
+    def __init__(self,server):
+        self.server=server
+    def collect(self):
+        exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""")
+        if exe_result.succeed:
+            pass
     
