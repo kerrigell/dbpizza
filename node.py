@@ -1636,7 +1636,7 @@ class Crontab(object):
         self.server=server
         if self.__class__.__dbsession__ is None  or self.__class__.__dbclass__ is None:
             self._get_dbclass()  
-    def judge_availability (self):
+    def judge_available(self):
         if self.server.s.role=='rds' or self.server.s.os_type=='Windows':
             return False
         else:
