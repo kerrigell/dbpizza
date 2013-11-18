@@ -719,7 +719,9 @@ class Nagios(object):
             cd Sys-Statistics-Linux-0.66 && \
             perl Makefile.PL &> /dev/null; \
             make &> /dev/null && \
-            make test &> /dev/null && make install &> /dev/null""",'is_install_perl-devel'],
+            make install &> /dev/null""",
+                                        #make test &> /dev/null && \
+                                        'is_install_perl-devel'],
                     'is_installed_nagios_plugin':['tools','nagios_plugin','client/tools/','/tmp/',
                                                   """cd /tmp && \
             tar zxf nagios-plugins-1.4.15.tar.gz && \
