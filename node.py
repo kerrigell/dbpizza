@@ -1638,7 +1638,7 @@ class Crontab(object):
             self._get_dbclass()        
     def collect(self):
         print self.server,
-        exe_result=self.server.execute("""crontab -u root -l | grep -v \# | grep -v \= | sed /^$/d""",hide_puts=True,showprefix=True)
+        exe_result=self.server.execute("""crontab -u %s -l 2>/dev/null | grep -v \# | grep -v \= | sed /^$/d""" % self.server.loginuser,hide_puts=True,showprefix=True)
         if exe_result.succeed:
             dbsession=self.__class__.__dbsession__
             dbclass=self.__class__.__dbclass__  
