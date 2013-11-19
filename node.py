@@ -1359,7 +1359,7 @@ class Transfer(object):
     @classmethod
     def get_from_lftp(cls,server,label,mid_path,dest_dir):
         store_path='/home/dba/update'
-        exe_result=server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"""" % (label,
+        exe_result=server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"\'""" % (label,
                                                                                 mid_path,
                                                                                 dest_dir))
         if exe_result.succeed:
