@@ -329,16 +329,17 @@ class PizzaShell(cmd.Cmd):
 
         trans_task=Transfer()
         if opts.get_version:
-            trans_task.set_source_server(self.server.current_node.root)
+
             
             src_path=Transfer.get_from_lftp(self.server.current_node.root,
                                                'get-version',
                                                'db_version/ALL/',
                                                opts.get_version) 
             if src_path:
+                trans_task.set_source_server(self.server.current_node.root)
                 trans_task.set_source_path(src_path)
             else:
-                trans_task.set_source_path(opts.target)
+                return
         else:
             trans_task.set_source_server(self.server.current_node)
             trans_task.set_source_path(opts.target)
