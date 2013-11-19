@@ -1348,13 +1348,15 @@ class Transfer(object):
         (self._lpath,self._lfile) = os.path.split(path)
         self.uuid=str(muuid.uuid1())
         
-    def add_dest_server(self,empty_old=False,*srvlist):
-        if empty_old:
-            self.dest_servers=[]
+    def add_dest_server(self,*srvlist):
         for srv in srvlist:
             if type(srv)==Server:
                 if srv.s.role not in ['rds']:
                     self.dest_servers.append(srv)
+    def empty_dest_server(self):
+        if self.trans_list:
+            self.clear()
+        self.dest_servers=[]
     @classmethod
     def get_from_lftp(cls,server,label,mid_path,dest_dir):
         store_path='/home/dba/update'
