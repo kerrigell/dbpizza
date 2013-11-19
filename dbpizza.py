@@ -319,12 +319,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-w','--who',type='string',help='trans target'),
               make_option('--get_version',type='string',help='trans target')])
     def do_trans(self,arg,opts=None):
-        if opts.get_version:
-            Transfer.get_from_lftp(self.server.current_node.root,
-                                   'get-version',
-                                   'db_version/ALL/',
-                                   opts.get_version)
-            return
+
         server_list=self._get_operation_list(self.server.current_node,
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=False,
@@ -332,7 +327,22 @@ class PizzaShell(cmd.Cmd):
                                             useRecursion=True if opts.recursion else False,
                                             objClass=None)
 
-        trans_task=Transfer(self.server.current_node,opts.target)
+        trans_task=Transfer()
+        if opts.get_version:
+            trans_task.set_source_server(self.server.current_node.root)
+            
+            src_path=Transfer.get_from_lftp(self.server.current_node.root,
+                                               'get-version',
+                                               'db_version/ALL/',
+                                               opts.get_version) 
+            if src_path:
+                trans_task.set_source_path(src_path)
+            else:
+                trans_task.set_source_path(opts.target)
+        else:
+            trans_task.set_source_server(self.server.current_node)
+            trans_task.set_source_path(opts.target)
+            #self.server.current_node,opts.target)
         if opts.who:
             line=string.strip(opts.who)
             dbid=line
