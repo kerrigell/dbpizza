@@ -317,7 +317,7 @@ class PizzaShell(cmd.Cmd):
               make_option('-t','--target',type='string',help='trans target'),
               make_option('-d','--deploy_dir',type='string',help='trans target'),
               make_option('-w','--who',type='string',help='trans target'),
-              make_option('--get_version',type='string',help='trans target']))
+              make_option('--get_version',type='string',help='trans target')])
     def do_trans(self,arg,opts=None):
         if opts.get_version:
             Transfer.get_from_lftp(self.server.current_node.root,
