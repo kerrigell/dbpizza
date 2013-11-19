@@ -1575,9 +1575,9 @@ class MySQL(object):
         else:
             print 'Error:%s' % exe_result.result
             return False
-    def merage(self,db_name,dest_server,dest_port):
+    def merage(self,db_name,sport,dest_server,dport,bk_nodata=False):
         print 'starting to merget from %s to %s' % (self.server,dest_server)
-        backup_file=self.backup(db_name,port=3306,no_data=True)
+        backup_file=self.backup(db_name=db_name,port=sport,no_data=bk_nodata)
         if backup_file:
             (lpath,lfile)=os.path.split(backup_file)
             trans_path='/home/databackup'
@@ -1588,7 +1588,7 @@ class MySQL(object):
             target_path=os.path.join(trans_path,lfile)
             if dest_server.exists(target_path):
                 dest_mysql=MySQL(dest_server)
-                if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,target_path,port=dest_port):
+                if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,target_path,port=dport):
                     print 'Merage finished :OK'
             else:
                 print 'No files in %s :%s' % (dest_server,target_path)
@@ -1633,7 +1633,7 @@ class MySQL(object):
                 print 'Backup failure'
                 return None
             
-    def recover(self,dbname,backupfile,port=None,char_set='utf8'):
+    def recover(self,dbname,port,backupfile,char_set='utf8'):
         if len(self.instances)==0:
             if not self.get_instance_list():
                 return False

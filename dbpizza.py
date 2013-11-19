@@ -444,33 +444,50 @@ class PizzaShell(cmd.Cmd):
                 if opts.delete:
                     item.delete(dbid=opts.cronid,realupdate=True if opts.realupdate else False)
     @options([make_option('-p','--piece',type='string',help='piece name'),
-                  make_option('--recursion',action='store_true',help='get childs  with recursion'),
-                  make_option('-c','--childs',action='store_true',help='get childs '), 
-                  
-                  make_option('--merage',action='store_true',help='get childs '),
-                  make_option('--dserver',type='string',help='get childs '),
-                  make_option('--dport',type='string',help='get childs '),
-                  
-                  make_option('--databases',type='string',help='get childs '), 
-                  make_option('--no_data',action='store_true',help='get childs '), 
-        #          make_option('--port',,type='string',help='get childs '), 
-                  make_option('-w','--who',type='string',help='get childs ')])
+                make_option('--recursion',action='store_true',help='get childs  with recursion'),
+                make_option('-c','--childs',action='store_true',help='get childs '), 
+                
+                make_option('--sport',type='string',help='get childs '),
+                make_option('--databases',type='string',help='get childs '), 
+                make_option('--no_data',action='store_true',help='get childs '),                
+                
+                make_option('--merage',action='store_true',help='get childs '),
+                make_option('--dserver',type='string',help='get childs '),
+                make_option('--dport',type='string',help='get childs ')
+                ])
     def do_mysql(self,arg,opts=None):
         from node import MySQL
+        if opts.merge and opts.sport and opts.dserver and opts.dport:
+            dest_server=None
+            line=string.strip(opts.dserver)
+            dbid=line
+            if string.find(line,'[') !=-1:
+                (dbid,info)=string.split(line,'[')
+                (dbid,info)=string.split(info,':')   
+                dest_server=self.server.current_node.get_node(int(dbid))  
+            if dest_server is None:
+                print 'Not find the destination :%s' % line
+                return
+            mysql=MySQL(self.server.current_node)
+            db_lists=None
+            if opts.databases:
+                db_lists=string.split(opts.databases,',')
+            else:
+                db_lists=[None]
+            for db in db_lists:
+                mysql.merage(db,sport=opts.sport,dest_server=dest_server,dport=opts.dport,bk_nodata=True if opts.no_data else False)
+            return
+            
+            
         operation_list=self._get_operation_list(self.server.current_node,
                                             inPiece=opts.piece if opts.piece else None,
                                             inCurrent=True,
                                             inChilds=True if opts.childs else False,
                                             useRecursion=True if opts.recursion else False,
                                             objClass=MySQL)
-        dest_server=None
+
         if opts.dserver:
-            line=string.strip(opts.dserver)
-            dbid=line
-            if string.find(line,'[') !=-1:
-                (dbid,info)=string.split(line,'[')
-                (dbid,info)=string.split(info,':')   
-                dest_server=self.server.current_node.get_node(int(dbid))       
+     
         for item in operation_list:
             if opts.merage:
                 item.merage(opts.databases if opts.databases else None,
