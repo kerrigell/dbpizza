@@ -1586,7 +1586,7 @@ class MySQL(object):
             trans.send(trans_path)
             trans.clear()
             target_path=os.path.join(trans_path,lfile)
-            if dest_server.exeists(target_path):
+            if dest_server.exists(target_path):
                 dest_mysql=MySQL(dest_server)
                 if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,target_path):
                     print 'Merage finished :OK'
