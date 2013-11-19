@@ -486,13 +486,9 @@ class PizzaShell(cmd.Cmd):
                                             useRecursion=True if opts.recursion else False,
                                             objClass=MySQL)
 
-        if opts.dserver:
      
         for item in operation_list:
-            if opts.merage:
-                item.merage(opts.databases if opts.databases else None,
-                            dest_server,
-                            opts.dport)
+            pass
         
 
  
