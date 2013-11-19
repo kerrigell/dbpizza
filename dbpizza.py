@@ -475,7 +475,7 @@ class PizzaShell(cmd.Cmd):
             if opts.merage:
                 item.merage(opts.databases if opts.databases else None,
                             dest_server,
-                            3306)
+                            opts.dport)
         
 
  
