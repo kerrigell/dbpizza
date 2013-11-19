@@ -443,6 +443,36 @@ class PizzaShell(cmd.Cmd):
                     item.list()
                 if opts.delete:
                     item.delete(dbid=opts.cronid,realupdate=True if opts.realupdate else False)
+    @options([make_option('-p','--piece',type='string',help='piece name'),
+                  make_option('--recursion',action='store_true',help='get childs  with recursion'),
+                  make_option('-c','--childs',action='store_true',help='get childs '), 
+                  
+                  make_option('--merage',action='store_true',help='get childs '), 
+                  make_option('--databases',type='string',help='get childs '), 
+                  make_option('--no_data',action='store_true',help='get childs '), 
+        #          make_option('--port',,type='string',help='get childs '), 
+                  make_option('-w','--who',type='string',help='get childs ')])
+    def do_mysql(self,arg,opts=None):
+        from node import MySQL
+        operation_list=self._get_operation_list(self.server.current_node,
+                                            inPiece=opts.piece if opts.piece else None,
+                                            inCurrent=True,
+                                            inChilds=True if opts.childs else False,
+                                            useRecursion=True if opts.recursion else False,
+                                            objClass=MySQL)
+        dest_server=None
+        if opts.who:
+            line=string.strip(opts.who)
+            dbid=line
+            if string.find(line,'[') !=-1:
+                (dbid,info)=string.split(line,'[')
+                (dbid,info)=string.split(info,':')   
+                dest_server=self.server.current_node.get_node(int(dbid))       
+        for item in operation_list:
+            if opts.merage:
+                item.merage(opts.databases if opts.databases else None,
+                            dest_server,
+                            3306)
         
 
  

@@ -1560,7 +1560,70 @@ class SysInit(object):
         #virt-what
   
 class MySQL(object):
-    pass
+    def __init__(self,server=None):
+        self.server=None
+        if server:
+            self.server=server
+        self.instances=[]
+    def get_instance_list(self):
+        exe_result=self.server.execute(""" ls -1Fd \/home\/mysql* 2>\/dev\/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql\/" """)
+        if exe_result.succeed:
+            for ins in exe_result.result:
+                self.instances.append(os.path.join(ins,'mysql.sock'))
+            return True
+        else:
+            return False
+    def merage(self,db_name,dest_server,dest_port):
+        backup_file=self.backup(db_name,port=3306,no_data=True)
+        if backup_file:
+            trans=Transfer(self.server,backup_file)
+            trans.add_dest_server(dest_server)
+            trans.send('/home/databackup')
+            trans.clear()
+    def backup(self,db_name=None,port=3306,char_set='utf8',no_data=False):
+        if len(self.instances)==0:
+            if not self.get_instance_list():
+                return None
+        link_str=None
+        for ins in self.instances:
+            if string.find(ins,str(port))!=-1:
+                link_str=ins
+                break
+        if link_str:
+            changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+            #地区_产品_IP段_引擎_端口_方法-库名-时间-full|inc.tar.gz
+            backup_file="%s_%s_%s_%s_%s-%s-%s_%s_%s.tar.gz" % (self.server.s.region,
+                                                            self.server.s.product,
+                                                            self.server.s.ip_oper,
+                                                            'mysql',
+                                                            str(port),
+                                                            'dump',
+                                                            string.replace(db_name,',','.') if db_name else 'ALL',
+                                                            changetime,
+                                                            'full')
+            store_path='/home/databackup/'
+            backup_path=os.path.join(store_path,backup_file)
+            dump_param=" --default-character-set=%s  --single-transaction  -R --triggers -q " % char_set
+            if no_data:dump_param += ' --no-data '
+            dump_param += ((" -B %s ") % db_name) if db_name else ' -A '
+            backup_cmd="""mkdir -p %s ;mysqldump -S %s %s | gzip > %s""" % (store_path,
+                                                            link_str,
+                                                            dump_param,
+                                                            backup_path)
+            exe_result=self.server.execute(backup_cmd)
+            if exe_result.succeed:
+                print 'Backup finished: %s' % backup_path
+                return backup_path
+            else:
+                print 'Backup failure'
+                return None
+            
+                
+    
+    """
+    mysqldump -S /home/mysql_3306/mysql.sock  --default-character-set=utf8 --single-transaction -R --triggers -q -B $DOD_CONFIG > $DOD_CONFIG_bak_`date +%Y%m%d%H%M`.sql
+    """
+        
 
 class Axis(object):
     def __init__(self,server):
