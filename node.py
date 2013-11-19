@@ -1350,7 +1350,6 @@ class Transfer(object):
         
     def add_dest_server(self,empty_old=False,*srvlist):
         if empty_old:
-
             self.dest_servers=[]
         for srv in srvlist:
             if type(srv)==Server:
