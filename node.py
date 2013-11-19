@@ -1649,10 +1649,10 @@ class MySQL(object):
         #for unc in ['.tar.gz','.gz','.zip']
         #if fext=='.gz':
             #uncompress='gzip -d %s' % backupfile
-        recover_cmd="""cat %s | gunzip | mysql -S %s --default-character-set=%s %s """ % (backupfile,
+        recover_cmd="""cat %s | gunzip | mysql -S %s --default-character-set=%s  """ % (backupfile,
                                                                             link_str,
-                                                                            char_set,
-                                                                            dbname if dbname else '')
+                                                                            char_set)
+                                                                 #           dbname if dbname else '')
         exe_result=self.server.execute(recover_cmd)
         if exe_result.succeed:
             print 'Recover database of [%s] on %s finished' % (dbname,self.server)
