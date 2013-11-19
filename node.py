@@ -1579,10 +1579,21 @@ class MySQL(object):
         print 'starting to merget from %s to %s' % (self.server,dest_server)
         backup_file=self.backup(db_name,port=3306,no_data=True)
         if backup_file:
+            (lpath,lfile)=os.path.split(backup_file)
+            trans_path='/home/databackup'
             trans=Transfer(self.server,backup_file)
             trans.add_dest_server(dest_server)
-            trans.send('/home/databackup')
+            trans.send(trans_path)
             trans.clear()
+            target_path=os.path.join(trans_path,lfile)
+            if dest_server.exeists(target_path):
+                dest_mysql=MySQL(dest_server)
+                if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,target_path):
+                    print 'Merage finished :OK'
+            else:
+                print 'No files in %s :%s' % (dest_server,target_path)
+                print 'Merage is broken'
+            
     def backup(self,db_name=None,port=3306,char_set='utf8',no_data=False):
         if len(self.instances)==0:
             if not self.get_instance_list():
@@ -1595,7 +1606,7 @@ class MySQL(object):
         if link_str:
             changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
             #地区_产品_IP段_引擎_端口_方法-库名-时间-full|inc.tar.gz
-            backup_file="%s_%s_%s_%s_%s-%s-%s_%s_%s.tar.gz" % (self.server.s.region,
+            backup_file="%s_%s_%s_%s_%s-%s-%s_%s_%s.sql.gz" % (self.server.s.region,
                                                             self.server.s.product,
                                                             self.server.s.ip_oper,
                                                             'mysql',
@@ -1621,6 +1632,36 @@ class MySQL(object):
             else:
                 print 'Backup failure'
                 return None
+            
+    def recover(self,dbname,backupfile,char_set='utf8'):
+        if len(self.instances)==0:
+            if not self.get_instance_list():
+                return False
+        link_str=None
+        for ins in self.instances:
+            if string.find(ins,str(port))!=-1:
+                link_str=ins
+                break
+        #(fpath,fname)=os.path.split(backupfile)
+
+        #uncompress={'.tar.gz':['tar zxvf %s -C %s' % (backupfile,fpath)],
+                    #'.gz':
+        #for unc in ['.tar.gz','.gz','.zip']
+        #if fext=='.gz':
+            #uncompress='gzip -d %s' % backupfile
+        recover_cmd="""cat %s | gunzip | mysql -S %s --default-character-set=%s %s """ % (backupfile,
+                                                                            link_str,
+                                                                            char_set,
+                                                                            dbname if dbname else '')
+        exe_result=self.server.execute(recover_cmd)
+        if exe_result.succeed:
+            print 'Recover database of [%s] on %s finished' % (dbname,self.server)
+            return True
+        else:
+            print 'Recover database of [%s] on %s failure' % (dbname,self.server)
+            return False
+                                                                            
+        
             
                 
     

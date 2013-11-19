@@ -447,7 +447,10 @@ class PizzaShell(cmd.Cmd):
                   make_option('--recursion',action='store_true',help='get childs  with recursion'),
                   make_option('-c','--childs',action='store_true',help='get childs '), 
                   
-                  make_option('--merage',action='store_true',help='get childs '), 
+                  make_option('--merage',action='store_true',help='get childs '),
+                  make_option('--dserver',type='string',help='get childs '),
+                  make_option('--dport',type='string',help='get childs '),
+                  
                   make_option('--databases',type='string',help='get childs '), 
                   make_option('--no_data',action='store_true',help='get childs '), 
         #          make_option('--port',,type='string',help='get childs '), 
@@ -461,8 +464,8 @@ class PizzaShell(cmd.Cmd):
                                             useRecursion=True if opts.recursion else False,
                                             objClass=MySQL)
         dest_server=None
-        if opts.who:
-            line=string.strip(opts.who)
+        if opts.dserver:
+            line=string.strip(opts.dserver)
             dbid=line
             if string.find(line,'[') !=-1:
                 (dbid,info)=string.split(line,'[')
