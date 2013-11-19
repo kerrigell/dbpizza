@@ -1316,7 +1316,7 @@ class SysInfo(object):
             print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
             
 class Transfer(object):
-    def __init__(self,server=None,path=None,*dest_server=None):
+    def __init__(self,server=None,path=None):
         self._lpath=None
         self._lfile=None
         self.server=None
@@ -1330,8 +1330,7 @@ class Transfer(object):
             self.set_source_server(server)
         if path:
             self.set_source_path(path)
-        if dest_server:
-            self.add_dest_server(dest_server)
+
         
         self.tmppath=''
         try:
@@ -1342,12 +1341,15 @@ class Transfer(object):
     def set_source_server(self,src_server):
         self.server=src_server
     def set_source_path(self,path):
+        if self.trans_list:
+            self.clear()
+            self.trans_list=None        
         (self._lpath,self._lfile) = os.path.split(path)
         self.uuid=str(muuid.uuid1())
         
     def add_dest_server(self,*srvlist,empty_old=False):
         if empty_old:
-            self.clear()
+
             self.dest_servers=[]
         for srv in srvlist:
             if type(srv)==Server:
