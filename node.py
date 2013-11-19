@@ -1567,12 +1567,13 @@ class MySQL(object):
             self.server=server
         self.instances=[]
     def get_instance_list(self):
-        exe_result=self.server.execute(""" ls -1Fd \/home\/mysql* 2>\/dev\/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql\/" """)
+        exe_result=self.server.execute(""" ls -1Fd /home/mysql* 2>/dev/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql/" """)
         if exe_result.succeed:
             for ins in string.split(exe_result.result,'\n'):
                 self.instances.append(os.path.join(ins,'mysql.sock'))
             return True
         else:
+            print 'Error:%s' % exe_result.result
             return False
     def merage(self,db_name,dest_server,dest_port):
         print 'starting to merget from %s to %s' % (self.server,dest_server)
