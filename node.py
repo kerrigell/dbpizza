@@ -1455,6 +1455,8 @@ class Transfer(object):
                     
                 
     def clear(self):
+        if not self.trans_list:
+            return
         print "Start to clear temp files"
         for key,value in self.trans_list.iteritems():
             if value[1]>1:
