@@ -1588,7 +1588,7 @@ class MySQL(object):
             target_path=os.path.join(trans_path,lfile)
             if dest_server.exists(target_path):
                 dest_mysql=MySQL(dest_server)
-                if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,target_path,port=dport):
+                if dest_mysql.recover( (db_name if string.find(db_name,',') ==-1 else None) if db_name else None,port=dport,backupfile=target_path):
                     print 'Merage finished :OK'
             else:
                 print 'No files in %s :%s' % (dest_server,target_path)
