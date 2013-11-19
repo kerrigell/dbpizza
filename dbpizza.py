@@ -350,10 +350,11 @@ class PizzaShell(cmd.Cmd):
                 (dbid,info)=string.split(line,'[')
                 (dbid,info)=string.split(info,':')   
                 server_list.append(self.server.current_node.get_node(int(dbid)))
-        trans_task.add_dest_server(*server_list)
-        print "Servers Count:%s" % len(trans_task.dest_servers)
-        trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
-        trans_task.clear()
+        if len(server_list)>0:
+            trans_task.add_dest_server(*server_list)
+            print "Servers Count:%s" % len(trans_task.dest_servers)
+            trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
+            trans_task.clear()
 
     @options([make_option('-p','--piece',type='string',help='piece name'),
               make_option('--recursion',action='store_true',help='get childs  with recursion'),
