@@ -1347,6 +1347,7 @@ class Transfer(object):
             self.trans_list=None        
         (self._lpath,self._lfile) = os.path.split(path)
         self.uuid=str(muuid.uuid1())
+        self.source_path=path
         
     def add_dest_server(self,*srvlist):
         for srv in srvlist:
