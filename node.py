@@ -1372,7 +1372,7 @@ class Transfer(object):
             print "Download failure"
             return None
     def send(self,dest_path,mode=None,owner=None):
-        if len(self.dest_servers)==0 or self.source_path or self.server:
+        if len(self.dest_servers)==0 or not self.source_path or not self.server:
             return 
         self.trans_list={}
         dest_list=self.dest_servers if len(self.dest_servers)<2 else sorted(self.dest_servers,key= lambda x:x.level,reverse=True)
