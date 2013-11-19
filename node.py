@@ -1568,12 +1568,13 @@ class MySQL(object):
     def get_instance_list(self):
         exe_result=self.server.execute(""" ls -1Fd \/home\/mysql* 2>\/dev\/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql\/" """)
         if exe_result.succeed:
-            for ins in exe_result.result:
+            for ins in string.split(exe_result.result,'\n'):
                 self.instances.append(os.path.join(ins,'mysql.sock'))
             return True
         else:
             return False
     def merage(self,db_name,dest_server,dest_port):
+        print 'starting to merget from %s to %s' % (self.server,dest_server)
         backup_file=self.backup(db_name,port=3306,no_data=True)
         if backup_file:
             trans=Transfer(self.server,backup_file)
@@ -1610,6 +1611,7 @@ class MySQL(object):
                                                             link_str,
                                                             dump_param,
                                                             backup_path)
+            print 'starting to backup database in %s' % self.server
             exe_result=self.server.execute(backup_cmd)
             if exe_result.succeed:
                 print 'Backup finished: %s' % backup_path
