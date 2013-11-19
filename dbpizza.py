@@ -457,7 +457,7 @@ class PizzaShell(cmd.Cmd):
                 ])
     def do_mysql(self,arg,opts=None):
         from node import MySQL
-        if opts.merge and opts.sport and opts.dserver and opts.dport:
+        if opts.merage and opts.sport and opts.dserver and opts.dport:
             dest_server=None
             line=string.strip(opts.dserver)
             dbid=line
