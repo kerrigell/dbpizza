@@ -351,7 +351,7 @@ class PizzaShell(cmd.Cmd):
                 (dbid,info)=string.split(info,':')   
                 server_list.append(self.server.current_node.get_node(int(dbid)))
         if len(server_list)>0:
-            trans_task.add_dest_server(empty_old=True,*server_list)
+            trans_task.add_dest_server(*server_list)
             print "Servers Count:%s" % len(trans_task.dest_servers)
             trans_task.send( opts.deploy_dir if opts.deploy_dir else '/tmp')
             trans_task.clear()
