@@ -844,7 +844,7 @@ class Nagios(object):
         if True if force else self.status['version_perl'] == 'v5.8.5':
           #  UUID = self.server.download(file, uuid=UUID)
             trans=Transfer(self.server.root,perl_file)
-            trans.add_server(self.server)
+            trans.add_dest_server(self.server)
             trans.send('/tmp')
             trans.clear()
             exe_result=self.server.execute("""
@@ -886,7 +886,7 @@ class Nagios(object):
                 script_file=os.path.join(self.base_dir,"client/libexec/",value)
                 monitor_file=os.path.join('/usr/local/nagios/libexec',value)
                 trans=Transfer(self.server.root,script_file)
-                trans.add_server(self.server)
+                trans.add_dest_server(self.server)
                 trans.send('/usr/local/nagios/libexec/')
                 trans.clear()
                 exe_result=self.server.execute("""chmod +x %s && \
@@ -964,7 +964,7 @@ class Nagios(object):
             file_name=self.config.get(config_section,config_key)
             trans_file=os.path.join(self.base_dir,middle_path,file_name)
             trans=Transfer(self.server.root,trans_file)
-            trans.add_server(self.server)
+            trans.add_dest_server(self.server)
             trans.send(trans_path)
             trans.clear()
             if exe_cmd:
@@ -1316,31 +1316,57 @@ class SysInfo(object):
             print ("Check [%s]=%s" % (value.check_name,self.check_item(value.id,do_update))).encode('gbk')
             
 class Transfer(object):
-    def __init__(self,server,path):
-        
-        (self._lpath,self._lfile) = os.path.split(path)
-        self.server=server
+    def __init__(self,server=None,path=None,*dest_server=None):
+        self._lpath=None
+        self._lfile=None
+        self.server=None
         self.source_path=None
-        self.uuid=str(muuid.uuid1())
+        self.uuid=None
         # ServerID: [ Server, status, Result]
         self.trans_list=None
-        # ServerID: [ Server, status, Result]
         self.dest_servers=[]
-        self.source_path=path
+        
+        if server:
+            self.set_source_server(server)
+        if path:
+            self.set_source_path(path)
+        if dest_server:
+            self.add_dest_server(dest_server)
         
         self.tmppath=''
         try:
             self.tmppath=os.environ["TMP"]
         except:
             pass
-        if len(self.tmppath)==0 :self.tmppath='/tmp'        
-    def add_server(self,*srvlist):
+        if len(self.tmppath)==0 :self.tmppath='/tmp' 
+    def set_source_server(self,src_server):
+        self.server=src_server
+    def set_source_path(self,path):
+        (self._lpath,self._lfile) = os.path.split(path)
+        self.uuid=str(muuid.uuid1())
+        
+    def add_dest_server(self,*srvlist,empty_old=False):
+        if empty_old:
+            self.clear()
+            self.dest_servers=[]
         for srv in srvlist:
             if type(srv)==Server:
                 if srv.s.role not in ['rds']:
                     self.dest_servers.append(srv)
-                
-    def send(self,dest_path,mode=None):
+    @classmethod
+    def get_from_lftp(cls,server,label,mid_path,dest_dir):
+        store_path='/home/dba/update'
+        exe_result=server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"""" % (label,
+                                                                                mid_path,
+                                                                                dest_dir))
+        if exe_result.succeed:
+            store_path=os.path.join(store_path,dest_dir)
+            print "Download finished:%s" % store_path
+            return store_path
+        else:
+            print "Download failure"
+            return None
+    def send(self,dest_path,mode=None,owner=None):
         if len(self.dest_servers)==0:
             return 
         self.trans_list={}
@@ -1361,9 +1387,9 @@ class Transfer(object):
                         if src_srv.exists(os.path.join(self.tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
-                            exe_result=src_srv.execute("mv %s %s && chmod -R 755 %s" % (os.path.join(self.tmppath,self.uuid)
-                                                             ,os.path.join(dest_path,self._lfile)
-                                                             ,os.path.join(dest_path,self._lfile)
+                            exe_result=src_srv.execute("""mv %s %s %s %s""" % (os.path.join(self.tmppath,self.uuid) ,os.path.join(dest_path,self._lfile)
+                                                             ,(" && chmod -R %s %s" % (mode,os.path.join(dest_path,self._lfile))) if mode else ''
+                                                             ,(" && chown -R %s %s" % (owner,os.path.join(dest_path,self._lfile))) if owner else ''
                                                              ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
                                 self.trans_list[src_srv.dbid][1]=0
@@ -1376,8 +1402,9 @@ class Transfer(object):
                         if src_srv.exists(os.path.join(self.tmppath,self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path,hide_stdout=True,hide_output_prefix=True,hide_puts=True)
-                            exe_result=src_srv.execute("cp -r  %s %s" % (os.path.join(self.tmppath,self.uuid)
-                                                             ,os.path.join(dest_path,self._lfile)
+                            exe_result=src_srv.execute("""cp -r  %s %s   %s   %s""" % (os.path.join(self.tmppath,self.uuid) ,os.path.join(dest_path,self._lfile)
+                                                             ,(" && chmod -R %s %s" % (mode,os.path.join(dest_path,self._lfile))) if mode else ''
+                                                             ,(" && chown -R %s %s" % (owner,os.path.join(dest_path,self._lfile))) if owner else ''
                                                              ),hide_stdout=True,hide_output_prefix=True,hide_puts=True)
                             if exe_result.succeed:
                               #  self.trans_list[src_srv.dbid][1]=0
@@ -1549,8 +1576,8 @@ class Axis(object):
         if exe_result.succeed:
             print 'init env finished'
             tran=Transfer(self.server.root,'/tmp/zo9Z/AxisAgent')
-            tran.add_server(self.server)
-            tran.send('/home/axis/')
+            tran.add_dest_server(self.server)
+            tran.send('/home/axis/',owner='axis:axis')
             tran.clear()
     def start(self):
         cmd="""chown -R axis:axis /home/axis/AxisAgent;
