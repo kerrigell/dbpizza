@@ -6,7 +6,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime,DATETIME,SMALLINT
+from sqlalchemy import Column,Integer,BigInteger,VARCHAR,Text,DateTime,DATETIME,SMALLINT,TIMESTAMP
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.types import SchemaType,TypeDecorator,Enum
 from sqlalchemy.orm import sessionmaker
@@ -162,7 +162,12 @@ class t_crontab(Base):
     process=Column(VARCHAR(400))
     status=Column(SMALLINT)
     user=Column(VARCHAR(30))
+    group=Column(VARCHAR(20))
     description=Column(VARCHAR(100))
+    operator=Column(VARCHAR(30))
+    create_time=Column(TIMESTAMP)
+    update_time=Column(TIMESTAMP)
+    
 
     
     

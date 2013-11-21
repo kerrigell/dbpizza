@@ -473,19 +473,7 @@ class Server(NodeNet):
         except Exception, e:
             traceback.print_exc()
 
-    def infect_download(self,path,extent=False,uuid=None):
-        '''infect a file or command to childs or whole'''
-        if self.childs is None:
-            self.breed()
-        for i in self.childs.values():
-            tuuid=i.download(path,uuid)
-            if tuuid is not None and uuid is None and tuuid != -1:
-                uuid=tuuid
-            if extent and uuid and uuid <>-1:
-                i.infect_download(path,uuid)
 
-    def upload(self,local_path,uuid=None):
-        pass
     @classmethod
     def piece(cls,line):
         if cls.__dbclass__ is None:
@@ -1825,36 +1813,74 @@ class Crontab(object):
         print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % ("id","min",'hou','day','mon','wee','process','user','status','description')
         for i in ripsec:
             print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)  
-            
-    def delete(self,dbid=None,realupdate=False):
+    def _sed_reg(self,db_row):
+            sed_reg=""
+            try:
+                sed_reg+=".*"
+                sed_reg+=string.replace(db_row.pminute,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(db_row.phour,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(db_row.pday,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(db_row.pmonth,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(db_row.pweek,'*','\*').replace('/','\/')+'.*'
+                sed_reg+=string.replace(db_row.process,'*','\*').replace('/','\/')+'.*'
+            except:
+                pass
+            return sed_reg
+        
+    def delete(self,dbid=None):
         import time
         '''cat /var/spool/cron/root'''
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
         for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
-            dbsession.delete(instance)
-            if realupdate:
-                changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
-                sed_reg=".*"
-                sed_reg+=string.replace(instance.pminute,'*','\*').replace('/','\/')+'.*'
-                sed_reg+=string.replace(instance.phour,'*','\*').replace('/','\/')+'.*'
-                sed_reg+=string.replace(instance.pday,'*','\*').replace('/','\/')+'.*'
-                sed_reg+=string.replace(instance.pmonth,'*','\*').replace('/','\/')+'.*'
-                sed_reg+=string.replace(instance.pweek,'*','\*').replace('/','\/')+'.*'
-                sed_reg+=string.replace(instance.process,'*','\*').replace('/','\/')+'.*'
-                                    
-                cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
-                    sed -i '/%s/d' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
-                                                            sed_reg,self.server.s.loginuser)
-                exe_result=self.server.execute(cmd)
-                if exe_result.succeed:
-                    print 'delete succeed of ID:%s' % instance.id
-        dbsession.commit()         
-        pass
+            changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+            sed_reg=self._sed_reg(instance)
+                                
+            cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
+                sed -i '/%s/d' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                                                        sed_reg,self.server.s.loginuser)
+            exe_result=self.server.execute(cmd)
+            if exe_result.succeed:
+                print 'delete succeed of ID:%s' % instance.id
+                dbsession.delete(instance)
+                dbsession.commit() 
+            else:
+                print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
+
     def disable(self,dbid=None):
-        pass
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+            changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+            sed_reg=self._sed_reg(instance)
+                                
+            cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
+                sed -i '/%s/s/^/#/ /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                                                        sed_reg,self.server.s.loginuser)
+            exe_result=self.server.execute(cmd)
+            if exe_result.succeed:
+                print 'delete succeed of ID:%s' % instance.id
+                instance.status=0
+                dbsession.commit() 
+            else:
+                print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
     def enable(self,dbid=None):
-        pass
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+            changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
+            sed_reg=self._sed_reg(instance)
+                                
+            cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
+                sed -i '/%s/s/^#*// /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                                                        sed_reg,self.server.s.loginuser)
+            exe_result=self.server.execute(cmd)
+            if exe_result.succeed:
+                print 'delete succeed of ID:%s' % instance.id
+                instance.status=1
+                dbsession.commit() 
+            else:
+                print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
     def create(self):
         pass
     def change_description(self,dbid):

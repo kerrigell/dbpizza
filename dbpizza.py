@@ -421,7 +421,8 @@ class PizzaShell(cmd.Cmd):
                 item.check()
     @options([make_option('-p','--piece',type='string',help='piece name'),
                   make_option('--recursion',action='store_true',help='get childs  with recursion'),
-                  make_option('-c','--childs',action='store_true',help='get childs '),   
+                  make_option('-c','--childs',action='store_true',help='get childs '),
+                  
                   make_option('--collect',action='store_true',help='get crontab '),
                   make_option('--list',action='store_true',help='get crontab '),
                   make_option('--delete',action='store_true',help='get crontab '),
