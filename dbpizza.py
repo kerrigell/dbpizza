@@ -430,7 +430,7 @@ class PizzaShell(cmd.Cmd):
                   make_option('--delete',action='store_true',help='get crontab '),
                   make_option('--disable',action='store_true',help='get crontab '),
                   make_option('--enable',action='store_true',help='get crontab '),
-                  make_option('--change-group',action='store_true',help='get crontab '),
+                  make_option('--change_group',action='store_true',help='get crontab '),
                   ])
     def do_crontab(self,arg,opts=None):
         from node import Crontab
@@ -449,12 +449,12 @@ class PizzaShell(cmd.Cmd):
                 if opts.list:
                     item.list()
                 if opts.delete:
-                    item.delete(dbid=opts.cronid)
+                    item.delete(opts.cronid)
                 if opts.disable:
-                    item.disable(dbid=opts.cronid)
+                    item.disable(opts.cronid)
                 if opts.enable:
-                    item.enable(dbid=opts.cronid)
-                if opts.change-group:
+                    item.enable(opts.cronid)
+                if opts.change_group:
                     opts.list()
                     groupname=self.select(Crontab.groups,prompt='Your choice group?')
                     item.change_group(groupname,opts.cronid)

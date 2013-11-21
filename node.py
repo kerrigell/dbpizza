@@ -1810,7 +1810,7 @@ class Crontab(object):
                     count+=1
             print '  %50s' % ('Collected the number of crontab:%s' % count)
     def list(self):
-        ripsec=self._get_dbinfo(server_id=self.server.dbid)
+        ripsec=self._get_dbinfo(self.server.dbid)
         print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % ("id","min",'hou','day','mon','wee','process','user','status','description')
         for i in ripsec:
             print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % (i.id,i.pminute,i.phour,i.pday,i.pmonth,i.pweek,i.process,i.status,i.user,i.description)  
