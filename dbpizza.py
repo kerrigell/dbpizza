@@ -457,7 +457,7 @@ class PizzaShell(cmd.Cmd):
                 if opts.change_group:
                     opts.list()
                     groupname=self.select(Crontab.groups,prompt='Your choice group?')
-                    item.change_group(groupname,opts.cronid)
+                    item.change_group(groupname,string.split(opts.cronid,','))
     @options([make_option('-p','--piece',type='string',help='piece name'),
                 make_option('--recursion',action='store_true',help='get childs  with recursion'),
                 make_option('-c','--childs',action='store_true',help='get childs '), 
