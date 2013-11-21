@@ -13,6 +13,7 @@ import subprocess
 import time
 import os.path
 
+
 import cmd2 as cmd
 from cmd2 import options,make_option
 import getopt
@@ -26,7 +27,6 @@ from node import SysInfo
 from node import Transfer
 
 
-import paramiko
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
@@ -455,9 +455,11 @@ class PizzaShell(cmd.Cmd):
                 if opts.enable:
                     item.enable(opts.cronid)
                 if opts.change_group:
-                    opts.list()
-                    groupname=self.select(Crontab.groups,prompt='Your choice group?')
-                    item.change_group(groupname,string.split(opts.cronid,','))
+                    item.list()
+                    group_name=self.select(Crontab.groups,prompt='Your choice group?')
+                    cronid_list=raw_input('Please give crondbid list spliting with comma:')
+                    if cronid_list:
+                        item.change_group(group_name,*string.split(cronid_list,','))
     @options([make_option('-p','--piece',type='string',help='piece name'),
                 make_option('--recursion',action='store_true',help='get childs  with recursion'),
                 make_option('-c','--childs',action='store_true',help='get childs '), 
@@ -489,8 +491,7 @@ class PizzaShell(cmd.Cmd):
                 #db_lists=string.split(opts.databases,',')
             #else:
                 #db_lists=[None]
-            for db in db_lists:
-                mysql.merage(opts.databases,sport=opts.sport,dest_server=dest_server,dport=opts.dport,bk_nodata=True if opts.no_data else False)
+            mysql.merage(opts.databases,sport=opts.sport,dest_server=dest_server,dport=opts.dport,bk_nodata=True if opts.no_data else False)
             return
             
             

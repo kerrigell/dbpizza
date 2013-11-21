@@ -1770,7 +1770,7 @@ class Crontab(object):
         if len(dbid)==0:
             result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).all()
         else:
-            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).filter(cls.__dbclass__.id in dbid)
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).filter(cls.__dbclass__.id.in_(dbid))
         return result    
     def __init__(self,server):
         self.server=server
@@ -1896,7 +1896,7 @@ class Crontab(object):
     def change_group(self,group_name,*dbid):
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
-        for instance in self._get_dbinfo(self.server.dbid,dbid):
+        for instance in self._get_dbinfo(self.server.dbid,*dbid):
             print 'change_group for ID:%s to %s' % (instance.id,group_name)
             instance.group=group_name
         dbsession.commit() 
