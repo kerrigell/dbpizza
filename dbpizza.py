@@ -446,6 +446,10 @@ class PizzaShell(cmd.Cmd):
                     item.list()
                 if opts.delete:
                     item.delete(dbid=opts.cronid)
+                if opts.disable:
+                    item.disable(dbid=opts.cronid)
+                if opts.enable:
+                    item.enable(dbid=opts.cronid)
     @options([make_option('-p','--piece',type='string',help='piece name'),
                 make_option('--recursion',action='store_true',help='get childs  with recursion'),
                 make_option('-c','--childs',action='store_true',help='get childs '), 
