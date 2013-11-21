@@ -426,7 +426,10 @@ class PizzaShell(cmd.Cmd):
                   make_option('--collect',action='store_true',help='get crontab '),
                   make_option('--list',action='store_true',help='get crontab '),
                   make_option('--delete',action='store_true',help='get crontab '),
-                  make_option('--cronid',type='string',help='get crontab ')])
+                  make_option('--disable',action='store_true',help='get crontab '),
+                  make_option('--enable',action='store_true',help='get crontab '),
+                  make_option('--cronid',type='string',help='get crontab '),
+                  ])
     def do_crontab(self,arg,opts=None):
         from node import Crontab
         crontab_list=self._get_operation_list(self.server.current_node,
