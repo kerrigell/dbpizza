@@ -688,7 +688,8 @@ $IPTABLES -I INPUT -s 127.0.0.1 -j ACCEPT;
 $IPTABLES -P INPUT  DROP;
 $IPTABLES -P FORWARD DROP ;
 $IPTABLES -P OUTPUT ACCEPT ;
-service iptables save
+service iptables save;
+chkconfig --level=2345 iptables on
     
     ''' % filterlist
         return ipsec_temp  
@@ -1605,7 +1606,7 @@ class MySQL(object):
                 break
         if link_str:
             changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
-            #地区_产品_IP段_引擎_端口_方法-库名-时间-full|inc.tar.gz
+            #地区_产品_IP段_引擎_端口_方法-库_名-时间-full|inc.tar.gz
             backup_file="%s_%s_%s_%s_%s-%s-%s_%s_%s.sql.gz" % (self.server.s.region,
                                                             self.server.s.product,
                                                             self.server.s.ip_oper,
@@ -1618,7 +1619,7 @@ class MySQL(object):
             store_path='/home/databackup/'
             backup_path=os.path.join(store_path,backup_file)
             dump_param=" --default-character-set=%s  --single-transaction  -R --triggers -q " % char_set
-            if no_data:dump_param += ' --no-data '
+            if no_data and db_name :dump_param += ' --no-data '
             dump_param += ((" -B %s ") % db_name) if db_name else ' -A '
             backup_cmd="""mkdir -p %s ;mysqldump -S %s %s | gzip > %s""" % (store_path,
                                                             link_str,
@@ -1668,6 +1669,9 @@ class MySQL(object):
     """
     mysqldump -S /home/mysql_3306/mysql.sock  --default-character-set=utf8 --single-transaction -R --triggers -q -B $DOD_CONFIG > $DOD_CONFIG_bak_`date +%Y%m%d%H%M`.sql
     """
+    def update(self,dbname,port,sqlfile,char_set='utf8'):
+        pass
+        
         
 
 class Axis(object):

@@ -469,13 +469,13 @@ class PizzaShell(cmd.Cmd):
                 print 'Not find the destination :%s' % line
                 return
             mysql=MySQL(self.server.current_node)
-            db_lists=None
-            if opts.databases:
-                db_lists=string.split(opts.databases,',')
-            else:
-                db_lists=[None]
+            #db_lists=None
+            #if opts.databases:
+                #db_lists=string.split(opts.databases,',')
+            #else:
+                #db_lists=[None]
             for db in db_lists:
-                mysql.merage(db,sport=opts.sport,dest_server=dest_server,dport=opts.dport,bk_nodata=True if opts.no_data else False)
+                mysql.merage(opts.databases,sport=opts.sport,dest_server=dest_server,dport=opts.dport,bk_nodata=True if opts.no_data else False)
             return
             
             
