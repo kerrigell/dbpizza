@@ -1884,8 +1884,13 @@ class Crontab(object):
                 print 'enable failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
     def create(self):
         pass
-    def change_description(self,dbid):
-        pass
+    def change_description(self,description,dbid):
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in self._get_dbinfo(self.server.dbid,dbid):
+            print 'description for ID:%s to %s' % (instance.id,description)
+            instance.description=description
+        dbsession.commit() 
     def show(self):
         exe_result=self.server.execute("""crontab -l""")
     def change_group(self,group_name,*dbid):
