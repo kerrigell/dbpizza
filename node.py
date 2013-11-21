@@ -1855,7 +1855,7 @@ class Crontab(object):
             sed_reg=self._sed_reg(instance)
                                 
             cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
-                sed -i '/%s/s/^/#/ /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                sed -i '/%s/s/^/#/' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
                                                         sed_reg,self.server.s.loginuser)
             exe_result=self.server.execute(cmd)
             if exe_result.succeed:
@@ -1872,7 +1872,7 @@ class Crontab(object):
             sed_reg=self._sed_reg(instance)
                                 
             cmd="""cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
-                sed -i '/%s/s/^#*// /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
+                sed -i '/%s/s/^#*//' /var/spool/cron/%s""" % (self.server.s.loginuser,self.server.s.loginuser,changetime,
                                                         sed_reg,self.server.s.loginuser)
             exe_result=self.server.execute(cmd)
             if exe_result.succeed:
