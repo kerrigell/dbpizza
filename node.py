@@ -1735,6 +1735,7 @@ class Parallel(threading.Thread):
     def run(self):
         pass
 class Crontab(object):
+    groups=['backup','hardware_monitor','game_count','finance_query','ntp''clean_data','other','temp']
     # db table class
     __dbclass__=None
     # db session
@@ -1761,7 +1762,7 @@ class Crontab(object):
             else:
                 return False
     @classmethod
-    def _get_dbinfo(cls,server_id,dbid=None):
+    def _get_dbinfo(cls,server_id,*dbid):
         if not cls._get_dbclass():
             return None
         result=[]
@@ -1769,7 +1770,7 @@ class Crontab(object):
         if dbid is  None:
             result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).all()
         else:
-            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).filter(cls.__dbclass__.id==dbid)
+            result=cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id==server_id).filter(cls.__dbclass__.id in dbid)
         return result    
     def __init__(self,server):
         self.server=server
@@ -1827,12 +1828,12 @@ class Crontab(object):
                 pass
             return sed_reg
         
-    def delete(self,dbid=None):
+    def delete(self,*dbid):
         import time
         '''cat /var/spool/cron/root'''
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
-        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+        for instance in self._get_dbinfo(self.server.dbid,dbid):
             changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
             sed_reg=self._sed_reg(instance)
                                 
@@ -1847,10 +1848,10 @@ class Crontab(object):
             else:
                 print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
 
-    def disable(self,dbid=None):
+    def disable(self,*dbid):
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
-        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+        for instance in self._get_dbinfo(self.server.dbid,dbid):
             changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
             sed_reg=self._sed_reg(instance)
                                 
@@ -1859,15 +1860,15 @@ class Crontab(object):
                                                         sed_reg,self.server.s.loginuser)
             exe_result=self.server.execute(cmd)
             if exe_result.succeed:
-                print 'delete succeed of ID:%s' % instance.id
+                print 'disable succeed of ID:%s' % instance.id
                 instance.status=0
                 dbsession.commit() 
             else:
-                print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
-    def enable(self,dbid=None):
+                print 'disable failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
+    def enable(self,*dbid):
         dbsession=self.__class__.__dbsession__
         dbclass=self.__class__.__dbclass__
-        for instance in self._get_dbinfo(server_id=self.server.dbid,dbid=dbid):
+        for instance in self._get_dbinfo(self.server.dbid,dbid):
             changetime=time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
             sed_reg=self._sed_reg(instance)
                                 
@@ -1876,14 +1877,25 @@ class Crontab(object):
                                                         sed_reg,self.server.s.loginuser)
             exe_result=self.server.execute(cmd)
             if exe_result.succeed:
-                print 'delete succeed of ID:%s' % instance.id
+                print 'enable succeed of ID:%s' % instance.id
                 instance.status=1
                 dbsession.commit() 
             else:
-                print 'delte failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
+                print 'enable failure of ID:%s and Error:%s' % (instance.id,exe_result.result)
     def create(self):
         pass
     def change_description(self,dbid):
         pass
+    def show(self):
+        exe_result=self.server.execute("""crontab -l""")
+    def change_group(self,group_name,*dbid):
+        dbsession=self.__class__.__dbsession__
+        dbclass=self.__class__.__dbclass__
+        for instance in self._get_dbinfo(self.server.dbid,dbid):
+            print 'change_group for ID:%s to %s' % (instance.id,group_name)
+            instance.group=group_name
+        dbsession.commit() 
+
+        
         
     

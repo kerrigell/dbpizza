@@ -423,12 +423,14 @@ class PizzaShell(cmd.Cmd):
                   make_option('--recursion',action='store_true',help='get childs  with recursion'),
                   make_option('-c','--childs',action='store_true',help='get childs '),
                   
+                  make_option('--show',action='store_true',help='get crontab '),
                   make_option('--collect',action='store_true',help='get crontab '),
                   make_option('--list',action='store_true',help='get crontab '),
+                  make_option('--cronid',type='string',help='get crontab '),
                   make_option('--delete',action='store_true',help='get crontab '),
                   make_option('--disable',action='store_true',help='get crontab '),
                   make_option('--enable',action='store_true',help='get crontab '),
-                  make_option('--cronid',type='string',help='get crontab '),
+                  make_option('--change-group',action='store_true',help='get crontab '),
                   ])
     def do_crontab(self,arg,opts=None):
         from node import Crontab
@@ -440,6 +442,8 @@ class PizzaShell(cmd.Cmd):
                                             objClass=Crontab)
         for item in crontab_list:
             if item.judge_available():
+                if opts.show:
+                    item.show()
                 if opts.collect:
                     item.collect()
                 if opts.list:
@@ -450,6 +454,10 @@ class PizzaShell(cmd.Cmd):
                     item.disable(dbid=opts.cronid)
                 if opts.enable:
                     item.enable(dbid=opts.cronid)
+                if opts.change-group:
+                    opts.list()
+                    groupname=self.select(Crontab.groups,prompt='Your choice group?')
+                    item.change_group(groupname,opts.cronid)
     @options([make_option('-p','--piece',type='string',help='piece name'),
                 make_option('--recursion',action='store_true',help='get childs  with recursion'),
                 make_option('-c','--childs',action='store_true',help='get childs '), 
