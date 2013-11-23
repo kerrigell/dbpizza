@@ -11,6 +11,7 @@ import ConfigParser
 config = ConfigParser.SafeConfigParser()
 config.read('monitor.ini')
 
+
 class Scripting():
     def __init__(self, argv):
         self.entry = None
@@ -31,7 +32,7 @@ class Scripting():
         print colors.GREEN + tags + "  " + str(server) + "  " + tags + colors.END
 
     def deploy(self):
-        if self.entry != 'check':   
+        if self.entry != 'check':
             self.check()
         if hasattr(self, self.entry):
             deploying = getattr(self, self.entry)
@@ -94,7 +95,7 @@ class Scripting():
                     echo \;
                     """ % (shell, server.s.ip_monitor, server.s.ip_monitor, server.s.ip_monitor))
 
-            server.status = dict([ x.split()[0].split(':') for x in raw_status.split(';') if x ])
+            server.status = dict([x.split()[0].split(':') for x in raw_status.split(';') if x])
 
             if self.entry == 'check':
                 self.title(server)
@@ -124,7 +125,7 @@ class Scripting():
                         make test &> /dev/null && \
                         make install &> /dev/null
                         """)
-        
+
 
     def config_iptables(self):
         for server in self.piece:
@@ -160,7 +161,7 @@ class Scripting():
                             || sed -i '/nagios/s/$/,%s/g' /etc/sudoers) \
                             || echo \"nagios ALL=NOPASSWD: %s\" \
                             >> /etc/sudoers
-                            """ % (file_name, file_name, AP, AP, OP) )
+                            """ % (file_name, file_name, AP, AP, OP))
         for server in self.piece:
             self.title(server)
             server.execute("""
@@ -279,7 +280,7 @@ class Scripting():
                         /usr/local/nagios/etc/nrpe.cfg;
                         """ % (name, nrpe_line)
             server.execute(shell)
-            
+
     def review_nrpe(self):
         for server in self.piece:
             self.title(server)
@@ -308,21 +309,22 @@ class Scripting():
         print '\t%-37s %s' % ('-e list', 'list all avaliable action entries')
         print '\t%-37s %s' % ('-k vn,tlbb -e list', 'list all servers of vn tlbb projects')
         print '\t%-37s %s' % ('-k vn,tlbb -e auto', 'automatically deploy all servers of vn tlbb project')
-        print '\t%-37s %s' % ('-k vn,tlbb -a 172.16.1.1 -e auto', 'automatically deploy a specified server of vn tlbb project')
-        print 
+        print '\t%-37s %s' % (
+        '-k vn,tlbb -a 172.16.1.1 -e auto', 'automatically deploy a specified server of vn tlbb project')
+        print
         print 'all action entries:'
-        print '\t%-17s %s' % ('list','list all servers suited for your keywords')
-        print '\t%-17s %s' % ('auto','do everything automatically.')
-        print '\t%-17s %s' % ('check','check current status')
-        print '\t%-17s %s' % ('upgrade_perl','upgrade perl from v5.8.5 to v5.8.9')
-        print '\t%-17s %s' % ('config_iptables','open ping and 5666 for nagios monitor servers')
-        print '\t%-17s %s' % ('deploy_script','deploy all monitor scripts')
-        print '\t%-17s %s' % ('test_script','test script')
-        print '\t%-17s %s' % ('install_tools','instal nrpe and nagios plug-in')
-        print '\t%-17s %s' % ('review_nrpe','review all your commands currently defined in nrpe.cfg')
-        print '\t%-17s %s' % ('update_nrpe','update your nrpe commands')
-        print 
-    
+        print '\t%-17s %s' % ('list', 'list all servers suited for your keywords')
+        print '\t%-17s %s' % ('auto', 'do everything automatically.')
+        print '\t%-17s %s' % ('check', 'check current status')
+        print '\t%-17s %s' % ('upgrade_perl', 'upgrade perl from v5.8.5 to v5.8.9')
+        print '\t%-17s %s' % ('config_iptables', 'open ping and 5666 for nagios monitor servers')
+        print '\t%-17s %s' % ('deploy_script', 'deploy all monitor scripts')
+        print '\t%-17s %s' % ('test_script', 'test script')
+        print '\t%-17s %s' % ('install_tools', 'instal nrpe and nagios plug-in')
+        print '\t%-17s %s' % ('review_nrpe', 'review all your commands currently defined in nrpe.cfg')
+        print '\t%-17s %s' % ('update_nrpe', 'update your nrpe commands')
+        print
+
     def handle_opts(self, argv):
         try:
             opts, args = getopt.getopt(argv[1:], 'hve:k:a:', ['help', 'version', 'entry=', 'keywords=', 'address='])
@@ -344,6 +346,7 @@ class Scripting():
                 print 'Unkonwn options.'
                 sys.exit(3)
 
+
 class colors:
     RED = '\033[01;31m'
     GREEN = '\033[01;32m'
@@ -357,7 +360,8 @@ class colors:
         self.YELLOW = ''
         self.PINK = ''
         self.END = ''
-    
+
+
 if __name__ == '__main__':
     deploying = Scripting(sys.argv)
     deploying.deploy()

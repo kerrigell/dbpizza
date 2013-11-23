@@ -11,14 +11,15 @@
 #import suds
 #url = 'http://webservice.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl'
 #client = suds.client.Client(url)
-#print client    #½á¹û¿´Í¼1
-#result =  client.service.getMobileCodeInfo(18611217787)  #Õâ¸öºÅÂëÊÇ°ìÖ¤µÄ£¬ÄÃÀ´²âÊÔ£¬¹þ¹þ
-#print result    #½á¹û¿´Í¼2
-#print client.last_received()  #½á¹û¿´Í¼3
+#print client    #ï¿½ï¿½ï¿½Í¼1
+#result =  client.service.getMobileCodeInfo(18611217787)  #ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Ö¤ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½
+#print result    #ï¿½ï¿½ï¿½Í¼2
+#print client.last_received()  #ï¿½ï¿½ï¿½Í¼3
 
 
 
 from suds.client import Client
+
 hello_client = Client('http://localhost:8000/?wsdl')
 print hello_client
 print hello_client.service.say_hello("Dave", 5)
