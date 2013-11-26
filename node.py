@@ -19,6 +19,8 @@ import string
 import ConfigParser
 import os.path
 import time
+import threading
+from Queue import Queue  
 
 reload(sys)
 sys.setdefaultencoding('latin1')
@@ -118,6 +120,7 @@ class NodeNet(object):
         if self.__class__.current_node is None:
             self.__class__.current_node = self
 
+
     @classmethod
     def cd(cls, dbid):
         dbid = string.strip(dbid)
@@ -151,6 +154,7 @@ class NodeNet(object):
         child.level = self.level + 1
         child.parent = self
         self.childs[child.dbid] = child
+
 
     def breed(self, recursion=False):
         '''依据自身.dbid值，繁殖子节点：返回子嗣数量'''
@@ -224,6 +228,12 @@ class Server(NodeNet):
     def __init__(self, dbid=None, foreignclass=None):
         """Constructor"""
         super(Server, self).__init__(dbid, foreignclass)
+
+        
+        
+    def run(self):
+        pass
+        
 
 
     def __getitem__(self, index):
@@ -306,11 +316,12 @@ class Server(NodeNet):
             with settings(hide(*hiding_clause)):
                 env.skip_bad_hosts = False
                 env.abort_exception = FabricAbortException()
-                #   env.connection_attempts=2
+                env.connection_attempts=2
                 env.disable_known_hosts = True
+                env.command_timeout=8
                 #   env.eagerly_disconnect=True
                 env.colorize_errors = True
-                env.keepalive = 10
+                env.keepalive = 5
                 env.abort_on_prompts = abort_on_prompts
                 env.warn_only = hide_warning
                 if password:
@@ -358,21 +369,22 @@ class Server(NodeNet):
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
             if self.level > 2:
-                raise "Don't supply operation on 4 round"
+                raise Exception("Don't supply operation on 4 round")
             env.host_string = host_string
             env.gateway = gateway_string
-            hiding_clause = (
-            'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
-            hiding_clause = [x for x in hiding_clause if x]
-            with settings(hide(*hiding_clause), warn_only=True):
-                #env.skip_bad_hosts=True
-                env.connection_attempts = 2
-                #env.disable_known_hosts=True
-                #env.eagerly_disconnect=True
-                env.abort_on_prompts = True
-                #env.warn_only=True
-                env.output_prefix = False if hide_output_prefix else False
-                open_shell(cmd)
+            #hiding_clause = (
+            #'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
+            #hiding_clause = [x for x in hiding_clause if x]
+            #with settings(hide(*hiding_clause), warn_only=True):
+            #    #env.skip_bad_hosts=True
+            #    env.connection_attempts = 2
+            #    #env.disable_known_hosts=True
+            #    #env.eagerly_disconnect=True
+            #    env.abort_on_prompts = True
+            #    #env.warn_only=True
+            #    env.output_prefix = False if hide_output_prefix else False
+            env.remote_interrupt=False
+            open_shell(cmd)
 
         except NetworkError, e:
         #pdb.set_trace()
@@ -1505,6 +1517,18 @@ class SysInit(object):
             #mount  -o noatime -o nodiratime  -t xfs -L home /home
             #yum install xfsprogs kmod-xfs
             #virt-what
+    def invalid_users(self):
+        valid_users={'oracle':'oinstall',
+                     'mysql':'mysql',
+                     'root':'root',
+                     'cyldj':'cyldj',
+                     'nagios':'nagios',
+                     'netdump':'netdump',
+                     'axis':'axis'
+                     }
+        
+        self.server.execute(""" grep \'bin/bash\' \/etc\/passwd|egrep -v "^#|%s"|awk -F':' '{print $1,$6}' """
+                            % (string.join(valid_users.keys(),'|')))
 
 
 class MySQL(object):
@@ -1695,16 +1719,6 @@ class Piece(object):
         pass
 
 
-import threading
-
-
-class Parallel(threading.Thread):
-    def __init__(self, name):
-        threading.Thread.__init__(self)
-        self.t_name = name
-
-    def run(self):
-        pass
 
 
 class Crontab(object):

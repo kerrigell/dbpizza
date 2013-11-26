@@ -52,7 +52,6 @@ class PizzaShell(cmd.Cmd):
 
     def complete_cd(self, text, line, begidx, endidx):
         import readline
-
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
         tlist = [str(i) for i in self.mode.current_node.childs.values() if string.find(str(i), line[3:]) == 0]
         return tlist
@@ -376,7 +375,8 @@ class PizzaShell(cmd.Cmd):
               make_option('--disable_selinux', action='store_true', help='piece name'),
               make_option('--amazon_change_access_key', action='store_true', help='piece name'),
               make_option('--access_key', type='string', help='piece name'),
-              make_option('--secret_key', type='string', help='piece name')
+              make_option('--secret_key', type='string', help='piece name'),
+              make_option('--invalid_users', action='store_true', help='piece name'),
     ])
     def do_sysinit(self, arg, opts=None):
         from node import SysInit
@@ -398,6 +398,8 @@ class PizzaShell(cmd.Cmd):
                 item.disable_selinux()
             if opts.amazon_change_access_key and opts.access_key and opts.secret_key:
                 item.amazon_change_access_key(opts.access_key, opts.secret_key)
+            if opts.invalid_users:
+                item.invalid_users()
 
     @options([make_option('-p', '--piece', type='string', help='piece name'),
               make_option('--recursion', action='store_true', help='get childs  with recursion'),
