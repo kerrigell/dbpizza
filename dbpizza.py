@@ -12,11 +12,13 @@ import traceback
 import subprocess
 import time
 import os.path
+import shlex
+from optparse import OptionParser
+import thread
 
 import cmd2 as cmd
 from cmd2 import options, make_option
 
-import getopt
 import pdb
 
 from node import Server
@@ -37,8 +39,9 @@ class PizzaShell(cmd.Cmd):
         #   self.feature=Feature(foreignclass=Server)
         #  self.feature.breed(True)
         self.piecis = {}
-        self.mode = Server
+        self.mode = Server	
         self.prompt = "Pizza [%s]>" % self.mode.current_node
+        
 
 
     def do_cd(self, line):
@@ -102,21 +105,33 @@ class PizzaShell(cmd.Cmd):
         #readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>;?')
         #return self.root.search_list(text)
 
-    @options([make_option('-p', '--piece', type='string', help='piece name'),
-              make_option('--recursion', action='store_true', help='get childs  with recursion'),
-              make_option('-c', '--childs', action='store_true', help='get childs ')])
-    def do_cmd(self, args, opts=None):
+
+    def do_cmd(self,line):
+        if not len(line)>0:
+            return
+        shl=shlex.shlex(line,posix=True)
+        shl.whitespace_split=True
+        optparse=OptionParser()
+        optparse.add_option('-p', '--piece', type='string', help='piece name')
+        optparse.add_option('--recursion', action='store_true', help='get childs  with recursion')
+        optparse.add_option('-c', '--childs', action='store_true', help='get childs ')
+        (opts,args)=optparse.parse_args([ i for i in shl])
+        
+        
         oper_list = self._get_operation_list(self.server.current_node,
                                              inPiece=opts.piece if opts.piece else None,
                                              inCurrent=True,
                                              inChilds=True if opts.childs else False,
                                              useRecursion=True if opts.recursion else False,
                                              objClass=None)
+        print 'Server Count:%s' % len(oper_list)
         for oper in oper_list:
-            oper.execute(args)
-            #     self.stdout.write(args.parsed.dump()+'\n')
-            #for s in self._get_operation_list(opts):
-            #s.execute(arg)
+            print "%s" % oper
+            if oper.s.role =='rds':
+                print 'ignore rds'
+                continue
+            oper.execute(string.join(args,';'),hide_server_info=True)
+
 
 
             #@options([make_option('-p','--piece',type='string',help='piece name'),
@@ -142,7 +157,6 @@ class PizzaShell(cmd.Cmd):
               make_option('-d', '--delete', action='store_true', help='delete piece'),
               make_option('-n', '--name', type='string', help='piece name')])
     def do_piece(self, arg, opts=None):
-    #   parser=argparse.
         arg = ''.join(arg)
         if opts.create and opts.name and opts.ploy:
             piece = {'ploy': opts.ploy,
@@ -247,6 +261,7 @@ class PizzaShell(cmd.Cmd):
                     operfun(oper_param)
                 else:
                     operfun()
+            
 
     @options([make_option('-a', '--add', action='store_true', help='add ipsec filter'),
               make_option('--chain', type='choice', choices=['INPUT', 'OUTPUT', 'FORWARD'], help='protocal'),

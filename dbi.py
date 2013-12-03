@@ -28,7 +28,7 @@ def _get_db_string():
 
 
 
-engine = create_engine(_get_db_string(), pool_recycle=5)
+engine = create_engine(_get_db_string(), pool_size=5,pool_recycle=5,max_overflow=10)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -74,6 +74,8 @@ class t_server(Base):
     ip_monitor = Column(VARCHAR(16))
     ip_ntp_server = Column(VARCHAR(16))
     serial = Column(VARCHAR(50))
+    is_online = Column(TINYINT(1))
+    is_delete = Column(TINYINT(1))
 
     def __repr__(self):
         return "<Server('%s','%s','%s')>" % (self.region, self.product, self.ip_oper)
@@ -198,8 +200,8 @@ class t_crontab(Base):
     operator = Column(VARCHAR(30))
     create_time = Column(TIMESTAMP)
     update_time = Column(TIMESTAMP)
-    
 
-    
-    
-        
+
+#class t_mysql(Base):
+    #__tablename__='t_mysql'
+    #id = Column(Integer, primary_key=True)

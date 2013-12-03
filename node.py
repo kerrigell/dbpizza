@@ -20,6 +20,7 @@ import ConfigParser
 import os.path
 import time
 import threading
+import thread
 from Queue import Queue  
 
 reload(sys)
@@ -285,13 +286,11 @@ class Server(NodeNet):
 
 
     def execute(self, cmd,
-                hide_running=True, hide_stdout=True, hide_stderr=False,
-                hide_output_prefix=False, hide_puts=False, showprefix=None,
-                hide_warning=True, password=None, abort_on_prompts=True):
+                hide_running=True, hide_stdout=True, hide_stderr=False, hide_puts=False, showprefix=None,
+                hide_warning=True, password=None, abort_on_prompts=True,hide_server_info=False):
         class FabricAbortException(Exception):
             def __str__(self):
                 return repr('Fabric Abort Exception:', self.message)
-
         class ExecuteOut(object):
             def __init__(self):
                 self.return_code = -99
@@ -306,32 +305,33 @@ class Server(NodeNet):
         gateway_string = "%s@%s" % (
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
-            if self.level > 2:
-                raise "Don't supply operation on 4 round"
-            env.host_string = host_string
-            env.gateway = gateway_string
+            #if self.level > 2:
+            #    raise Exception("Don't supply operation on 4 round")
+            #env.host_string = host_string
+            #env.gateway = gateway_string
             hiding_clause = (
             'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             hiding_clause = [x for x in hiding_clause if x]
-            with settings(hide(*hiding_clause)):
-                env.skip_bad_hosts = False
-                env.abort_exception = FabricAbortException()
-                env.connection_attempts=2
-                env.disable_known_hosts = True
-                env.command_timeout=8
+            with settings(hide(*hiding_clause),
+                          host_string = host_string,
+                          gateway = gateway_string,
+                          skip_bad_hosts = False,
+                          abort_exception = FabricAbortException(),
+                          connection_attempts=2,
+                          disable_known_hosts = True,
+                          timeout=15,
+                          colorize_errors = True,
+                          abort_on_prompts = abort_on_prompts,
+                          warn_only = hide_warning,
+                          password = password if password else None,
+                          output_prefix = False):
                 #   env.eagerly_disconnect=True
-                env.colorize_errors = True
-                env.keepalive = 5
-                env.abort_on_prompts = abort_on_prompts
-                env.warn_only = hide_warning
-                if password:
-                    env.password = password
-                env.output_prefix = False if hide_output_prefix else False
+                #   env.keepalive = 5
                 result = run(cmd, shell=False)
                 out.result = str(result)
                 if hasattr(result, 'return_code'):
                     out.return_code = result.return_code
-                if not hide_puts:
+                if not hide_server_info:
                     puts(yellow(
                         "%s ReturnCode:%s" % (str(self), result.return_code if hasattr(result, 'return_code') else '')),
                          show_prefix=showprefix, flush=True)
@@ -362,16 +362,19 @@ class Server(NodeNet):
             return out
             #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
 
-    def login(self, cmd=None, hide_running=True, hide_stdout=True, hide_stderr=False, hide_output_prefix=False,
-              hide_puts=False):
+
+    def login(self, cmd=None):
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
-            if self.level > 2:
-                raise Exception("Don't supply operation on 4 round")
-            env.host_string = host_string
-            env.gateway = gateway_string
+            #if self.level > 2:
+            #    raise Exception("Don't supply operation on 4 round")
+            with settings(host_string =host_string,
+                          gateway = gateway_string,
+                          eagerly_disconnect=True,
+                          remote_interrupt=False):
+
             #hiding_clause = (
             #'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
             #hiding_clause = [x for x in hiding_clause if x]
@@ -379,12 +382,11 @@ class Server(NodeNet):
             #    #env.skip_bad_hosts=True
             #    env.connection_attempts = 2
             #    #env.disable_known_hosts=True
-            #    #env.eagerly_disconnect=True
+            #    env.eagerly_disconnect=True
             #    env.abort_on_prompts = True
             #    #env.warn_only=True
             #    env.output_prefix = False if hide_output_prefix else False
-            env.remote_interrupt=False
-            open_shell(cmd)
+                open_shell(cmd)
 
         except NetworkError, e:
         #pdb.set_trace()
@@ -431,17 +433,21 @@ class Server(NodeNet):
         return serverlist
 
     def exists(self, path):
-        env.host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
-        env.gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
+        host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
+        gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         result = False
         try:
-            env.skip_bad_hosts = True
-            env.connection_attempts = 2
-            env.disable_known_hosts = True
-            env.eagerly_disconnect = True
-            env.abort_on_prompts = True
-            env.warn_only = False
-            result = fexists(path)
+            with settings(host_string =host_string,
+                          gateway = gateway,
+                          skip_bad_hosts = True,
+                          connection_attempts = 2,
+                          disable_known_hosts = True,
+                          eagerly_disconnect = True,
+                          abort_on_prompts = True,
+                          warn_only = False
+                          ):
+                result = fexists(path)
+
         except NetworkError, e:
             result = False
         except Exception, e:
@@ -462,12 +468,12 @@ class Server(NodeNet):
                 if parent.exists("/tmp/%s" % uuid):
                     puts(yellow("%s+-->%s" % (string.ljust(' ', self.level * 4, ), str(self))), show_prefix=False)
                     if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid, local_user, local_ip, uuid),
-                                      hide_stdout=False, hide_output_prefix=True, hide_puts=True).succeed:
+                                      hide_stdout=False,  hide_puts=True).succeed:
                         if not self.exists(targetpath):
-                            self.execute("mkdir -p %s" % (targetpath), hide_stdout=False, hide_output_prefix=True,
+                            self.execute("mkdir -p %s" % (targetpath), hide_stdout=False,
                                          hide_puts=True)
                         self.execute("cp -r /tmp/%s %s/%s" % (uuid, targetpath, filename), hide_stdout=False,
-                                     hide_output_prefix=True, hide_puts=True)
+                                      hide_puts=True)
                         return uuid
                     else:
                         puts(red("%s+-->%s:%s" % (string.ljust(' ', self.level * 4, ), str(self), "Transfer Failed!")),
@@ -479,11 +485,11 @@ class Server(NodeNet):
                 if parent.level == 0:
                     if parent.exists(path):
                         uuid = uuid if uuid else muuid.uuid1()
-                        parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False, hide_output_prefix=True,
+                        parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,
                                        hide_puts=True)
                         puts(yellow("%s+-->%s" % (string.ljust(' ', self.level * 4), str(self))), show_prefix=False)
                         if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid, local_user, local_ip, uuid),
-                                          hide_stdout=False, hide_output_prefix=True, hide_puts=True).succeed:
+                                          hide_stdout=False, hide_puts=True).succeed:
                         #  if not self.exists(targetpath):
                         #      self.execute("mkdir -p %s" %(targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
                         #  self.execute("cp -r  /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
@@ -555,7 +561,7 @@ class Server(NodeNet):
                                                  , tmpfile,
                                                  dest_path,
                                                  lfile)
-                        , hide_stdout=False, hide_output_prefix=True, hide_puts=True).succeed:
+                        , hide_stdout=False,  hide_puts=True).succeed:
                     print 'send finished'
                 else:
                     print 'send failure'
@@ -569,7 +575,7 @@ class Server(NodeNet):
                 )
                 print cmd
 
-                t.execute(cmd, hide_stdout=False, hide_output_prefix=True, hide_puts=True)
+                t.execute(cmd, hide_stdout=False,  hide_puts=True)
             else:
                 cmd = 'scp -r %s %s@%s:%s' % ( '%s/%s' % (ltpath if ltpath else lpath, tmpfile if ltpath else lfile)
                                                , t.s.loginuser
@@ -578,7 +584,7 @@ class Server(NodeNet):
                                                #     ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
                 )
                 print cmd
-                f.execute(cmd, hide_stdout=False, hide_output_prefix=True, hide_puts=True)
+                f.execute(cmd, hide_stdout=False, hide_puts=True)
             if not ltpath:
                 ltpath = tpath
 
@@ -1331,13 +1337,13 @@ class Transfer(object):
                     if self.trans_list[src_srv.dbid][1] == 1:
                         if src_srv.exists(os.path.join(self.tmppath, self.uuid)):
                             if not src_srv.exists(dest_path):
-                                src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True, hide_output_prefix=True,
-                                                hide_puts=True)
+                                src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True,
+                                                hide_puts=True,hide_server_info=True)
                             exe_result = src_srv.execute("""mv %s %s %s %s""" % (
                             os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
                             , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
                             , (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
-                            ), hide_stdout=True, hide_output_prefix=True, hide_puts=True)
+                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
                             if exe_result.succeed:
                                 self.trans_list[src_srv.dbid][1] = 0
                                 print 'move finished'
@@ -1348,13 +1354,13 @@ class Transfer(object):
                     elif self.trans_list[src_srv.dbid][1] > 1:
                         if src_srv.exists(os.path.join(self.tmppath, self.uuid)):
                             if not src_srv.exists(dest_path):
-                                src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True, hide_output_prefix=True,
-                                                hide_puts=True)
+                                src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True,
+                                                hide_puts=True,hide_server_info=True)
                             exe_result = src_srv.execute("""cp -r  %s %s   %s   %s""" % (
                             os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
                             , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
                             , (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
-                            ), hide_stdout=True, hide_output_prefix=True, hide_puts=True)
+                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
                             if exe_result.succeed:
                             #  self.trans_list[src_srv.dbid][1]=0
                                 print 'copy finished'
@@ -1376,7 +1382,7 @@ class Transfer(object):
                                                  , os.path.join(self.tmppath,
                                                                 self.uuid) if src_srv == self.server else os.path.join(
                                 self.tmppath)
-                            ), hide_stdout=True, hide_output_prefix=True, hide_puts=True)
+                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1] += 1
                             self.trans_list[dst_srv.dbid][2] = 'OK'
@@ -1396,7 +1402,7 @@ class Transfer(object):
                         , "%s@%s" % (dst_srv.s.loginuser, dst_srv.s.ip_oper)
                         ,
                         os.path.join(self.tmppath, self.uuid) if src_srv == self.server else os.path.join(self.tmppath)
-                        ), hide_stdout=True, hide_output_prefix=True, hide_puts=True)
+                        ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1] += 1
                             self.trans_list[dst_srv.dbid][2] = 'OK'
@@ -1415,7 +1421,7 @@ class Transfer(object):
             if value[1] > 1:
                 print "%5s%100s%5s  %40s" % (key, value[0], value[1], value[2]),
                 exe_result = value[0].execute("cd %s; rm -rf %s" % ( self.tmppath, self.uuid), hide_stdout=True,
-                                              hide_output_prefix=True, hide_puts=True)
+                                               hide_puts=True,hide_server_info=True)
                 if exe_result.succeed:
                     value[1] = 0
                     print 'ok'
@@ -1452,7 +1458,7 @@ class SysInit(object):
 
                     if way_server.exists(os.path.join(way_auth_path, "id_%s.pub" % key)):
                         exe_result = way_server.execute("cat %s" % os.path.join(way_auth_path, "id_%s.pub" % key)
-                            , hide_stdout=True, hide_output_prefix=True, hide_puts=True, abort_on_prompts=False)
+                            , hide_stdout=True,  hide_puts=True, abort_on_prompts=False)
                         if exe_result.succeed:
                             id_pub += exe_result.result + '\n'
                 id_pub = string.strip(id_pub)
@@ -1537,7 +1543,13 @@ class MySQL(object):
         if server:
             self.server = server
         self.instances = []
-
+    def get_info(self):
+        shell="""
+            echo -n "instances:"
+            INC=`perl -e 'print \"@INC\"'`;
+            find ${INC} -name 'Linux.pm' -print 2> /dev/null \
+            | grep -q 'Linux.pm' && echo True || echo False;
+        """
     def get_instance_list(self):
         exe_result = self.server.execute(
             """ ls -1Fd \/home\/mysql* 2>\/dev\/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql\/" """)
@@ -1568,6 +1580,7 @@ class MySQL(object):
             else:
                 print 'No files in %s :%s' % (dest_server, target_path)
                 print 'Merage is broken'
+
 
     def backup(self, db_name=None, port=3306, char_set='utf8', no_data=False):
         if len(self.instances) == 0:
@@ -1646,6 +1659,7 @@ class MySQL(object):
         pass
 
 
+
 class Axis(object):
     def __init__(self, server):
         self.server = server
@@ -1664,7 +1678,7 @@ class Axis(object):
         grep gs_axis_idc_server /etc/hosts &> /dev/null \
         || echo \"%s    gs_axis_idc_server\">> /etc/hosts
         ''' % (sudo_cmd, sudo_cmd, satellite_ip)
-        exe_result = self.server.execute(cmd, hide_stdout=True, hide_output_prefix=True)
+        exe_result = self.server.execute(cmd, hide_stdout=True)
         if exe_result.succeed:
             print 'init env finished'
             tran = Transfer(self.server.root, '/tmp/zo9Z/AxisAgent')
@@ -1677,7 +1691,7 @@ class Axis(object):
         chmod 750 /home/axis/AxisAgent/AxisAgent;
         su - axis -c 'cd /home/axis/AxisAgent/;./AxisAgent  &>/dev/null &' ;
         ps -ef | grep AxisAgent | grep -v grep """
-        exe_result = self.server.execute(cmd, hide_stdout=True, hide_output_prefix=True)
+        exe_result = self.server.execute(cmd, hide_stdout=True)
         if exe_result.succeed:
             print 'start finished'
         else:
@@ -1685,7 +1699,7 @@ class Axis(object):
 
     def stop(self):
         cmd = """ps -ef | grep AxisAgent | grep -v grep  | awk \'{print $2}\' | xargs kill -9 """
-        exe_result = self.server.execute(cmd, hide_stdout=True, hide_output_prefix=True)
+        exe_result = self.server.execute(cmd, hide_stdout=True)
         if exe_result.succeed:
             print 'stop finished'
 
@@ -1694,7 +1708,7 @@ class Axis(object):
         cmd = """chattr -i /etc/shadow;
         userdel -r axis;
         chattr +i /etc/shadow;"""
-        exe_result = self.server.execute(cmd, hide_stdout=True, hide_output_prefix=True)
+        exe_result = self.server.execute(cmd, hide_stdout=True)
         if exe_result.succeed:
             print 'uninstall finished'
 
