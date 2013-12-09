@@ -40,7 +40,7 @@ class PizzaShell(cmd.Cmd):
         #  self.feature.breed(True)
         self.piecis = {}
         self.mode = Server	
-        self.prompt = "Pizza [%s]>" % self.mode.current_node
+        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % self.mode.current_node,"magenta")
         
 
 
@@ -51,7 +51,7 @@ class PizzaShell(cmd.Cmd):
             (dbid, info) = string.split(line, '[')
             (dbid, info) = string.split(info, ':')
         cnode = self.mode.cd(dbid)
-        self.prompt = "Pizza [%s]>" % cnode
+        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % cnode,"magenta")
 
     def complete_cd(self, text, line, begidx, endidx):
         import readline
@@ -69,7 +69,7 @@ class PizzaShell(cmd.Cmd):
             self.mode = Feature
         elif line == 'server':
             self.mode = Server
-        self.prompt = "Pizza [%s]>" % self.mode.current_node
+        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % self.mode.current_node,"magenta")
 
     def complete_mode(self, text, line, begidx, endidx):
         modelist = ['product', 'server']
@@ -219,9 +219,18 @@ class PizzaShell(cmd.Cmd):
               make_option('-d', '--deploy', action='store_true', help='deploy everything automatically'),
               make_option('-s', '--step', action='store_true', help='deploy monitor step by step'),
               make_option('--force', action='store_true', help='install tools force'),
-              make_option('--restart', action='store_true', help='restart service'),
-              make_option('--show_nrpe', action='store_true', help='deploy monitor step by step')])
+              make_option('--restart_nrpe', action='store_true', help='restart service'),
+              make_option('--show_nrpe', action='store_true', help='deploy monitor step by step'),
+              make_option('--add_to_centreon', action='store_true', help='deploy monitor step by step'),
+              make_option('--del_from_centreon', action='store_true', help='deploy monitor step by step'),
+              make_option('--reload_centreon', action='store_true', help='deploy monitor step by step')
+              ])
     def do_nagios(self, args, opts=None):
+        Nagios.get_config()
+        Nagios.get_centreon_info()        
+        if opts.reload_centreon:
+            Nagios.reload_centreon()
+            return
         monitor_list = self._get_operation_list(self.server.current_node,
                                                 inPiece=opts.piece if opts.piece else None,
                                                 inCurrent=True,
@@ -229,8 +238,10 @@ class PizzaShell(cmd.Cmd):
                                                 useRecursion=True if opts.recursion else False,
                                                 objClass=Nagios)
 
+
         oper = None
         oper_param = None
+
         if opts.step:
             sauce = self.select([x[0] for x in Nagios.operation_step], 'Please choice what you want?')
             dopers = dict(Nagios.operation_step)
@@ -239,26 +250,42 @@ class PizzaShell(cmd.Cmd):
                 if oper == 'update_nrpe':
                     nrpt_item = raw_input('Please give the name of nrpe:')
                     if nrpt_item:
-                        oper_param = nrpt_item
+                        oper_param=[ nrpt_item]
                 if oper == 'deploy_script' or oper == 'upgrade_perl' or oper == 'install_tools':
                     force_install = raw_input('Force install tools?(yes|no)')
                     if force_install == 'yes':
-                        oper_param = True
+                        oper_param=[True]
         elif opts.check:
             oper = 'check'
         elif opts.deploy:
             oper = 'deploy'
             if opts.force:
-                oper_param = True
+                oper_param=[True] 
         elif opts.show_nrpe:
             oper = 'show_nrpe'
-        elif opts.restart:
+        elif opts.restart_nrpe:
             oper = 'restart_service'
+        elif opts.add_to_centreon:
+            oper = 'add_to_centreon'
+            tpl_dict=dict(enumerate(Nagios.centreon['host_template']))
+            print "Host Template List:"
+            for key,value in tpl_dict.iteritems():
+                print "%s %2s. %s" % (string.ljust('',4),key,value)
+            tplin=raw_input("Please get numbers of template:")
+            tpl_list=[]
+            for num in string.split(tplin,','):
+                if tpl_dict.has_key(int(num)):
+                    tpl_list.append(tpl_dict[int(num)])
+            host_group=self.select(Nagios.centreon['host_group'])
+            oper_param=[host_group] + tpl_list
+
+        elif opts.del_from_centreon:
+            oper= 'del_from_centreon'
         for item in monitor_list:
             if oper:
                 operfun = getattr(item, oper)
-                if oper_param:
-                    operfun(oper_param)
+                if oper_param and len(oper_param)>0:
+                    operfun(*oper_param)
                 else:
                     operfun()
             
@@ -500,15 +527,17 @@ class PizzaShell(cmd.Cmd):
               make_option('--sport', type='string', help='get childs '),
               make_option('--databases', type='string', help='get childs '),
               make_option('--no_data', action='store_true', help='get childs '),
-
+              
+              make_option('--backup', action='store_true', help='get childs '),
               make_option('--merage', action='store_true', help='get childs '),
+              
               make_option('--dserver', type='string', help='get childs '),
               make_option('--dport', type='string', help='get childs ')
     ])
     def do_mysql(self, arg, opts=None):
         from node import MySQL
-
-        if opts.merage and opts.sport and opts.dserver and opts.dport:
+        mysql = MySQL(self.server.current_node)
+        if opts.dserver:
             dest_server = None
             line = string.strip(opts.dserver)
             dbid = line
@@ -518,8 +547,19 @@ class PizzaShell(cmd.Cmd):
                 dest_server = self.server.current_node.get_node(int(dbid))
             if dest_server is None:
                 print 'Not find the destination :%s' % line
-                return
-            mysql = MySQL(self.server.current_node)
+                return            
+        if opts.backup and opts.databases and opts.sport:
+            backup_path=mysql.backup(opts.databases, port=opts.sport,
+                                     no_data=True if opts.no_data else False)
+            if len(backup_path)>0 :
+                print "Backup databases [%s] finished -> %s:%s " % (opts.databases,mysql.server,backup_path)
+                if opts.dserver:
+                    trans=Transfer(mysql.server,backup_path)
+                    trans.add_dest_server(dest_server)
+                    trans.send('/home/databackup/')
+                    
+        if opts.merage and opts.sport and opts.dserver and opts.dport:
+            
             #db_lists=None
             #if opts.databases:
             #db_lists=string.split(opts.databases,',')
@@ -529,20 +569,21 @@ class PizzaShell(cmd.Cmd):
                          bk_nodata=True if opts.no_data else False)
             return
 
-        operation_list = self._get_operation_list(self.server.current_node,
-                                                  inPiece=opts.piece if opts.piece else None,
-                                                  inCurrent=True,
-                                                  inChilds=True if opts.childs else False,
-                                                  useRecursion=True if opts.recursion else False,
-                                                  objClass=MySQL)
+        #operation_list = self._get_operation_list(self.server.current_node,
+                                                  #inPiece=opts.piece if opts.piece else None,
+                                                  #inCurrent=True,
+                                                  #inChilds=True if opts.childs else False,
+                                                  #useRecursion=True if opts.recursion else False,
+                                                  #objClass=MySQL)
 
-        for item in operation_list:
-            pass
+        #for item in operation_list:
+            #pass
 
     def do_go(self, line):
         line = string.strip(line)
         cnode = self.mode.cd(line)
-        self.prompt = "Pizza [%s]>" % cnode
+        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % cnode,"magenta")
+        
 
 class Logger(object):
     def __init__(self, filename="Default.log"):

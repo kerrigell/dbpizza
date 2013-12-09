@@ -747,7 +747,7 @@ class Nagios(object):
         ['open ping and 5666 for nagios monitor servers', 'config_iptables'],
         ['update your nrpe commands', 'update_nrpe'],
         ['update ntp server address in your nrpe.cfg', 'update_nrpe_ntp'],
-        ['change statliate nagios ip', 'change_statliate_ip'],
+        ['change statliate nagios ip', 'change_satellite_ip'],
         ['config xinetd service', 'config_xinetd'],
         ['restart service', 'restart_service'],
         ['review all your commands currently defined in nrpe.cfg', 'review_nrpe'],
@@ -762,7 +762,8 @@ class Nagios(object):
                make &> /dev/null && \
                make install &> /dev/null""",
                                                 #make test &> /dev/null && \
-                                                'is_install_perl-devel'],
+                                            #    'is_install_perl-devel'
+                                                None],
                       'is_installed_nagios_plugin': ['tools', 'nagios_plugin', 'client/tools/', '/tmp/',
                                                      """cd /tmp && \
                tar zxf nagios-plugins-1.4.15.tar.gz && \
@@ -801,12 +802,21 @@ class Nagios(object):
             cls.config.read(os.path.join(base_path, "config/monitor.ini"))
     @classmethod
     def get_centreon_info(cls):
-        if cls.centreon is None:
-            cls.centreon['server_id']=int(cls.config.get('centreon_server','dbid'))
-            cls.centreon['cli']=cls.config.get('centreon_server','cli')
-            cls.centreon['host_template']=[i for i,j in cls.config.items('centreon_host_template') ]
-            cls.centreon['satelliate']=dict(cls.config.items("centreon_satelite"))
-            cls.centreon['host_template']=[i for i,j in cls.config.items('centreon_server_group') ]
+        try:
+            if cls.centreon is None:
+                cls.centreon={}
+                cls.centreon['server_id']=int(cls.config.get('centreon_server','dbid'))
+                cls.centreon['cli']=cls.config.get('centreon_server','cli')
+                cls.centreon['host_template']=[i for i,j in cls.config.items('centreon_host_template') ]
+                cls.centreon['satelliate']=dict(cls.config.items("centreon_satelite"))
+                cls.centreon['host_group']=[j for i,j in cls.config.items('centreon_server_group') ]
+            return True
+        except Exception,e:
+            print "Error: %s" % ( e)
+            cls.centreon=None
+            return  False
+
+
     def __init__(self, srv):
         if srv is None: raise "Server Is Null"
         if type(srv) != Server:
@@ -897,7 +907,7 @@ class Nagios(object):
         file_name = self.config.get('tools', 'perl')
         perl_file = os.path.join(self.base_dir, "client/tools/", file_name)
         UUID = None
-        if True if force else self.status['version_perl'] == 'v5.8.5':
+        if True if force else (self.status['version_perl'] == 'v5.8.5' or self.status['version_perl']=='v5.8.8'):
         #  UUID = self.server.download(file, uuid=UUID)
             trans = Transfer(self.server.root, perl_file)
             trans.add_dest_server(self.server)
@@ -924,12 +934,13 @@ class Nagios(object):
         self.title()
         if (True if force else self.status['is_ping_opened'] == 'False'):
             self.server.execute("""
-                    /sbin/iptables -I INPUT -s %s -p icmp -j ACCEPT
+                    /sbin/iptables -I INPUT -s %s -p icmp -j ACCEPT && service iptables save
                     """ % self.ip_monitor, hide_puts=True)
         if self.status['is_5666_opened'] == 'False':
             self.server.execute("""
-                    /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT
+                    /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT && service iptables save
                     """ % self.ip_monitor, hide_puts=True)
+        
 
     def deploy_script(self, force=False):
         if len(self.status) == 0:
@@ -1109,9 +1120,8 @@ class Nagios(object):
         print 'update ntp server',
         ntp = string.strip(self.server.s.ip_ntp_server)
         if len(ntp) > 0:
-            exe_result = self.server.execute("""grep check_ntp /usr/local/nagios/etc/nrpe.cfg || \
-            sed -i 's/check_ntp_time -H.*-w/check_ntp_time -H %s -w/g' /usr/local/nagios/etc/nrpe.cfg
-            """ % ntp)
+            exe_result = self.server.execute(""" grep check_ntp /usr/local/nagios/etc/nrpe.cfg && \
+                sed -i 's/check_ntp_time -H.*-w/check_ntp_time -H %s -w/g' /usr/local/nagios/etc/nrpe.cfg """ % ntp)
             if exe_result.succeed:
                 print 'OK'
             else:
@@ -1150,21 +1160,98 @@ class Nagios(object):
         self.update_nrpe_ntp()
         print 'config xinetd service'
         self.config_xinetd()
-        print "deploy nagios monitor completly,Next to restart service"
+        print 'restart nrpe service'
+        self.restart_service()
+        print 'finished'
+     #   print "deploy nagios monitor completly,Next to restart service"
 
 
-    def centreon_add(self,satellite_name,host_group,*template_names):
-
-        if satellite_name not in self.centreon['satelliate'].keys() :
-            print 'Statellite name is not correct:%s' % satellite_name
+    def add_to_centreon(self,host_group,*template_names):
+        cli=self.centreon['cli']
+        satellite_name=None
+        if self.server.s.ip_monitor and self.centreon['satelliate'].has_key(self.server.s.ip_monitor):
+            satellite_name=self.centreon['satelliate'][self.server.s.ip_monitor]
+        else:
+            print "Error:Please check out ip_monitor information in web"
             return
-        if host_group not in self.centreon['host_template']:
+            
+        if host_group not in self.centreon['host_group']:
             print 'The host template is not correct:%s' % host_group
             return
-        centreon=self.server.get_node(self.centreon['server_id'])
+        template_str=string.join([ i for i in template_names if i in self.centreon['host_template']],'|')
+        if len(template_str)<=0:
+            print "Error: template list"
+            return
+                
+        centreon_server=self.server.get_node(self.centreon['server_id'])
+        if centreon_server is None:
+            print "getting centreon server is error"
+            return
 
         #nrpes = self.config.items('nrpe')
         #file_name=self.config.get('tools', 'nrpe')
+        hostname=string.join([self.server.s.region,
+                              self.server.s.product,
+                              "db-%s" % self.server.s.role if string.find(self.server.s.role,'db') == -1 else self.server.s.role,
+                              self.server.s.ip_oper],'-')
+        clicmd='''%s  -o HOST -a ADD -v "%s"  ''' % (cli,"%s;%s;%s;%s;%s;%s" % (hostname,
+                                                                           hostname,
+                                                                           self.server.s.ip_oper,
+                                                                           template_str,
+                                                                           satellite_name,
+                                                                           host_group)
+                                                    )
+        exe_result=centreon_server.execute(clicmd)
+        if exe_result.succeed:
+            print "create finished:%s" % hostname
+            print "do apply template"
+            clicmd=''' %s  -o HOST -a applytpl -v "%s" ''' % (cli,hostname)
+            exe_result=centreon_server.execute(clicmd)
+            if exe_result.succeed:
+                print "ok"
+            else:
+                print 'Error:' + exe_result.result  
+            
+        else:
+            print 'Error:' + exe_result.result
+    def del_from_centreon(self):
+        hostname=string.join([self.server.s.region,
+                              self.server.s.product,
+                              "db-%s" % self.server.s.role if string.find(self.server.s.role,'db') == -1 else self.server.s.role,
+                              self.server.s.ip_oper],'-') 
+        cli=self.centreon['cli']
+        centreon_server=self.server.get_node(self.centreon['server_id'])
+        if centreon_server is None:
+            print "getting centreon server is error"
+            return        
+        clicmd='''%s  -o HOST -a DEL -v "%s" ''' % (cli,hostname)   
+        exe_result=centreon_server.execute(clicmd)
+        if exe_result.succeed:
+            print "delete completly :%s" % hostname
+        else:
+            print 'Error:' + exe_result.result 
+    @classmethod
+    def reload_centreon(cls):
+        cli=cls.centreon['cli']
+        centreon_server=Server.get_node(cls.centreon['server_id'])
+        if centreon_server is None:
+            print "getting centreon server is error"
+            return  
+        clicmd=''' %s -a POLLERLIST  | grep -v Return ''' % cli
+        exe_result=centreon_server.execute(clicmd)
+        if exe_result.succeed:
+            satell_dict=dict([ string.split(string.strip(i)) for i in string.split(exe_result.result,'\n')])
+            statll_num=raw_input("Please give the number of your choice satelliate:")
+            if satell_dict.has_key(statll_num):
+                clicmd=[]
+                for act in ['POLLERGENERATE','POLLERTEST','CFGMOVE','POLLERRESTART ']:
+                    clicmd.append(''' %s  -a %s -v "%s" ''' % (cli,act,statll_num))
+                clicmd=string.join(clicmd,' && ')
+                centreon_server.execute(clicmd)
+            
+        else:
+            print 'Error:' + exe_result.result         
+                                                                     
 
 
 
@@ -1305,9 +1392,11 @@ class Transfer(object):
     @classmethod
     def get_from_lftp(cls, server, label, mid_path, dest_dir):
         store_path = '/home/dba/update'
-        exe_result = server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"\'""" % (label,
+        exe_result = server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"\' && \
+                                        chmod -R 755 "%s" """ % (label,
                                                                                      mid_path,
-                                                                                     dest_dir))
+                                                                                     dest_dir,
+                                                                                     os.path.join('/home/dba/update/',dest_dir)))
         if exe_result.succeed:
             store_path = os.path.join(store_path, dest_dir)
             print "Download finished:%s" % store_path
@@ -1462,6 +1551,9 @@ class SysInit(object):
                         if exe_result.succeed:
                             id_pub += exe_result.result + '\n'
                 id_pub = string.strip(id_pub)
+                if way_server.level == 1 and len(id_pub)<10:
+                    print "Please create ssh key in %s, And redo this" % way_server
+                    return
                 if len(id_pub) > 10:
                     setattr(way_server, "authorize_key", id_pub)
                     pub_key += id_pub
@@ -1478,7 +1570,8 @@ class SysInit(object):
             chmod 700 %s && \
             chattr -i %s && \
             mv -f %s.tmp %s && \
-            chmod 600 %s ''' % (auth_path, auth_path,
+            chmod 600 %s  && \
+            cat %s''' % (auth_path, auth_path,
                                 auth_file, auth_file,
                                 auth_file, auth_file,
                                 pub_key, auth_file,
@@ -1486,8 +1579,10 @@ class SysInit(object):
                                 auth_path,
                                 auth_file,
                                 auth_file, auth_file,
+                                auth_file,
                                 auth_file)
             #    password = getpass.getpass('Enter password: ')
+
             exe_result = self.server.execute(authcmd, hide_warning=False, password=password if password else None,
                                              abort_on_prompts=True)
             if exe_result.succeed:
@@ -1530,7 +1625,8 @@ class SysInit(object):
                      'cyldj':'cyldj',
                      'nagios':'nagios',
                      'netdump':'netdump',
-                     'axis':'axis'
+                     'axis':'axis',
+                     'in_mobile':'in_mobile'
                      }
         
         self.server.execute(""" grep \'bin/bash\' \/etc\/passwd|egrep -v "^#|%s"|awk -F':' '{print $1,$6}' """

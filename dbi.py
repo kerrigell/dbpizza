@@ -75,7 +75,7 @@ class t_server(Base):
     ip_ntp_server = Column(VARCHAR(16))
     serial = Column(VARCHAR(50))
     is_online = Column(TINYINT(1))
-    is_delete = Column(TINYINT(1))
+    is_deleted = Column(TINYINT(1))
 
     def __repr__(self):
         return "<Server('%s','%s','%s')>" % (self.region, self.product, self.ip_oper)
