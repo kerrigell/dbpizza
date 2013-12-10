@@ -12,6 +12,7 @@ from fabric.colors import *
 from fabric.tasks import execute
 from fabric.exceptions import NetworkError
 from fabric.contrib.files import exists as fexists
+from fabric.state import connections
 import traceback
 import uuid as muuid
 import pdb
@@ -282,8 +283,11 @@ class Server(NodeNet):
 
         root = self if (self.root == None) else self.root
         return _search(addr, root)
-
-
+    @classmethod
+    def disconnect_all(cls):
+        for key in connections.keys():
+            connections[key].close()
+            del connections[key]        
 
     def execute(self, cmd,
                 hide_running=True, hide_stdout=True, hide_stderr=False, hide_puts=False, showprefix=None,
@@ -370,7 +374,7 @@ class Server(NodeNet):
 
     def login(self, cmd=None):
         if self.s.role in  ['rds']:
-            out.result="This server role is %s: can't login " % self.s.role
+            print "This server role is %s: can't login " % self.s.role
             return       
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (

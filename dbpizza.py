@@ -6,22 +6,18 @@
 
 import os, sys
 import string
-import unittest
-import traceback
-#import cmd
-import subprocess
 import time
 import os.path
 import shlex
 from optparse import OptionParser
-import thread
+
+import traceback
+import pdb
 
 import ConfigParser
 
 import cmd2 as cmd
 from cmd2 import options, make_option
-
-import pdb
 
 from node import Server
 from node import Feature
@@ -138,11 +134,12 @@ class PizzaShell(cmd.Cmd):
                                              inChilds=True if opts.childs else False,
                                              useRecursion=True if opts.recursion else False,
                                              objClass=None)
-        #!!!!self.__process_list(oper_list,"execute",string.join(args,';'),hide_server_info=True)
-        print 'Server Count:%s' % len(oper_list)
-        for oper in oper_list:
-            print "%s" % oper
-            oper.execute(string.join(args,';'),hide_server_info=True)
+        self.__process_list(oper_list,"execute",string.join(args,';'),hide_server_info=True)
+        
+        #print 'Server Count:%s' % len(oper_list)
+        #for oper in oper_list:
+            #print "%s" % oper
+            #oper.execute(string.join(args,';'),hide_server_info=True)
 
 
 
@@ -200,15 +197,20 @@ class PizzaShell(cmd.Cmd):
         results={}
         proc_fun=fun
         error_count=0
-        for num,value in enumerate(inst_list):
-            proc_item=value
-            proc_res=None
-            if hasattr(proc_item,proc_fun):
-                getattr(proc_item,proc_fun)(*args,**kwargs)
-                if not proc_res:
-                    error_count += 1
-            results[num]=[value,proc_res]
-        self.__print_result(results)
+        try:
+            for num,value in enumerate(inst_list):
+                proc_item=value
+                proc_res=None
+                if hasattr(proc_item,proc_fun):
+                    getattr(proc_item,proc_fun)(*args,**kwargs)
+                    if not proc_res:
+                        error_count += 1
+                results[num]=[value,proc_res]
+            self.__print_result(results)
+        except Exception,e:
+            print e.message
+        finally:
+            Server.disconnect_all()
     def __print_result(self,results):
         error_count=0
         for key,value in results.iteritems():
