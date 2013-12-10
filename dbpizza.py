@@ -16,6 +16,8 @@ import shlex
 from optparse import OptionParser
 import thread
 
+import ConfigParser
+
 import cmd2 as cmd
 from cmd2 import options, make_option
 
@@ -32,15 +34,25 @@ from node import Transfer
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-
+        centerid=None
+        try:
+            config =ConfigParser.SafeConfigParser()
+            base_path = os.path.split(os.path.realpath(sys.argv[0]))[0]
+            config.read(os.path.join(base_path, "config/pizza.ini"))
+            centerid=config.get('pizza','centerid')
+            
+        except Exception,e:
+            pass
+            
         #using
-        self.server = Server()
+        self.server = Server(centerid if centerid else None)
         self.server.breed()
         #   self.feature=Feature(foreignclass=Server)
         #  self.feature.breed(True)
         self.piecis = {}
         self.mode = Server	
-        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % self.mode.current_node,"magenta")
+        self.__set_prompt(self.mode.current_node)
+        
         
 
 
@@ -51,7 +63,8 @@ class PizzaShell(cmd.Cmd):
             (dbid, info) = string.split(line, '[')
             (dbid, info) = string.split(info, ':')
         cnode = self.mode.cd(dbid)
-        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % cnode,"magenta")
+        self.__set_prompt(cnode)
+
 
     def complete_cd(self, text, line, begidx, endidx):
         import readline
@@ -69,7 +82,8 @@ class PizzaShell(cmd.Cmd):
             self.mode = Feature
         elif line == 'server':
             self.mode = Server
-        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % self.mode.current_node,"magenta")
+        self.__set_prompt(self.mode.current_node)
+
 
     def complete_mode(self, text, line, begidx, endidx):
         modelist = ['product', 'server']
@@ -124,12 +138,10 @@ class PizzaShell(cmd.Cmd):
                                              inChilds=True if opts.childs else False,
                                              useRecursion=True if opts.recursion else False,
                                              objClass=None)
+        #!!!!self.__process_list(oper_list,"execute",string.join(args,';'),hide_server_info=True)
         print 'Server Count:%s' % len(oper_list)
         for oper in oper_list:
             print "%s" % oper
-            if oper.s.role =='rds':
-                print 'ignore rds'
-                continue
             oper.execute(string.join(args,';'),hide_server_info=True)
 
 
@@ -178,7 +190,38 @@ class PizzaShell(cmd.Cmd):
                         print ' '.ljust(4, ' '), j
         elif opts.run:
             pass
-
+    def __set_prompt(self,node):
+        self.prompt= """%s%s%s%s>""" % (self.colorize("Pizza","blue"),
+                                 '[',
+                                 self.colorize(str(node),"magenta"),
+                                 ']')
+    def __process_list(self,inst_list,fun,*args,**kwargs):
+        print "Count: %s" % len(inst_list)
+        results={}
+        proc_fun=fun
+        error_count=0
+        for num,value in enumerate(inst_list):
+            proc_item=value
+            proc_res=None
+            if hasattr(proc_item,proc_fun):
+                getattr(proc_item,proc_fun)(*args,**kwargs)
+                if not proc_res:
+                    error_count += 1
+            results[num]=[value,proc_res]
+        self.__print_result(results)
+    def __print_result(self,results):
+        error_count=0
+        for key,value in results.iteritems():
+            color= "cyan" if value[1] else "red"
+            if not value[1]:
+                error_count += 1
+            print """%3s %40s %s""" % (self.colorize(str(key),color),
+                                       str(value[0]),
+                                       self.colorize(str(value[1]),color))
+        print "Count: %s Error: %s" % (len(results.keys()),
+                                       error_count)
+        
+            
     def _get_operation_list(self, node, inPiece=None, inCurrent=False, inChilds=False, useRecursion=False,
                             objClass=None):
         server_list = []
@@ -582,7 +625,7 @@ class PizzaShell(cmd.Cmd):
     def do_go(self, line):
         line = string.strip(line)
         cnode = self.mode.cd(line)
-        self.prompt = self.colorize("Pizza","blue")+ self.colorize("[%s]>" % cnode,"magenta")
+        self.__set_prompt(cnode)
         
 
 class Logger(object):

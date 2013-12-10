@@ -301,6 +301,11 @@ class Server(NodeNet):
         out.return_code = -99
         out.result = ''
         out.succeed = False
+        if self.s.role in  ['rds']:
+            out.result="This server role is %s: can't execute any cmd" % self.s.role
+            if not hide_puts:
+                print out.result
+            return out
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
@@ -364,6 +369,9 @@ class Server(NodeNet):
 
 
     def login(self, cmd=None):
+        if self.s.role in  ['rds']:
+            out.result="This server role is %s: can't login " % self.s.role
+            return       
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
