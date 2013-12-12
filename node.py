@@ -5,6 +5,7 @@
 # Created: 2013/6/17
 
 import sys
+import datetime
 
 from fabric.api import run, env, task, parallel, settings, hide, open_shell
 from fabric.utils import puts
@@ -42,6 +43,8 @@ class NodeNet(object):
     __foreignclass__ = None
     # foreign node
     foreignnode = None
+    # encoding 
+    encoding = 'gbk'
     #----------------------------------------------------------------------
     @classmethod
     def _get_dbclass(cls):
@@ -221,7 +224,14 @@ class Feature(NodeNet):
         return ("%s[%s:%s]%s" % (self.s.detail, self.dbid, '' if self.parent is None else self.parent.s.detail,
                                  '' if self.foreignnode is None else "-->%s" % self.foreignnode)).encode('gbk')
 
-
+class ExecuteOut(object):
+    def __init__(self):
+        self.return_code = -99
+        self.result = ''
+        self.succeed = False
+        self.elapsed=None
+    def __str__(self):
+        return """Code: %s Result: \n%s""" % (self.return_code,self.result)
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__ = {}
@@ -251,7 +261,7 @@ class Server(NodeNet):
     def __str__(self):
         return (
         "%s:%s:%s[%03d:%s]" % (self.s.region, self.s.product, self.s.ip_oper, self.dbid, self.s.description)).encode(
-            'gbk')
+            self.encoding)
 
     def __len__(self):
         return self.level
@@ -295,25 +305,21 @@ class Server(NodeNet):
         class FabricAbortException(Exception):
             def __str__(self):
                 return repr('Fabric Abort Exception:', self.message)
-        class ExecuteOut(object):
-            def __init__(self):
-                self.return_code = -99
-                self.result = ''
-                self.succeed = False
+
 
         out = ExecuteOut()
         out.return_code = -99
         out.result = ''
         out.succeed = False
-        if self.s.role in  ['rds']:
-            out.result="This server role is %s: can't execute any cmd" % self.s.role
-            if not hide_puts:
-                print out.result
-            return out
+        starttime=time.time()
+
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
         self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
+            if self.s.role in  ['rds']:
+                raise Exception("This server role is %s: can't execute any cmd" % self.s.role)
+          
             #if self.level > 2:
             #    raise Exception("Don't supply operation on 4 round")
             #env.host_string = host_string
@@ -333,7 +339,8 @@ class Server(NodeNet):
                           abort_on_prompts = abort_on_prompts,
                           warn_only = hide_warning,
                           password = password if password else None,
-                          output_prefix = False):
+                          output_prefix = False,
+                          keepalive=5):
                 #   env.eagerly_disconnect=True
                 #   env.keepalive = 5
                 result = run(cmd, shell=False)
@@ -352,24 +359,23 @@ class Server(NodeNet):
                     out.succeed = False
                     if not hide_puts:
                         puts(red(result), show_prefix=showprefix, flush=True)
-            return out
         except NetworkError, e:
-        #  traceback.print_exc()
-        # print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
-        #  return ''
             out.succeed = False
             out.result = "Error: %s \n #%s" % (host_string, e)
             if not hide_puts:
                 puts(red(out.result))
-            return out
         except Exception, e:
         #  traceback.print_exc()
             out.succeed = False
             out.result = "Error: %s \n #%s" % (host_string, e)
             if not hide_puts:
                 puts(red(out.result))
-            return out
             #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
+        finally:
+            endtime=time.time()
+            out.result=string.strip(out.result)
+            out.elapsed=endtime-starttime
+            return out
 
 
     def login(self, cmd=None):
@@ -1723,11 +1729,11 @@ class MySQL(object):
                                                                               backup_path)
             print 'starting to backup database in %s' % self.server
             exe_result = self.server.execute(backup_cmd)
-            if exe_result.succeed:
+            if exe_result.succeed and string.find(exe_result.result,'error') == -1:
                 print 'Backup finished: %s' % backup_path
                 return backup_path
             else:
-                print 'Backup failure'
+                print 'Backup failure:%s' % exe_result.result
                 return None
 
     def recover(self, dbname, port, backupfile, char_set='utf8'):

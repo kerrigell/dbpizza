@@ -7,9 +7,12 @@
 import os, sys
 import string
 import time
+import datetime
 import os.path
 import shlex
 from optparse import OptionParser
+
+
 
 import traceback
 import pdb
@@ -18,7 +21,9 @@ import ConfigParser
 
 import cmd2 as cmd
 from cmd2 import options, make_option
+import prettytable
 
+import colors
 from node import Server
 from node import Feature
 from node import Nagios
@@ -30,18 +35,20 @@ from node import Transfer
 class PizzaShell(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-        centerid=None
+        self.centerid=None
+        self.encoding=None
         try:
             config =ConfigParser.SafeConfigParser()
             base_path = os.path.split(os.path.realpath(sys.argv[0]))[0]
             config.read(os.path.join(base_path, "config/pizza.ini"))
-            centerid=config.get('pizza','centerid')
-            
+            self.centerid=config.get('pizza','centerid')
+            self.encoding=config.get('pizza','encoding')
         except Exception,e:
             pass
             
         #using
-        self.server = Server(centerid if centerid else None)
+        Server.encoding=self.encoding
+        self.server = Server(self.centerid if self.centerid else None)
         self.server.breed()
         #   self.feature=Feature(foreignclass=Server)
         #  self.feature.breed(True)
@@ -57,7 +64,7 @@ class PizzaShell(cmd.Cmd):
         dbid = line
         if string.find(line, '[') != -1:
             (dbid, info) = string.split(line, '[')
-            (dbid, info) = string.split(info, ':')
+            (dbid, info) = string.split(info, ':')[0:2]
         cnode = self.mode.cd(dbid)
         self.__set_prompt(cnode)
 
@@ -134,7 +141,7 @@ class PizzaShell(cmd.Cmd):
                                              inChilds=True if opts.childs else False,
                                              useRecursion=True if opts.recursion else False,
                                              objClass=None)
-        self.__process_list(oper_list,"execute",string.join(args,';'),hide_server_info=True)
+        self.__process_list(oper_list,"execute",string.join(args,';'),hide_server_info=True,hide_puts=True)
         
         #print 'Server Count:%s' % len(oper_list)
         #for oper in oper_list:
@@ -188,40 +195,73 @@ class PizzaShell(cmd.Cmd):
         elif opts.run:
             pass
     def __set_prompt(self,node):
-        self.prompt= """%s%s%s%s>""" % (self.colorize("Pizza","blue"),
+        self.prompt= """%s%s%s%s>""" % (colors.blue("Pizza",prompt=True),
                                  '[',
-                                 self.colorize(str(node),"magenta"),
+                                 colors.magenta(str(node),prompt=True),
                                  ']')
+             
     def __process_list(self,inst_list,fun,*args,**kwargs):
-        print "Count: %s" % len(inst_list)
-        results={}
-        proc_fun=fun
+        results=[]
+        cross_print=False
         error_count=0
+        elapsed_sum=0
+        proc_fun=fun
         try:
-            for num,value in enumerate(inst_list):
-                proc_item=value
+            for num,instance in enumerate(inst_list):
+                proc_item=instance
                 proc_res=None
                 if hasattr(proc_item,proc_fun):
-                    getattr(proc_item,proc_fun)(*args,**kwargs)
-                    if not proc_res:
-                        error_count += 1
-                results[num]=[value,proc_res]
-            self.__print_result(results)
+                    proc_res=getattr(proc_item,proc_fun)(*args,**kwargs)
+                if proc_res and (not cross_print) and string.find(proc_res.result,'\n') != -1:
+                    cross_print = True
+                if proc_res is None or proc_res.succeed == False:
+                    error_count += 1
+                if proc_res is not None:
+                    elapsed_sum += proc_res.elapsed
+                results.append([num+1,instance,proc_res])
+            self.__print_result(results,len(inst_list),error_count,elapsed_sum,cross_print)
         except Exception,e:
-            print e.message
+            print "Error:%s" % e
         finally:
             Server.disconnect_all()
-    def __print_result(self,results):
-        error_count=0
-        for key,value in results.iteritems():
-            color= "cyan" if value[1] else "red"
-            if not value[1]:
-                error_count += 1
-            print """%3s %40s %s""" % (self.colorize(str(key),color),
-                                       str(value[0]),
-                                       self.colorize(str(value[1]),color))
-        print "Count: %s Error: %s" % (len(results.keys()),
-                                       error_count)
+    def __print_result(self,results,inst_count,error_count,elapsed_sum,cross_print=False):
+        def __print_table(results,encoding="gbk"):
+            res_table=prettytable.PrettyTable(["Num","Instance","Elapsed","Result"])
+            res_table.align["Result"]="l"
+            res_table.align["Instance"]="l"
+            res_table.align["Elapsed"]="l"
+            res_table.padding_width=1
+            res_table.encoding=encoding
+            for (num,instance,result) in results:
+                if result.succeed:
+                    color="cyan"
+                else:
+                    color="red"
+                res_table.add_row([num,
+                                   instance  if result.succeed else colors.red(str(instance)),
+                                   datetime.timedelta(seconds=result.elapsed),
+                                   result.result if result.succeed else colors.red(str(result.result))
+                                   ])
+            print res_table
+        def __print_cross(results,encoding="gbk"):
+            for (num,instance,result) in results:
+                print "Num:%5s [%40s] Elapsed:%20s" % (num,
+                                         instance  if result.succeed else colors.red(str(instance)),
+                                         datetime.timedelta(seconds=result.elapsed))
+                print colors.green(str(result.result)) if result.succeed else colors.red(str(result.result))
+            
+                    
+                    
+        print "Count/Error: %s/%s     Elapsed: %s" % (colors.yellow(str(inst_count)),
+                                                      colors.red(str(error_count)),
+                                                      datetime.timedelta(seconds=elapsed_sum))  
+        if cross_print:
+            __print_cross(results,self.encoding)
+        else:
+            __print_table(results,self.encoding)
+
+        
+
         
             
     def _get_operation_list(self, node, inPiece=None, inCurrent=False, inChilds=False, useRecursion=False,
@@ -593,8 +633,8 @@ class PizzaShell(cmd.Cmd):
             if dest_server is None:
                 print 'Not find the destination :%s' % line
                 return            
-        if opts.backup and opts.databases and opts.sport:
-            backup_path=mysql.backup(opts.databases, port=opts.sport,
+        if opts.backup  and opts.sport:
+            backup_path=mysql.backup(db_name=opts.databases if opts.databases else None, port=opts.sport,
                                      no_data=True if opts.no_data else False)
             if len(backup_path)>0 :
                 print "Backup databases [%s] finished -> %s:%s " % (opts.databases,mysql.server,backup_path)
@@ -602,7 +642,7 @@ class PizzaShell(cmd.Cmd):
                     trans=Transfer(mysql.server,backup_path)
                     trans.add_dest_server(dest_server)
                     trans.send('/home/databackup/')
-                    
+                    print "Trans backup file finished -> %s:%s " % (dest_server,'/home/databackup/')                    
         if opts.merage and opts.sport and opts.dserver and opts.dport:
             
             #db_lists=None
