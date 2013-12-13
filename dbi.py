@@ -28,7 +28,7 @@ def _get_db_string():
 
 
 
-engine = create_engine(_get_db_string(), pool_size=5,pool_recycle=5,max_overflow=10)
+engine = create_engine(_get_db_string(), pool_size=10,pool_recycle=10,max_overflow=10)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()

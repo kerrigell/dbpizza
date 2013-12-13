@@ -81,6 +81,7 @@ class NodeNet(object):
             result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.pid == 0).all()
         else:
             result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.id == dbid).all()
+        cls.__dbsession__.close()
         return None if result is None or len(result) <> 1 else result[0]
 
     def dockapply(self):
@@ -474,58 +475,6 @@ class Server(NodeNet):
             return result
         return result
 
-    def download(self, path, uuid=None, targetpath='/tmp'):
-        try:
-            filename = [x for x in path.split('/') if x][-1]
-            parent = self.parent
-            local_ip = self.s.ip_oper
-            local_user = self.s.loginuser
-            if uuid == -1:
-                return -1
-            elif uuid is not None:
-                if parent.exists("/tmp/%s" % uuid):
-                    puts(yellow("%s+-->%s" % (string.ljust(' ', self.level * 4, ), str(self))), show_prefix=False)
-                    if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid, local_user, local_ip, uuid),
-                                      hide_stdout=False,  hide_puts=True).succeed:
-                        if not self.exists(targetpath):
-                            self.execute("mkdir -p %s" % (targetpath), hide_stdout=False,
-                                         hide_puts=True)
-                        self.execute("cp -r /tmp/%s %s/%s" % (uuid, targetpath, filename), hide_stdout=False,
-                                      hide_puts=True)
-                        return uuid
-                    else:
-                        puts(red("%s+-->%s:%s" % (string.ljust(' ', self.level * 4, ), str(self), "Transfer Failed!")),
-                             show_prefix=False)
-                        return -1
-                else:
-                    return self.download(path, uuid)
-            else:
-                if parent.level == 0:
-                    if parent.exists(path):
-                        uuid = uuid if uuid else muuid.uuid1()
-                        parent.execute("cp -r %s /tmp/%s" % (path, uuid), hide_stdout=False,
-                                       hide_puts=True)
-                        puts(yellow("%s+-->%s" % (string.ljust(' ', self.level * 4), str(self))), show_prefix=False)
-                        if parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid, local_user, local_ip, uuid),
-                                          hide_stdout=False, hide_puts=True).succeed:
-                        #  if not self.exists(targetpath):
-                        #      self.execute("mkdir -p %s" %(targetpath),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
-                        #  self.execute("cp -r  /tmp/%s %s/%s" %(uuid, targetpath,filename),hide_stdout=False,hide_output_prefix=True,hide_puts=True)
-                            return uuid
-                        else:
-                            puts(red(
-                                "%s+-->%s:%s" % (string.ljust(' ', self.level * 4, ), str(self), "Transfer Failed!")),
-                                 show_prefix=False)
-                            return -1
-                    else:
-                        puts(red("%s+-->%s:%s" % (string.ljust(' ', self.level * 4, ), str(self), "File not  exists")),
-                             show_prefix=False)
-                        return -1
-                else:
-                    return self.download(path, parent.download(path))
-
-        except Exception, e:
-            traceback.print_exc()
 
 
     @classmethod
@@ -552,59 +501,9 @@ class Server(NodeNet):
                               loginuser=loginuser
         ))
         dbsession.commit()
+        dbsession.close()
 
-    def sendto(self, local_file, dest_server, dest_path, uuid=None):
-        import os.path
-        (lpath, lfile) = os.path.split(local_file)
-        if not len(lfile):
-            return None
-        walkpath = self.walk(self, dest_server)
-        if not walkpath:
-            puts(red("Error: Not found the correct way from %s to %s"))
-            return None
-        tpath = '/tmp'
-        ltpath = None
 
-        if uuid is None:
-            uuid = muuid.uuid1()
-        tmpfile = uuid
-
-        puts(yellow("%s+-->%s" % (string.ljust(' ', self.level * 4, ), str(self))), show_prefix=False)
-
-        for (f, t) in map(None, walkpath, walkpath[1:]):
-            puts(yellow("%s+-->%s" % (string.ljust(' ', f.level * 4, ) + str(f), str(t))), show_prefix=False)
-            if t == None:
-                #parent.execute("scp -r /tmp/%s %s@%s:/tmp/%s" % (uuid,local_user,local_ip,uuid),hide_stdout=False,hide_output_prefix=True,hide_puts=True).succeed
-                if f.execute('mv %s/%s %s/%s' % (tpath
-                                                 , tmpfile,
-                                                 dest_path,
-                                                 lfile)
-                        , hide_stdout=False,  hide_puts=True).succeed:
-                    print 'send finished'
-                else:
-                    print 'send failure'
-                break
-            if f.level > t.level:
-                cmd = 'scp -r %s@%s:%s %s' % (f.s.loginuser
-                                              , f.s.ip_oper
-                                              , '%s/%s' % (ltpath if ltpath else lpath, tmpfile if ltpath else lfile)
-                                              , '%s/%s' % (tpath, tmpfile)
-                                              #        ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
-                )
-                print cmd
-
-                t.execute(cmd, hide_stdout=False,  hide_puts=True)
-            else:
-                cmd = 'scp -r %s %s@%s:%s' % ( '%s/%s' % (ltpath if ltpath else lpath, tmpfile if ltpath else lfile)
-                                               , t.s.loginuser
-                                               , t.s.ip_oper
-                                               , '%s/%s' % (tpath, tmpfile)
-                                               #     ,' && rm -f %s' % ('%s/%s' % (tpath,tmpfile)) if  ltpath else '')
-                )
-                print cmd
-                f.execute(cmd, hide_stdout=False, hide_puts=True)
-            if not ltpath:
-                ltpath = tpath
 
     @classmethod
     def walk(cls, source_server, dest_server):
@@ -659,6 +558,7 @@ class IPsec(object):
 
         if dbid is not None:
             result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id == dbid).all()
+        cls.__dbsession__.close()
         return result
 
     def __init__(self, srv):
@@ -686,6 +586,7 @@ class IPsec(object):
                               chain=chain)
         )
         dbsession.commit()
+        dbsession.close()
 
     def del_filter(self, dbid):
         dbsession = self.__class__.__dbsession__
@@ -693,6 +594,7 @@ class IPsec(object):
         for instance in dbsession.query(dbclass).filter_by(id=dbid):
             dbsession.delete(instance)
         dbsession.commit()
+        dbsession.close()
 
     def list(self):
         return self.__class__._get_dbinfo(self.server.dbid)
@@ -1082,14 +984,11 @@ class Nagios(object):
 
     def update_nrpe(self, nrpe_name=None):
         self.title()
-        if nrpe_name:
-            nrpes = [nrpe_name]
-        else:
-            nrpes = self.config.items('nrpe')
+        nrpes = self.config.items('nrpe')
         shell = ""
         #  if nrpe_name and nrpe_name in nrpes
-        for name, value in nrpes:
-            print 'update nrpe script in nrpe.cfg:%s' % nrpe_name
+        for (name, value) in nrpes:
+        #    print 'update nrpe script in nrpe.cfg:%s' % nrpe_name
             nrpe_line = "command[" + name + "]=" + value
             if nrpe_name:
                 if nrpe_name == name:
@@ -1107,7 +1006,7 @@ class Nagios(object):
                         echo "%s" >> \
                         /usr/local/nagios/etc/nrpe.cfg;
                         """ % (name, nrpe_line)
-
+        print 'update nrpe script in nrpe.cfg:%s' % nrpe_name if nrpe_name else "ALL"
         self.server.execute(shell)
 
     def config_xinetd(self):
@@ -1317,6 +1216,7 @@ class SysInfo(object):
                     cls.__dbclass__.sys_type == sys_type and cls.__dbclass__.id == dbid).first()
             else:
                 result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.sys_type == sys_type).all()
+        cls.__dbsession__.close()
         return result
 
     def __init__(self, srv):
@@ -1890,6 +1790,7 @@ class Crontab(object):
         else:
             result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id == server_id).filter(
                 cls.__dbclass__.id.in_(dbid))
+        cls.__dbsession__.close()
         return result
 
     def __init__(self, server):
@@ -1932,6 +1833,7 @@ class Crontab(object):
                                           description=''))
                     dbsession.commit()
                     count += 1
+            dbsession.close()
             print '  %50s' % ('Collected the number of crontab:%s' % count)
 
     def list(self):
@@ -1976,6 +1878,7 @@ class Crontab(object):
                 dbsession.commit()
             else:
                 print 'delte failure of ID:%s and Error:%s' % (instance.id, exe_result.result)
+        dbsession.close()
 
     def disable(self, *dbid):
         dbsession = self.__class__.__dbsession__
@@ -1995,6 +1898,7 @@ class Crontab(object):
                 dbsession.commit()
             else:
                 print 'disable failure of ID:%s and Error:%s' % (instance.id, exe_result.result)
+        dbsession.close()
 
     def enable(self, *dbid):
         dbsession = self.__class__.__dbsession__
@@ -2014,6 +1918,7 @@ class Crontab(object):
                 dbsession.commit()
             else:
                 print 'enable failure of ID:%s and Error:%s' % (instance.id, exe_result.result)
+        dbsession.close()
 
     def create(self, process, minute, hour, day, month, week, status, description, group):
         dbsession = self.__class__.__dbsession__
@@ -2030,6 +1935,7 @@ class Crontab(object):
             print 'description for ID:%s to %s' % (instance.id, description)
             instance.description = description
         dbsession.commit()
+        dbsession.close()
 
     def show(self):
         exe_result = self.server.execute("""crontab -l""")
@@ -2041,6 +1947,7 @@ class Crontab(object):
             print 'change_group for ID:%s to %s' % (instance.id, group_name)
             instance.group = group_name
         dbsession.commit() 
+        dbsession.close()
 
         
         
