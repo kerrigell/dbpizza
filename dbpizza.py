@@ -72,7 +72,7 @@ class PizzaShell(cmd.Cmd):
     def complete_cd(self, text, line, begidx, endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
-        tlist = [str(i) for i in self.mode.curtrent_node.childs.values() if string.find(str(i), line[3:]) == 0]
+        tlist = [str(i) for i in self.mode.current_node.childs.values() if string.find(str(i), line[3:]) == 0]
         return tlist
 
     def do_login(self, line):
