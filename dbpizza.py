@@ -30,6 +30,7 @@ from node import Nagios
 from node import IPsec
 from node import SysInfo
 from node import Transfer
+from node import Iptables
 
 
 class PizzaShell(cmd.Cmd):
@@ -72,7 +73,7 @@ class PizzaShell(cmd.Cmd):
     def complete_cd(self, text, line, begidx, endidx):
         import readline
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;\'",<>;?')
-        tlist = [str(i) for i in self.mode.curtrent_node.childs.values() if string.find(str(i), line[3:]) == 0]
+        tlist = [str(i) for i in self.mode.current_node.childs.values() if string.find(str(i), line[3:]) == 0]
         return tlist
 
     def do_login(self, line):
@@ -123,8 +124,8 @@ class PizzaShell(cmd.Cmd):
         #return self.root.search_list(text)
 
 
-    def do_cmd(self,line):
-        if not len(line)>0:
+    def do_cmd(self, line):
+        if not len(line) > 0:
             return
         shl=shlex.shlex(line,posix=True)
         shl.whitespace_split=True
@@ -264,8 +265,12 @@ class PizzaShell(cmd.Cmd):
 
         
             
-    def _get_operation_list(self, node, inPiece=None, inCurrent=False, inChilds=False, useRecursion=False,
-                            objClass=None):
+    def _get_operation_list(self, node,
+            inPiece=None,
+            inCurrent=False,
+            inChilds=False,
+            useRecursion=False,
+            objClass=None):
         server_list = []
         if inPiece and self.piecis.has_key(inPiece):
             for s in self.piecis[inPiece]['servers']:
@@ -429,6 +434,27 @@ class PizzaShell(cmd.Cmd):
         if opts.status:
             self.server.current_node.execute("iptables -nvL")
             return
+
+    @options([
+        make_option('-p', '--piece', type='string', help='piece name'),
+        make_option('--recursion', action='store_true', help='get childs  with recursion'),
+        make_option('-c', '--childs', action='store_true', help='get childs '),
+        make_option('-s', '--save', action='store_true', help='Store iptables rules from onlie server to database')
+    ])
+    def do_iptables(self, args, opts=None):
+        iptables_list = self._get_operation_list(
+            self.server.current_node,
+            inPiece=opts.piece if opts.piece else None,
+            inCurrent=True,
+            inChilds=True if opts.childs else False,
+            useRecursion=True if opts.recursion else False,
+            objClass=Iptables
+        )
+        if opts.save:
+            for iptables in iptables_list:
+                iptables.save_from_server()
+            return
+
 
     @options([make_option('-p', '--piece', type='string', help='piece name'),
               make_option('--recursion', action='store_true', help='get childs  with recursion'),

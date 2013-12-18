@@ -256,6 +256,41 @@ CREATE TABLE `t_ipsec` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `t_iptables`
+--
+
+DROP TABLE IF EXISTS `t_iptables`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `t_iptables` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `server_id` int(10) unsigned NOT NULL,
+  `trx_id` varchar(16) NOT NULL,
+  `trx_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `t_iptables_rules`
+--
+
+DROP TABLE IF EXISTS `t_iptables_rules`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `t_iptables_rules` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `trx_id` varchar(16) NOT NULL,
+  `index` tinyint(11) NOT NULL,
+  `table` varchar(16) NOT NULL,
+  `chain` varchar(50) NOT NULL,
+  `opt` varchar(150) NOT NULL,
+  `arg` varchar(150) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `t_server`
 --
 
@@ -323,4 +358,4 @@ CREATE TABLE `t_sysinfo` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-13 16:09:22
+-- Dump completed on 2013-12-18 12:34:01

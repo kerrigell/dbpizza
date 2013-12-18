@@ -16,14 +16,16 @@ from fabric.contrib.files import exists as fexists
 from fabric.state import connections
 import traceback
 import uuid as muuid
+from itertools import izip
 import pdb
+import pprint
 import string
 import ConfigParser
 import os.path
 import time
 import threading
 import thread
-from Queue import Queue  
+from Queue import Queue
 
 reload(sys)
 sys.setdefaultencoding('latin1')
@@ -215,7 +217,7 @@ class Feature(NodeNet):
 
     def print_structure(self):
         print "%s+-%s" % (string.ljust('', self.level * 4), "%s---%s->%s" % (
-        self, self.foreignnode.__class__.__name__, self.foreignnode) if self.foreignnode else self)
+            self, self.foreignnode.__class__.__name__, self.foreignnode) if self.foreignnode else self)
         for i in self.childs.values():
             i.print_structure()
 
@@ -225,14 +227,18 @@ class Feature(NodeNet):
         return ("%s[%s:%s]%s" % (self.s.detail, self.dbid, '' if self.parent is None else self.parent.s.detail,
                                  '' if self.foreignnode is None else "-->%s" % self.foreignnode)).encode('gbk')
 
+
 class ExecuteOut(object):
     def __init__(self):
         self.return_code = -99
         self.result = ''
         self.succeed = False
-        self.elapsed=None
+        self.elapsed = None
+
     def __str__(self):
-        return """Code: %s Result: \n%s""" % (self.return_code,self.result)
+        return """Code: %s Result: \n%s""" % (self.return_code, self.result)
+
+
 class Server(NodeNet):
     """Server.s --->  sqlobject ---> TABLE:servers"""
     __nodemap__ = {}
@@ -242,11 +248,9 @@ class Server(NodeNet):
         """Constructor"""
         super(Server, self).__init__(dbid, foreignclass)
 
-        
-        
+
     def run(self):
         pass
-        
 
 
     def __getitem__(self, index):
@@ -261,7 +265,8 @@ class Server(NodeNet):
 
     def __str__(self):
         return (
-        "%s:%s:%s[%03d:%s]" % (self.s.region, self.s.product, self.s.ip_oper, self.dbid, self.s.description)).encode(
+            "%s:%s:%s[%03d:%s]" % (
+                self.s.region, self.s.product, self.s.ip_oper, self.dbid, self.s.description)).encode(
             self.encoding)
 
     def __len__(self):
@@ -294,15 +299,16 @@ class Server(NodeNet):
 
         root = self if (self.root == None) else self.root
         return _search(addr, root)
+
     @classmethod
     def disconnect_all(cls):
         for key in connections.keys():
             connections[key].close()
-            del connections[key]        
+            del connections[key]
 
     def execute(self, cmd,
                 hide_running=True, hide_stdout=True, hide_stderr=False, hide_puts=False, showprefix=None,
-                hide_warning=True, password=None, abort_on_prompts=True,hide_server_info=False):
+                hide_warning=True, password=None, abort_on_prompts=True, hide_server_info=False):
         class FabricAbortException(Exception):
             def __str__(self):
                 return repr('Fabric Abort Exception:', self.message)
@@ -312,35 +318,36 @@ class Server(NodeNet):
         out.return_code = -99
         out.result = ''
         out.succeed = False
-        starttime=time.time()
+        starttime = time.time()
 
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
-        self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
+            self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
-            if self.s.role in  ['rds']:
+            if self.s.role in ['rds']:
                 raise Exception("This server role is %s: can't execute any cmd" % self.s.role)
-          
+
             #if self.level > 2:
             #    raise Exception("Don't supply operation on 4 round")
             #env.host_string = host_string
             #env.gateway = gateway_string
             hiding_clause = (
-            'running' if hide_running else None, 'stdout' if hide_stdout else None, 'stderr' if hide_stderr else None)
+                'running' if hide_running else None, 'stdout' if hide_stdout else None,
+                'stderr' if hide_stderr else None)
             hiding_clause = [x for x in hiding_clause if x]
             with settings(hide(*hiding_clause),
-                          host_string = host_string,
-                          gateway = gateway_string,
-                          skip_bad_hosts = False,
-                          abort_exception = FabricAbortException(),
+                          host_string=host_string,
+                          gateway=gateway_string,
+                          skip_bad_hosts=False,
+                          abort_exception=FabricAbortException(),
                           connection_attempts=2,
-                          disable_known_hosts = True,
+                          disable_known_hosts=True,
                           timeout=15,
-                          colorize_errors = True,
-                          abort_on_prompts = abort_on_prompts,
-                          warn_only = hide_warning,
-                          password = password if password else None,
-                          output_prefix = False,
+                          colorize_errors=True,
+                          abort_on_prompts=abort_on_prompts,
+                          warn_only=hide_warning,
+                          password=password if password else None,
+                          output_prefix=False,
                           keepalive=5):
                 #   env.eagerly_disconnect=True
                 #   env.keepalive = 5
@@ -371,26 +378,26 @@ class Server(NodeNet):
             out.result = "Error: %s \n #%s" % (host_string, e)
             if not hide_puts:
                 puts(red(out.result))
-            #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
+                #   print '%s Error: #%d %s' % (target.address, e.args[0], e.args[1])
         finally:
-            endtime=time.time()
-            out.result=string.strip(out.result)
-            out.elapsed=endtime-starttime
+            endtime = time.time()
+            out.result = string.strip(out.result)
+            out.elapsed = endtime - starttime
             return out
 
 
     def login(self, cmd=None):
-        if self.s.role in  ['rds']:
+        if self.s.role in ['rds']:
             print "This server role is %s: can't login " % self.s.role
-            return       
+            return
         host_string = '%s@%s' % (self.s.loginuser, '127.0.0.1' if self.root == self else self.s.ip_oper)
         gateway_string = "%s@%s" % (
-        self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
+            self.parent.s.loginuser, self.parent.s.ip_oper) if self.level == 2 and self.parent != None else None
         try:
             #if self.level > 2:
             #    raise Exception("Don't supply operation on 4 round")
-            with settings(host_string =host_string,
-                          gateway = gateway_string,
+            with settings(host_string=host_string,
+                          gateway=gateway_string,
                           eagerly_disconnect=True,
                           remote_interrupt=False):
 
@@ -456,15 +463,15 @@ class Server(NodeNet):
         gateway = self.parent.s.ip_oper if self.level == 2 and self.parent != None else None
         result = False
         try:
-            with settings(host_string =host_string,
-                          gateway = gateway,
-                          skip_bad_hosts = True,
-                          connection_attempts = 2,
-                          disable_known_hosts = True,
-                          eagerly_disconnect = True,
-                          abort_on_prompts = True,
-                          warn_only = False
-                          ):
+            with settings(host_string=host_string,
+                          gateway=gateway,
+                          skip_bad_hosts=True,
+                          connection_attempts=2,
+                          disable_known_hosts=True,
+                          eagerly_disconnect=True,
+                          abort_on_prompts=True,
+                          warn_only=False
+            ):
                 result = fexists(path)
 
         except NetworkError, e:
@@ -474,7 +481,6 @@ class Server(NodeNet):
         finally:
             return result
         return result
-
 
 
     @classmethod
@@ -489,7 +495,7 @@ class Server(NodeNet):
                 serverlist.append(tnode)
         return serverlist
 
-    def add_child_info(self,region,product,role, ip_oper, description,  loginuser='root'):
+    def add_child_info(self, region, product, role, ip_oper, description, loginuser='root'):
         dbsession = self.__class__.__dbsession__
         dbclass = self.__class__.__dbclass__
         dbsession.add(dbclass(pid=self.dbid,
@@ -502,7 +508,6 @@ class Server(NodeNet):
         ))
         dbsession.commit()
         dbsession.close()
-
 
 
     @classmethod
@@ -615,11 +620,11 @@ class IPsec(object):
 
             for item in parent_iplist:
                 filterlist += '''$IPTABLES -I INPUT -s %s -p tcp --dport 22 -j ACCEPT; #cc:%s\n''' % (
-                item, self.server.parent)
+                    item, self.server.parent)
 
         for i in ripsec:
             filterlist += '''$IPTABLES -I %s -s %s -p %s -m multiport --dport %s -j ACCEPT; #%s\n''' % (
-            i.chain, i.source_addr, i.protocal, i.dport, i.description)
+                i.chain, i.source_addr, i.protocal, i.dport, i.description)
 
         ipsec_temp = '''
 IPTABLES=/sbin/iptables;
@@ -655,6 +660,193 @@ chkconfig --level=2345 iptables on
             self.server.execute(self.make_script())
 
 
+class Iptables_rules(object):
+    # db table class
+    __dbclass__ = None
+    # db session
+    __dbsession__ = None
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname = cls.__name__
+        dbclassname = "t_%s" % string.lower(selfclassname)
+        dbclass = None
+        dbsession = None
+        import importlib
+
+        mo = importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo, dbclassname):
+                dbclass = getattr(mo, dbclassname)
+            if hasattr(mo, 'session'):
+                dbsession = getattr(mo, 'session')
+            if dbclass and dbsession:
+                cls.__dbsession__ = dbsession
+                cls.__dbclass__ = dbclass
+                return True
+            else:
+                return False
+
+    @classmethod
+    def _get_dbinfo(cls, dbid=None):
+        if not cls._get_dbclass():
+            return None
+        result = None
+
+        if dbid is not None:
+            result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id == dbid).all()
+        cls.__dbsession__.close()
+        return result
+
+    def _generate_rules(self, raw_rules=None, trx_id=None):
+        try:
+            status = None
+            rules = {trx_id: []}
+            Table = None
+            for line in raw_rules:
+                line = line.strip()
+                if line.startswith('# Generated'):
+                    status = "started"
+                elif line.startswith('*'):
+                    Table = line.strip('*')
+                elif line.startswith(':'):
+                    if status == "started" and Table:
+                        Index = 0
+                        Chain = line.strip(':').split()[0]
+                        Policy = line.strip(':').split()[1]
+                        rule = {Table: {Chain: {Index: {'POLICY': Policy}}}}
+                        rules[trx_id].append(rule)
+                    else:
+                        raise "Logical errors during parsing iptables rules"
+                elif line.startswith('-'):
+                    if status == "started" and Table:
+                        Index += 1
+                        line = line.split()
+                        Chain = line[1]
+                        i = iter(line)
+                        rule = {Table: {Chain: {Index: dict(zip(i, i))}}}
+                        rules[trx_id].append(rule)
+                    else:
+                        raise "Logical errors during parsing iptables rules"
+                elif line.startswith('# Completed'):
+                    status = "Ended"
+        except:
+            pass
+        return rules
+
+    def _load_rules(self, trx_id=None):
+        pass
+
+    def __init__(self, srv, raw_rules=None, trx_id=None):
+        if srv is None:
+            raise "Server Is Null"
+        if type(srv) != Server:
+            raise "param type is not Server"
+        self.server = srv
+        self.trx_id = trx_id
+        self.rules = None
+        if raw_rules and self.trx_id:
+            self.rules = self._generate_rules(raw_rules=raw_rules, trx_id=self.trx_id)
+        elif not raw_rules and self.trx_id:
+            self.rules = self._load_rules(trx_id=self.trx_id)
+        if self.__class__.__dbsession__ is None or self.__class__.__dbclass__ is None:
+            self._get_dbclass()
+
+    def save_rules_to_db(self):
+        dbsession = self.__class__.__dbsession__
+        dbclass = self.__class__.__dbclass__
+        try:
+            for rule in self.rules[self.trx_id]:
+                for table, table_rule in rule.items():
+                    for chain, chain_rule in table_rule.items():
+                        for index, rule_args in chain_rule.items():
+                            for opt, arg in rule_args.items():
+                                dbsession.add(dbclass(
+                                    trx_id=self.trx_id,
+                                    index=index,
+                                    table=table,
+                                    chain=chain,
+                                    opt=opt,
+                                    arg=arg
+                                ))
+            dbsession.commit()
+            dbsession.close()
+        except Exception as e:
+            print "Error: %s" % e
+
+
+class Iptables(object):
+    # db table class
+    __dbclass__ = None
+    # db session
+    __dbsession__ = None
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _get_dbclass(cls):
+        if cls.__dbsession__ and cls.__dbclass__:
+            return True
+        selfclassname = cls.__name__
+        dbclassname = "t_%s" % string.lower(selfclassname)
+        dbclass = None
+        dbsession = None
+        import importlib
+
+        mo = importlib.import_module('dbi')
+        if mo:
+            if hasattr(mo, dbclassname):
+                dbclass = getattr(mo, dbclassname)
+            if hasattr(mo, 'session'):
+                dbsession = getattr(mo, 'session')
+            if dbclass and dbsession:
+                cls.__dbsession__ = dbsession
+                cls.__dbclass__ = dbclass
+                return True
+            else:
+                return False
+
+    @classmethod
+    def _get_dbinfo(cls, dbid=None):
+        if not cls._get_dbclass():
+            return None
+        result = None
+
+        if dbid is not None:
+            result = cls.__dbsession__.query(cls.__dbclass__).filter(cls.__dbclass__.server_id == dbid).all()
+        cls.__dbsession__.close()
+        return result
+
+    def __init__(self, srv):
+        if srv is None:
+            raise "Server Is Null"
+        if type(srv) != Server:
+            raise "param type is not Server"
+        self.server = srv
+        self.rules = None
+        if self.__class__.__dbsession__ is None or self.__class__.__dbclass__ is None:
+            self._get_dbclass()
+            self.rules = self._get_dbinfo(dbid=srv.dbid)
+
+    def save_from_server(self):
+        all_rules = self.server.execute('iptables-save', hide_puts=True, hide_server_info=True)
+        dbsession = self.__class__.__dbsession__
+        dbclass = self.__class__.__dbclass__
+        if all_rules.succeed:
+            trx_id = str(muuid.uuid4()).rsplit('-', 3)[0]
+            trx_time = time.strftime("%Y%m%d%H%M%S")
+            rules = Iptables_rules(self.server, raw_rules=all_rules.result.splitlines(True), trx_id=trx_id)
+            rules.save_rules_to_db()
+            dbsession.add(dbclass(
+                server_id=self.server.dbid,
+                trx_id=trx_id,
+                trx_time=trx_time))
+        dbsession.commit()
+        dbsession.close()
+
+
 class Nagios(object):
     config = None
     centreon = None
@@ -682,7 +874,7 @@ class Nagios(object):
                make &> /dev/null && \
                make install &> /dev/null""",
                                                 #make test &> /dev/null && \
-                                            #    'is_install_perl-devel'
+                                                #    'is_install_perl-devel'
                                                 None],
                       'is_installed_nagios_plugin': ['tools', 'nagios_plugin', 'client/tools/', '/tmp/',
                                                      """cd /tmp && \
@@ -714,27 +906,29 @@ class Nagios(object):
                       'is_installed_utils_pm': ['tools', 'utils_pm', 'client/tools/', '/usr/local/nagios/libexec', None,
                                                 None]
     }
+
     @classmethod
     def get_config(cls):
         if cls.config is None:
-            cls.config =ConfigParser.SafeConfigParser()
+            cls.config = ConfigParser.SafeConfigParser()
             base_path = os.path.split(os.path.realpath(sys.argv[0]))[0]
             cls.config.read(os.path.join(base_path, "config/monitor.ini"))
+
     @classmethod
     def get_centreon_info(cls):
         try:
             if cls.centreon is None:
-                cls.centreon={}
-                cls.centreon['server_id']=int(cls.config.get('centreon_server','dbid'))
-                cls.centreon['cli']=cls.config.get('centreon_server','cli')
-                cls.centreon['host_template']=[i for i,j in cls.config.items('centreon_host_template') ]
-                cls.centreon['satelliate']=dict(cls.config.items("centreon_satelite"))
-                cls.centreon['host_group']=[j for i,j in cls.config.items('centreon_server_group') ]
+                cls.centreon = {}
+                cls.centreon['server_id'] = int(cls.config.get('centreon_server', 'dbid'))
+                cls.centreon['cli'] = cls.config.get('centreon_server', 'cli')
+                cls.centreon['host_template'] = [i for i, j in cls.config.items('centreon_host_template')]
+                cls.centreon['satelliate'] = dict(cls.config.items("centreon_satelite"))
+                cls.centreon['host_group'] = [j for i, j in cls.config.items('centreon_server_group')]
             return True
-        except Exception,e:
+        except Exception, e:
             print "Error: %s" % ( e)
-            cls.centreon=None
-            return  False
+            cls.centreon = None
+            return False
 
 
     def __init__(self, srv):
@@ -827,7 +1021,7 @@ class Nagios(object):
         file_name = self.config.get('tools', 'perl')
         perl_file = os.path.join(self.base_dir, "client/tools/", file_name)
         UUID = None
-        if True if force else (self.status['version_perl'] == 'v5.8.5' or self.status['version_perl']=='v5.8.8'):
+        if True if force else (self.status['version_perl'] == 'v5.8.5' or self.status['version_perl'] == 'v5.8.8'):
         #  UUID = self.server.download(file, uuid=UUID)
             trans = Transfer(self.server.root, perl_file)
             trans.add_dest_server(self.server)
@@ -860,7 +1054,7 @@ class Nagios(object):
             self.server.execute("""
                     /sbin/iptables -I INPUT -s %s -p tcp --dport 5666 -j ACCEPT && service iptables save
                     """ % self.ip_monitor, hide_puts=True)
-        
+
 
     def deploy_script(self, force=False):
         if len(self.status) == 0:
@@ -934,7 +1128,7 @@ class Nagios(object):
         if len(self.status) == 0:
             self.check(output=False)
         if True if force and self.status.has_key(check_name) else (
-        True if check_name and self.status[check_name] == 'False' else  False):
+            True if check_name and self.status[check_name] == 'False' else  False):
             value = self.install_config[check_name]
             up_condition = value[5]
             if up_condition is not None and self.status.has_key(up_condition) and self.status[up_condition] == 'False':
@@ -1080,96 +1274,98 @@ class Nagios(object):
         print 'restart nrpe service'
         self.restart_service()
         print 'finished'
-     #   print "deploy nagios monitor completly,Next to restart service"
+        #   print "deploy nagios monitor completly,Next to restart service"
 
 
-    def add_to_centreon(self,host_group,*template_names):
-        cli=self.centreon['cli']
-        satellite_name=None
+    def add_to_centreon(self, host_group, *template_names):
+        cli = self.centreon['cli']
+        satellite_name = None
         if self.server.s.ip_monitor and self.centreon['satelliate'].has_key(self.server.s.ip_monitor):
-            satellite_name=self.centreon['satelliate'][self.server.s.ip_monitor]
+            satellite_name = self.centreon['satelliate'][self.server.s.ip_monitor]
         else:
             print "Error:Please check out ip_monitor information in web"
             return
-            
+
         if host_group not in self.centreon['host_group']:
             print 'The host template is not correct:%s' % host_group
             return
-        template_str=string.join([ i for i in template_names if i in self.centreon['host_template']],'|')
-        if len(template_str)<=0:
+        template_str = string.join([i for i in template_names if i in self.centreon['host_template']], '|')
+        if len(template_str) <= 0:
             print "Error: template list"
             return
-                
-        centreon_server=self.server.get_node(self.centreon['server_id'])
+
+        centreon_server = self.server.get_node(self.centreon['server_id'])
         if centreon_server is None:
             print "getting centreon server is error"
             return
 
         #nrpes = self.config.items('nrpe')
         #file_name=self.config.get('tools', 'nrpe')
-        hostname=string.join([self.server.s.region,
-                              self.server.s.product,
-                              "db-%s" % self.server.s.role if string.find(self.server.s.role,'db') == -1 else self.server.s.role,
-                              self.server.s.ip_oper],'-')
-        clicmd='''%s  -o HOST -a ADD -v "%s"  ''' % (cli,"%s;%s;%s;%s;%s;%s" % (hostname,
-                                                                           hostname,
-                                                                           self.server.s.ip_oper,
-                                                                           template_str,
-                                                                           satellite_name,
-                                                                           host_group)
-                                                    )
-        exe_result=centreon_server.execute(clicmd)
+        hostname = string.join([self.server.s.region,
+                                self.server.s.product,
+                                "db-%s" % self.server.s.role if string.find(self.server.s.role,
+                                                                            'db') == -1 else self.server.s.role,
+                                self.server.s.ip_oper], '-')
+        clicmd = '''%s  -o HOST -a ADD -v "%s"  ''' % (cli, "%s;%s;%s;%s;%s;%s" % (hostname,
+                                                                                   hostname,
+                                                                                   self.server.s.ip_oper,
+                                                                                   template_str,
+                                                                                   satellite_name,
+                                                                                   host_group)
+        )
+        exe_result = centreon_server.execute(clicmd)
         if exe_result.succeed:
             print "create finished:%s" % hostname
             print "do apply template"
-            clicmd=''' %s  -o HOST -a applytpl -v "%s" ''' % (cli,hostname)
-            exe_result=centreon_server.execute(clicmd)
+            clicmd = ''' %s  -o HOST -a applytpl -v "%s" ''' % (cli, hostname)
+            exe_result = centreon_server.execute(clicmd)
             if exe_result.succeed:
                 print "ok"
             else:
-                print 'Error:' + exe_result.result  
-            
+                print 'Error:' + exe_result.result
+
         else:
             print 'Error:' + exe_result.result
+
     def del_from_centreon(self):
-        hostname=string.join([self.server.s.region,
-                              self.server.s.product,
-                              "db-%s" % self.server.s.role if string.find(self.server.s.role,'db') == -1 else self.server.s.role,
-                              self.server.s.ip_oper],'-') 
-        cli=self.centreon['cli']
-        centreon_server=self.server.get_node(self.centreon['server_id'])
+        hostname = string.join([self.server.s.region,
+                                self.server.s.product,
+                                "db-%s" % self.server.s.role if string.find(self.server.s.role,
+                                                                            'db') == -1 else self.server.s.role,
+                                self.server.s.ip_oper], '-')
+        cli = self.centreon['cli']
+        centreon_server = self.server.get_node(self.centreon['server_id'])
         if centreon_server is None:
             print "getting centreon server is error"
-            return        
-        clicmd='''%s  -o HOST -a DEL -v "%s" ''' % (cli,hostname)   
-        exe_result=centreon_server.execute(clicmd)
+            return
+        clicmd = '''%s  -o HOST -a DEL -v "%s" ''' % (cli, hostname)
+        exe_result = centreon_server.execute(clicmd)
         if exe_result.succeed:
             print "delete completly :%s" % hostname
         else:
-            print 'Error:' + exe_result.result 
+            print 'Error:' + exe_result.result
+
     @classmethod
     def reload_centreon(cls):
-        cli=cls.centreon['cli']
-        centreon_server=Server.get_node(cls.centreon['server_id'])
+        cli = cls.centreon['cli']
+        centreon_server = Server.get_node(cls.centreon['server_id'])
         if centreon_server is None:
             print "getting centreon server is error"
-            return  
-        clicmd=''' %s -a POLLERLIST  | grep -v Return ''' % cli
-        exe_result=centreon_server.execute(clicmd)
+            return
+        clicmd = ''' %s -a POLLERLIST  | grep -v Return ''' % cli
+        exe_result = centreon_server.execute(clicmd)
         if exe_result.succeed:
-            satell_dict=dict([ string.split(string.strip(i)) for i in string.split(exe_result.result,'\n')])
-            statll_num=raw_input("Please give the number of your choice satelliate:")
+            satell_dict = dict([string.split(string.strip(i)) for i in string.split(exe_result.result, '\n')])
+            statll_num = raw_input("Please give the number of your choice satelliate:")
             if satell_dict.has_key(statll_num):
-                clicmd=[]
-                for act in ['POLLERGENERATE','POLLERTEST','CFGMOVE','POLLERRESTART ']:
-                    clicmd.append(''' %s  -a %s -v "%s" ''' % (cli,act,statll_num))
-                clicmd=string.join(clicmd,' && ')
+                clicmd = []
+                for act in ['POLLERGENERATE', 'POLLERTEST', 'CFGMOVE', 'POLLERRESTART ']:
+                    clicmd.append(''' %s  -a %s -v "%s" ''' % (cli, act, statll_num))
+                clicmd = string.join(clicmd, ' && ')
                 centreon_server.execute(clicmd)
-            
-        else:
-            print 'Error:' + exe_result.result         
-                                                                     
 
+        else:
+            print 'Error:' + exe_result.result
 
 
 class SysInfo(object):
@@ -1312,9 +1508,9 @@ class Transfer(object):
         store_path = '/home/dba/update'
         exe_result = server.execute("""lftp -c \'open %s;cd %s;mirror \"%s\"\' && \
                                         chmod -R 755 "%s" """ % (label,
-                                                                                     mid_path,
-                                                                                     dest_dir,
-                                                                                     os.path.join('/home/dba/update/',dest_dir)))
+                                                                 mid_path,
+                                                                 dest_dir,
+                                                                 os.path.join('/home/dba/update/', dest_dir)))
         if exe_result.succeed:
             store_path = os.path.join(store_path, dest_dir)
             print "Download finished:%s" % store_path
@@ -1345,12 +1541,13 @@ class Transfer(object):
                         if src_srv.exists(os.path.join(self.tmppath, self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True,
-                                                hide_puts=True,hide_server_info=True)
+                                                hide_puts=True, hide_server_info=True)
                             exe_result = src_srv.execute("""mv %s %s %s %s""" % (
-                            os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
-                            , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
-                            , (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
-                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
+                                os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
+                                , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
+                                ,
+                                (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
+                            ), hide_stdout=True, hide_puts=True, hide_server_info=True)
                             if exe_result.succeed:
                                 self.trans_list[src_srv.dbid][1] = 0
                                 print 'move finished'
@@ -1362,12 +1559,13 @@ class Transfer(object):
                         if src_srv.exists(os.path.join(self.tmppath, self.uuid)):
                             if not src_srv.exists(dest_path):
                                 src_srv.execute("mkdir -p %s" % dest_path, hide_stdout=True,
-                                                hide_puts=True,hide_server_info=True)
+                                                hide_puts=True, hide_server_info=True)
                             exe_result = src_srv.execute("""cp -r  %s %s   %s   %s""" % (
-                            os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
-                            , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
-                            , (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
-                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
+                                os.path.join(self.tmppath, self.uuid), os.path.join(dest_path, self._lfile)
+                                , (" && chmod -R %s %s" % (mode, os.path.join(dest_path, self._lfile))) if mode else ''
+                                ,
+                                (" && chown -R %s %s" % (owner, os.path.join(dest_path, self._lfile))) if owner else ''
+                            ), hide_stdout=True, hide_puts=True, hide_server_info=True)
                             if exe_result.succeed:
                             #  self.trans_list[src_srv.dbid][1]=0
                                 print 'copy finished'
@@ -1389,7 +1587,7 @@ class Transfer(object):
                                                  , os.path.join(self.tmppath,
                                                                 self.uuid) if src_srv == self.server else os.path.join(
                                 self.tmppath)
-                            ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
+                            ), hide_stdout=True, hide_puts=True, hide_server_info=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1] += 1
                             self.trans_list[dst_srv.dbid][2] = 'OK'
@@ -1405,11 +1603,12 @@ class Transfer(object):
                     else:
                         print "%s+-->%s" % (string.ljust(' ', src_srv.level * 4, ) + str(src_srv), str(dst_srv)),
                         exe_result = src_srv.execute("scp -r %s %s:%s" % (
-                        self.source_path if src_srv == self.server else os.path.join(self.tmppath, self.uuid)
-                        , "%s@%s" % (dst_srv.s.loginuser, dst_srv.s.ip_oper)
-                        ,
-                        os.path.join(self.tmppath, self.uuid) if src_srv == self.server else os.path.join(self.tmppath)
-                        ), hide_stdout=True,  hide_puts=True,hide_server_info=True)
+                            self.source_path if src_srv == self.server else os.path.join(self.tmppath, self.uuid)
+                            , "%s@%s" % (dst_srv.s.loginuser, dst_srv.s.ip_oper)
+                            ,
+                            os.path.join(self.tmppath, self.uuid) if src_srv == self.server else os.path.join(
+                                self.tmppath)
+                        ), hide_stdout=True, hide_puts=True, hide_server_info=True)
                         if exe_result.succeed:
                             self.trans_list[dst_srv.dbid][1] += 1
                             self.trans_list[dst_srv.dbid][2] = 'OK'
@@ -1428,7 +1627,7 @@ class Transfer(object):
             if value[1] > 1:
                 print "%5s%100s%5s  %40s" % (key, value[0], value[1], value[2]),
                 exe_result = value[0].execute("cd %s; rm -rf %s" % ( self.tmppath, self.uuid), hide_stdout=True,
-                                               hide_puts=True,hide_server_info=True)
+                                              hide_puts=True, hide_server_info=True)
                 if exe_result.succeed:
                     value[1] = 0
                     print 'ok'
@@ -1451,7 +1650,7 @@ class SysInit(object):
 
     def make_authorized(self, password=None):
         auth_path = '''/%s/.ssh''' % (
-        'root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser)
+            'root' if self.server.s.loginuser == 'root' else 'home/%s' % self.server.s.loginuser)
         pub_key = ''
         for way_server in self.server:
             if hasattr(way_server, "authorize_key"):
@@ -1460,16 +1659,16 @@ class SysInit(object):
             else:
                 id_pub = ""
                 way_auth_path = '''/%s/.ssh''' % (
-                'root' if way_server.s.loginuser == 'root' else 'home/%s' % way_server.s.loginuser)
+                    'root' if way_server.s.loginuser == 'root' else 'home/%s' % way_server.s.loginuser)
                 for key in ['dsa', 'rsa']:
 
                     if way_server.exists(os.path.join(way_auth_path, "id_%s.pub" % key)):
                         exe_result = way_server.execute("cat %s" % os.path.join(way_auth_path, "id_%s.pub" % key)
-                            , hide_stdout=True,  hide_puts=True, abort_on_prompts=False)
+                            , hide_stdout=True, hide_puts=True, abort_on_prompts=False)
                         if exe_result.succeed:
                             id_pub += exe_result.result + '\n'
                 id_pub = string.strip(id_pub)
-                if way_server.level == 1 and len(id_pub)<10:
+                if way_server.level == 1 and len(id_pub) < 10:
                     print "Please create ssh key in %s, And redo this" % way_server
                     return
                 if len(id_pub) > 10:
@@ -1490,15 +1689,15 @@ class SysInit(object):
             mv -f %s.tmp %s && \
             chmod 600 %s  && \
             cat %s''' % (auth_path, auth_path,
-                                auth_file, auth_file,
-                                auth_file, auth_file,
-                                pub_key, auth_file,
-                                auth_file, auth_file, auth_file,
-                                auth_path,
-                                auth_file,
-                                auth_file, auth_file,
-                                auth_file,
-                                auth_file)
+                         auth_file, auth_file,
+                         auth_file, auth_file,
+                         pub_key, auth_file,
+                         auth_file, auth_file, auth_file,
+                         auth_path,
+                         auth_file,
+                         auth_file, auth_file,
+                         auth_file,
+                         auth_file)
             #    password = getpass.getpass('Enter password: ')
 
             exe_result = self.server.execute(authcmd, hide_warning=False, password=password if password else None,
@@ -1536,19 +1735,20 @@ class SysInit(object):
             #mount  -o noatime -o nodiratime  -t xfs -L home /home
             #yum install xfsprogs kmod-xfs
             #virt-what
+
     def invalid_users(self):
-        valid_users={'oracle':'oinstall',
-                     'mysql':'mysql',
-                     'root':'root',
-                     'cyldj':'cyldj',
-                     'nagios':'nagios',
-                     'netdump':'netdump',
-                     'axis':'axis',
-                     'in_mobile':'in_mobile'
-                     }
-        
+        valid_users = {'oracle': 'oinstall',
+                       'mysql': 'mysql',
+                       'root': 'root',
+                       'cyldj': 'cyldj',
+                       'nagios': 'nagios',
+                       'netdump': 'netdump',
+                       'axis': 'axis',
+                       'in_mobile': 'in_mobile'
+        }
+
         self.server.execute(""" grep \'bin/bash\' \/etc\/passwd|egrep -v "^#|%s"|awk -F':' '{print $1,$6}' """
-                            % (string.join(valid_users.keys(),'|')))
+                            % (string.join(valid_users.keys(), '|')))
 
 
 class MySQL(object):
@@ -1557,13 +1757,15 @@ class MySQL(object):
         if server:
             self.server = server
         self.instances = []
+
     def get_info(self):
-        shell="""
+        shell = """
             echo -n "instances:"
             INC=`perl -e 'print \"@INC\"'`;
             find ${INC} -name 'Linux.pm' -print 2> /dev/null \
             | grep -q 'Linux.pm' && echo True || echo False;
         """
+
     def get_instance_list(self):
         exe_result = self.server.execute(
             """ ls -1Fd \/home\/mysql* 2>\/dev\/null | egrep '/$' | egrep "mysql_[0-9]{4}/|mysql\/" """)
@@ -1629,7 +1831,7 @@ class MySQL(object):
                                                                               backup_path)
             print 'starting to backup database in %s' % self.server
             exe_result = self.server.execute(backup_cmd)
-            if exe_result.succeed and string.find(exe_result.result,'error') == -1:
+            if exe_result.succeed and string.find(exe_result.result, 'error') == -1:
                 print 'Backup finished: %s' % backup_path
                 return backup_path
             else:
@@ -1671,7 +1873,6 @@ class MySQL(object):
 
     def update(self, dbname, port, sqlfile, char_set='utf8'):
         pass
-
 
 
 class Axis(object):
@@ -1745,8 +1946,6 @@ class Axis(object):
 class Piece(object):
     def __init__(self):
         pass
-
-
 
 
 class Crontab(object):
@@ -1839,10 +2038,10 @@ class Crontab(object):
     def list(self):
         ripsec = self._get_dbinfo(self.server.dbid)
         print "%5s%5s%10s%5s%5s%5s %100s%10s %5s  %s" % (
-        "id", "min", 'hou', 'day', 'mon', 'wee', 'process', 'user', 'status', 'description')
+            "id", "min", 'hou', 'day', 'mon', 'wee', 'process', 'user', 'status', 'description')
         for i in ripsec:
             print "%5s%5s%10s%5s%5s%5s %100s%10s%5s  %s" % (
-            i.id, i.pminute, i.phour, i.pday, i.pmonth, i.pweek, i.process, i.user, i.status, i.description)
+                i.id, i.pminute, i.phour, i.pday, i.pmonth, i.pweek, i.process, i.user, i.status, i.description)
 
     def _sed_reg(self, db_row):
         sed_reg = ""
@@ -1889,8 +2088,8 @@ class Crontab(object):
 
             cmd = """cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
                 sed -i '/%s/s/^/#/' /var/spool/cron/%s""" % (
-            self.server.s.loginuser, self.server.s.loginuser, changetime,
-            sed_reg, self.server.s.loginuser)
+                self.server.s.loginuser, self.server.s.loginuser, changetime,
+                sed_reg, self.server.s.loginuser)
             exe_result = self.server.execute(cmd)
             if exe_result.succeed:
                 print 'disable succeed of ID:%s' % instance.id
@@ -1909,8 +2108,8 @@ class Crontab(object):
 
             cmd = """cp /var/spool/cron/%s /var/spool/cron/%s.%s && \
                 sed -i '/%s/s/^#*//' /var/spool/cron/%s""" % (
-            self.server.s.loginuser, self.server.s.loginuser, changetime,
-            sed_reg, self.server.s.loginuser)
+                self.server.s.loginuser, self.server.s.loginuser, changetime,
+                sed_reg, self.server.s.loginuser)
             exe_result = self.server.execute(cmd)
             if exe_result.succeed:
                 print 'enable succeed of ID:%s' % instance.id
@@ -1946,7 +2145,7 @@ class Crontab(object):
         for instance in self._get_dbinfo(self.server.dbid, *dbid):
             print 'change_group for ID:%s to %s' % (instance.id, group_name)
             instance.group = group_name
-        dbsession.commit() 
+        dbsession.commit()
         dbsession.close()
 
         
